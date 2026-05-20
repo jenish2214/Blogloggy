@@ -163,6 +163,21 @@
   gap: 8px;
 }
 
+.footer-built-by {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--color-text-2);
+}
+
+.footer-built-by a {
+  color: var(--color-accent-ai);
+  font-weight: 600;
+}
+
+.footer-built-by a:hover {
+  text-decoration: underline;
+}
+
 .footer-copy {
   grid-column: 1 / -1;
   color: var(--color-text-3);

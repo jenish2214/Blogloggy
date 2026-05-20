@@ -14,6 +14,7 @@ const LINKS = [
   { href: "/universities", label: "Universities" },
   { href: "/live", label: "Live" },
   { href: "/digest", label: "Digest" },
+  { href: "/about", label: "About" },
 ];
 
 export function Navbar() {
