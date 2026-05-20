@@ -1,0 +1,17 @@
+{
+  "name": "research-digest-platform",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm run dev --prefix backend\" \"npx wait-on http://localhost:4000/api/health -t 90000 && npm run dev:clean --prefix frontend\"",
+    "dev:clean": "npm run dev:clean --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "setup": "npm install && npm run install:all && cp -n backend/.env.example backend/.env 2>/dev/null; cp -n frontend/.env.example frontend/.env.local 2>/dev/null; echo Setup done. Run: npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "wait-on": "^8.0.1"
+  }
+}
