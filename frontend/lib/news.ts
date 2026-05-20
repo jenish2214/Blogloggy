@@ -29,3 +29,33 @@ export const SOURCE_COLORS: Record<string, string> = {
 export function sourceColor(logoKey: string): string {
   return SOURCE_COLORS[logoKey] ?? "var(--color-accent-ai)";
 }
+
+const SOURCE_LETTERS: Record<string, string> = {
+  hn: "H",
+  techcrunch: "TC",
+  verge: "V",
+  arstechnica: "A",
+  "mit-tr": "M",
+  mit: "M",
+  harvard: "H",
+  stanford: "S",
+  oxford: "O",
+  cambridge: "C",
+  deepmind: "D",
+  arxiv: "X",
+  anthropic: "A",
+  openai: "O",
+  wikipedia: "W",
+  google: "G",
+  blogger: "B",
+  blogloggy: "B",
+  pubmed: "P",
+};
+
+export function sourceAvatarLetter(logoKey: string): string {
+  const key = logoKey.toLowerCase();
+  if (SOURCE_LETTERS[key]) return SOURCE_LETTERS[key];
+  const clean = key.replace(/-rss$/, "").replace(/[^a-z0-9]/g, "");
+  if (clean.length >= 2) return clean.slice(0, 2).toUpperCase();
+  return (logoKey.charAt(0) || "?").toUpperCase();
+}

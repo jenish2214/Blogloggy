@@ -13,7 +13,7 @@ export default function CategoryDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const { data, loading, error } = useFetchData(
+  const { data, loading, error, refetch } = useFetchData(
     () => api.category(slug, 24),
     [slug]
   );
@@ -38,11 +38,12 @@ export default function CategoryDetailPage() {
         <AsyncLoad
           loading={loading}
           error={error}
-          label="Loading papers…"
+          onRetry={refetch}
+          label="Loading papers from API…"
           skeletonCount={6}
         >
           {papers.length === 0 ? (
-            <p className="empty-state">No papers found for this category.</p>
+            <p className="empty-state">No papers returned from the API for this category.</p>
           ) : (
             <StaggerList className="grid-3">
               {papers.map((p: ResearchPaper) => (

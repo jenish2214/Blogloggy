@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ExternalLink } from "lucide-react";
 import { api } from "@/lib/api";
 import { NewsPostCard } from "@/components/feed/NewsPostCard";
 import { NEWS_CATEGORY_LABELS, sourceColor } from "@/lib/news";
+import { ApiErrorState } from "@/components/ui/ApiErrorState";
 import { PageState } from "@/components/ui/PageState";
 import { LOADING_NEWS } from "@/lib/loadingMessages";
 import { useFetchData } from "@/lib/hooks/useFetchData";
@@ -20,10 +20,21 @@ export default function ArticlePage() {
   const article = data?.article ?? null;
   const related = data?.related ?? [];
 
-  if (!loading && (error || !article)) {
+  if (!loading && error) {
     return (
       <div className="page-main container">
-        <p className="error-banner">{error ?? "Article not found"}</p>
+        <ApiErrorState message={error} onRetry={refetch} variant="page" />
+        <p style={{ marginTop: 16 }}>
+          <Link href="/news">← Back to news</Link>
+        </p>
+      </div>
+    );
+  }
+
+  if (!loading && !article) {
+    return (
+      <div className="page-main container">
+        <p className="empty-state">Article not found in the API.</p>
         <p style={{ marginTop: 16 }}>
           <Link href="/news">← Back to news</Link>
         </p>
@@ -103,8 +114,7 @@ export default function ArticlePage() {
                     rel="noopener noreferrer"
                     className="btn btn-primary"
                   >
-                    <ExternalLink size={16} aria-hidden style={{ marginRight: 8 }} />
-                    Read on {article.handle}
+                    Read on {article.handle} ↗
                   </a>
                   <Link href="/news" className="btn btn-secondary">
                     Back to timeline

@@ -9,7 +9,7 @@ import { ResearchRedditLayout } from "@/components/layout/ResearchRedditLayout";
 import { timeAgo } from "@/lib/utils";
 
 export default function TopicsPage() {
-  const { data, loading, error } = useFetchData(() => api.researchDirectory(), []);
+  const { data, loading, error, refetch } = useFetchData(() => api.researchDirectory(), []);
 
   const topics = data?.topics ?? [];
 
@@ -23,7 +23,13 @@ export default function TopicsPage() {
           </p>
         </header>
 
-        <AsyncLoad loading={loading} error={error} label="Loading topics…" skeletonCount={6}>
+        <AsyncLoad
+          loading={loading}
+          error={error}
+          onRetry={refetch}
+          label="Loading topics from API…"
+          skeletonCount={6}
+        >
           <div className="topic-grid">
             {topics.map((t) => (
               <Link key={t.slug} href={`/topics/${t.slug}`} className="topic-card">

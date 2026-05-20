@@ -463,6 +463,78 @@
   font-weight: 600;
 }
 
+.live-feed-item-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.live-feed-time {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+
+.live-feed-time-abs {
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+}
+
+.live-page-updated {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-2);
+}
+
+.live-page-updated-abs {
+  color: var(--color-text-3);
+}
+
+.live-post-time {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: var(--color-text-2);
+}
+
+.live-post-time time {
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.live-post-time-sep {
+  color: var(--color-text-3);
+}
+
+.live-post-time-absolute {
+  color: var(--color-text-3);
+  font-size: 0.78rem;
+}
+
+.x-post-header-live {
+  margin-bottom: 2px;
+}
+
+.x-post-header-live .x-post-badge {
+  margin-left: 0;
+}
+
+.x-post-live .live-feed-new {
+  margin-right: 2px;
+}
+
+.marquee-item-time {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+  flex-shrink: 0;
+}
+
 /* Marquee */
 .marquee-wrap {
   overflow: hidden;
@@ -635,6 +707,10 @@
 .discover-search-icon {
   color: var(--color-text-3);
   flex-shrink: 0;
+}
+
+.discover-search-no-icon .discover-search-input {
+  width: 100%;
 }
 
 .discover-search-input {
@@ -1370,25 +1446,16 @@ a.research-card-tldr:hover {
   background: var(--color-surface-2);
 }
 
-.x-post-avatar-svg {
-  padding: 2px;
-  border: none;
-  background: transparent;
-}
-
-.source-icon-img {
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.source-icon-fallback {
+.source-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--color-surface-3);
+  border: 2px solid;
   font-weight: 700;
-  color: var(--color-text-2);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .x-post-avatar-lg {

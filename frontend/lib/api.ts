@@ -1,3 +1,4 @@
+import { formatApiError } from "@/lib/apiErrors";
 import type {
   DailyDigest,
   FeedItem,
@@ -11,18 +12,27 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000/api";
 
 async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...options?.headers,
-    },
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...options?.headers,
+      },
+      cache: "no-store",
+    });
+  } catch (e) {
+    throw new Error(formatApiError(e));
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? `API error ${res.status}`);
+    throw new Error(
+      formatApiError(
+        new Error((err as { error?: string }).error ?? `API error ${res.status}`)
+      )
+    );
   }
   return res.json() as Promise<T>;
 }

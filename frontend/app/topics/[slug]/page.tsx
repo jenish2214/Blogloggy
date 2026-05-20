@@ -13,7 +13,7 @@ export default function TopicDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const { data, loading, error } = useFetchData(
+  const { data, loading, error, refetch } = useFetchData(
     () => api.category(slug, 48),
     [slug]
   );
@@ -40,10 +40,16 @@ export default function TopicDetailPage() {
           </p>
         </header>
 
-        <AsyncLoad loading={loading} error={error} label="Loading topic papers…" skeletonCount={5}>
-          {error || (!loading && !category) ? (
+        <AsyncLoad
+          loading={loading}
+          error={error}
+          onRetry={refetch}
+          label="Loading topic papers from API…"
+          skeletonCount={5}
+        >
+          {!loading && !category ? (
             <p className="empty-state">
-              Topic not found. Browse all{" "}
+              Topic not found in the API. Browse all{" "}
               <Link href="/topics">topics</Link>.
             </p>
           ) : papers.length === 0 ? (

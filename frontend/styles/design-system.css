@@ -318,3 +318,77 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* API error states */
+.api-error-state {
+  width: 100%;
+}
+
+.api-error-state-inner {
+  padding: 28px 24px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-accent-err);
+  border-radius: var(--radius);
+}
+
+.api-error-state-compact .api-error-state-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 16px;
+  padding: 14px 20px;
+  text-align: left;
+  border-style: dashed;
+}
+
+.api-error-state-compact .api-error-title {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.api-error-state-compact .api-error-message,
+.api-error-state-compact .api-error-hint {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.api-error-state-compact .api-error-icon {
+  flex-shrink: 0;
+}
+
+.marquee-wrap-api-error {
+  padding: 12px 0;
+  background: var(--color-surface-2);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.api-error-icon {
+  display: block;
+  margin: 0 auto 12px;
+  color: var(--color-accent-err);
+}
+
+.api-error-state-compact .api-error-icon {
+  margin: 0;
+}
+
+.api-error-title {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.api-error-message {
+  color: var(--color-text-2);
+  margin-bottom: 8px;
+}
+
+.api-error-hint {
+  margin-bottom: 16px !important;
+}
+
+.api-error-state .btn {
+  margin-top: 4px;
+}

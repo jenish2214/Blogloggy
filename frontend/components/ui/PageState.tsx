@@ -1,7 +1,7 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
 import { useDelayedMessage } from "@/lib/hooks/useDelayedMessage";
+import { ApiErrorState } from "@/components/ui/ApiErrorState";
 
 export type PageStateSkeleton = "page" | "grid" | "news" | "feed" | "cards";
 
@@ -118,22 +118,7 @@ export function PageState({
   if (error) {
     return (
       <div className="page-state page-state-error">
-        <div className="page-state-error-card">
-          <h3>Something went wrong</h3>
-          <p>{error}</p>
-          <p className="page-state-sub">
-            Make sure the API is running: <code>npm run dev</code> from the project root, then check{" "}
-            <a href="http://localhost:4000/api/health" target="_blank" rel="noopener noreferrer">
-              localhost:4000/api/health
-            </a>
-          </p>
-          {onRetry && (
-            <button type="button" className="btn btn-primary" onClick={onRetry}>
-              <RefreshCw size={16} aria-hidden style={{ marginRight: 8 }} />
-              Try again
-            </button>
-          )}
-        </div>
+        <ApiErrorState message={error} onRetry={onRetry} variant="page" />
       </div>
     );
   }

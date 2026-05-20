@@ -1,11 +1,4 @@
-import Image from "next/image";
-import { BrandIcon } from "@/components/ui/BrandIcon";
-
-const SVG_ICONS: Record<string, string> = {
-  google: "/icons/google-g.svg",
-  blogger: "/icons/blogger-logo.svg",
-  blogloggy: "/icons/blogger-logo.svg",
-};
+import { sourceAvatarLetter, sourceColor } from "@/lib/news";
 
 type SourceIconProps = {
   logoKey: string;
@@ -13,35 +6,25 @@ type SourceIconProps = {
   className?: string;
 };
 
-/** Round SVG badge for feeds (Google G, Blogger b, etc.) */
-export function SourceIcon({ logoKey, size = 20, className = "" }: SourceIconProps) {
-  const key = logoKey.toLowerCase();
-  const src = SVG_ICONS[key];
+/** Letter + color badge for feed sources — no SVG images */
+export function SourceIcon({ logoKey, size = 40, className = "" }: SourceIconProps) {
+  const color = sourceColor(logoKey);
+  const letter = sourceAvatarLetter(logoKey);
 
-  if (src) {
-    return (
-      <Image
-        src={src}
-        alt=""
-        width={size}
-        height={size}
-        className={`source-icon-img ${className}`}
-        aria-hidden
-      />
-    );
-  }
-
-  if (key === "anthropic" || key === "openai") {
-    return (
-      <span
-        className={`source-icon-fallback ${className}`}
-        style={{ width: size, height: size, fontSize: size * 0.45 }}
-        aria-hidden
-      >
-        {key === "anthropic" ? "A" : "O"}
-      </span>
-    );
-  }
-
-  return <BrandIcon size={size} className={className} />;
+  return (
+    <span
+      className={`source-avatar ${className}`}
+      style={{
+        width: size,
+        height: size,
+        fontSize: Math.max(12, size * 0.38),
+        background: `${color}18`,
+        color,
+        borderColor: `${color}55`,
+      }}
+      aria-hidden
+    >
+      {letter}
+    </span>
+  );
 }

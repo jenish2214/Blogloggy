@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import type { ResearchCategory } from "@/types";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { motion } from "framer-motion";
-import { LoadingGrid, LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ApiSectionState } from "@/components/ui/ApiSectionState";
 import { useFetchData } from "@/lib/hooks/useFetchData";
 
 const ICONS: Record<string, string> = {
@@ -20,7 +20,7 @@ const ICONS: Record<string, string> = {
 };
 
 export function CategoriesSection() {
-  const { data, loading } = useFetchData(() => api.categories(), []);
+  const { data, loading, error, refetch } = useFetchData(() => api.categories(), []);
 
   const categories = data?.categories ?? [];
 
@@ -35,12 +35,14 @@ export function CategoriesSection() {
             </p>
           </div>
         </ScrollReveal>
-        {loading ? (
-          <div className="async-load-section">
-            <LoadingSpinner label="Loading categories…" />
-            <LoadingGrid count={4} />
-          </div>
-        ) : (
+        <ApiSectionState
+          loading={loading}
+          error={error}
+          onRetry={refetch}
+          loadingLabel="Loading categories from API…"
+          isEmpty={categories.length === 0}
+          emptyMessage="No categories returned from the API."
+        >
           <div className="categories-grid">
             {categories.map((c) => (
               <motion.div
@@ -57,7 +59,7 @@ export function CategoriesSection() {
               </motion.div>
             ))}
           </div>
-        )}
+        </ApiSectionState>
       </div>
     </section>
   );

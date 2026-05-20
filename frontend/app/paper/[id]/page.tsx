@@ -10,6 +10,7 @@ import { ResearchCard } from "@/components/cards/ResearchCard";
 import { authorSlug } from "@/lib/slugs";
 import { topicHref } from "@/lib/topics";
 import { generateBibTeX, excerptSummary } from "@/lib/utils";
+import { ApiErrorState } from "@/components/ui/ApiErrorState";
 import { PageState } from "@/components/ui/PageState";
 import { LOADING_PAPERS } from "@/lib/loadingMessages";
 import { useFetchData } from "@/lib/hooks/useFetchData";
@@ -116,22 +117,34 @@ export default function PaperPage() {
   const paper = data?.paper ?? null;
   const related = data?.related ?? [];
 
-  if (!loading && (error || !paper)) {
-    const fallbackUrl = id.startsWith("pubmed-")
-      ? `https://pubmed.ncbi.nlm.nih.gov/${id.replace("pubmed-", "")}/`
-      : id.startsWith("arxiv-")
-        ? `https://arxiv.org/abs/${id.replace("arxiv-", "")}`
-        : null;
+  const fallbackUrl = id.startsWith("pubmed-")
+    ? `https://pubmed.ncbi.nlm.nih.gov/${id.replace("pubmed-", "")}/`
+    : id.startsWith("arxiv-")
+      ? `https://arxiv.org/abs/${id.replace("arxiv-", "")}`
+      : null;
 
+  if (!loading && error) {
     return (
       <div className="page-main container">
-        <p className="error-banner">{error ?? "Paper not found"}</p>
+        <ApiErrorState message={error} onRetry={refetch} variant="page" />
+        <p style={{ marginTop: 16 }}>
+          <Link href="/research">← Back to research</Link>
+        </p>
+      </div>
+    );
+  }
+
+  if (!loading && !paper) {
+    return (
+      <div className="page-main container">
+        <p className="empty-state">Paper not found in the API.</p>
         {fallbackUrl && (
           <a
             href={fallbackUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary"
+            style={{ marginTop: 16, display: "inline-block" }}
           >
             Open on source site →
           </a>

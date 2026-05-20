@@ -1,33 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import type { DailyDigest } from "@/types";
 import { DigestCard } from "@/components/cards/DigestCard";
 import { RefreshButton } from "@/components/ui/RefreshButton";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
-import { LoadingGrid, LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ApiSectionState } from "@/components/ui/ApiSectionState";
+import { useFetchData } from "@/lib/hooks/useFetchData";
 
 export function AIDigestSection() {
-  const [digest, setDigest] = useState<DailyDigest | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const d = await api.digest();
-      setDigest(d);
-    } catch {
-      setDigest(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
+  const { data: digest, loading, error, refetch } = useFetchData(() => api.digest(), []);
 
   return (
     <section className="section">
@@ -49,21 +31,20 @@ export function AIDigestSection() {
                 Today&apos;s most notable papers and findings
               </p>
             </div>
-            <RefreshButton onRefresh={load} loading={loading} label="Refresh" />
+            <RefreshButton onRefresh={refetch} loading={loading} label="Refresh" />
           </div>
         </ScrollReveal>
-        {loading && !digest ? (
-          <div className="async-load-section">
-            <LoadingSpinner label="Loading digest…" />
-            <LoadingGrid count={2} />
-          </div>
-        ) : digest ? (
-          <DigestCard digest={digest} />
-        ) : (
-          <p className="empty-state">
-            Digest unavailable. Start the API server on port 4000.
-          </p>
-        )}
+        <ApiSectionState
+          loading={loading}
+          error={error}
+          onRetry={refetch}
+          loadingLabel="Loading digest from API…"
+          skeletonCount={2}
+          isEmpty={!digest}
+          emptyMessage="Digest empty — the API responded but had no items."
+        >
+          {digest && <DigestCard digest={digest} />}
+        </ApiSectionState>
         <p style={{ marginTop: 24 }}>
           <Link href="/digest">Full digest page →</Link>
         </p>

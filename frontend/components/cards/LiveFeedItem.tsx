@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { FeedItem } from "@/types";
-import { isNewItem, timeAgo } from "@/lib/utils";
+import { formatFeedTime, isNewItem } from "@/lib/utils";
 
 const SOURCE_COLORS: Record<string, string> = {
   arxiv: "var(--color-accent-open)",
@@ -18,6 +18,7 @@ const SOURCE_COLORS: Record<string, string> = {
 export function LiveFeedItem({ item }: { item: FeedItem }) {
   const isNew = isNewItem(item.pubDate);
   const color = SOURCE_COLORS[item.source] ?? "var(--color-text-2)";
+  const { relative, absolute } = formatFeedTime(item.pubDate);
 
   return (
     <motion.article
@@ -33,7 +34,10 @@ export function LiveFeedItem({ item }: { item: FeedItem }) {
           {item.logoKey}
         </span>
         {isNew && <span className="live-feed-new animate-pulse-new">NEW</span>}
-        <span className="live-feed-time">{timeAgo(item.pubDate)}</span>
+        <time className="live-feed-time" dateTime={item.pubDate} title={absolute}>
+          {relative}
+        </time>
+        <span className="live-feed-time-abs">{absolute}</span>
       </div>
       <h3 className="live-feed-title">{item.title}</h3>
       {item.contentSnippet && (

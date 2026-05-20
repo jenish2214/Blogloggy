@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ResearchPaper } from "@/types";
 import { api } from "@/lib/api";
+import { formatApiError } from "@/lib/apiErrors";
 
 export function usePapers(limit = 30) {
   const [papers, setPapers] = useState<ResearchPaper[]>([]);
@@ -16,7 +17,7 @@ export function usePapers(limit = 30) {
       const data = await api.research(limit);
       setPapers(data.papers);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load papers");
+      setError(formatApiError(e));
     } finally {
       setLoading(false);
     }

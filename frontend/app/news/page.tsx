@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Search, Zap } from "lucide-react";
 import { api } from "@/lib/api";
 import type { FeedItem, NewsCategory } from "@/types";
 import { NewsPostCard } from "@/components/feed/NewsPostCard";
@@ -104,14 +103,10 @@ export default function NewsPage() {
       actions={<RefreshButton onRefresh={refetch} loading={loading} />}
     >
       {data?.fetchNote && !loading && (
-        <p className="news-hub-sources">
-          <Zap size={14} aria-hidden style={{ marginRight: 6, verticalAlign: -2 }} />
-          {data.fetchNote}
-        </p>
+        <p className="news-hub-sources">{data.fetchNote}</p>
       )}
 
-      <div className="discover-search" style={{ marginBottom: 24 }}>
-        <Search size={18} className="discover-search-icon" aria-hidden />
+      <div className="discover-search discover-search-no-icon" style={{ marginBottom: 24 }}>
         <input
           type="search"
           className="discover-search-input"

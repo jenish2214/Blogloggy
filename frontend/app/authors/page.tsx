@@ -8,7 +8,7 @@ import { ResearchRedditLayout } from "@/components/layout/ResearchRedditLayout";
 import { timeAgo } from "@/lib/utils";
 
 export default function AuthorsPage() {
-  const { data, loading, error } = useFetchData(() => api.researchDirectory(), []);
+  const { data, loading, error, refetch } = useFetchData(() => api.researchDirectory(), []);
 
   const authors = data?.authors ?? [];
 
@@ -22,7 +22,13 @@ export default function AuthorsPage() {
           </p>
         </header>
 
-        <AsyncLoad loading={loading} error={error} label="Loading researchers…" skeletonCount={6}>
+        <AsyncLoad
+          loading={loading}
+          error={error}
+          onRetry={refetch}
+          label="Loading researchers from API…"
+          skeletonCount={6}
+        >
           <div className="author-grid">
             {authors.map((a) => (
               <Link key={a.slug} href={`/authors/${a.slug}`} className="author-card">

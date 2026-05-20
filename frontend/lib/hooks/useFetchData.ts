@@ -1,5 +1,6 @@
 "use client";
 
+import { formatApiError } from "@/lib/apiErrors";
 import { useCallback, useEffect, useState } from "react";
 
 export function useFetchData<T>(fetcher: () => Promise<T>, deps: unknown[]) {
@@ -14,7 +15,7 @@ export function useFetchData<T>(fetcher: () => Promise<T>, deps: unknown[]) {
       const result = await fetcher();
       setData(result);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load");
+      setError(formatApiError(e));
       setData(null);
     } finally {
       setLoading(false);

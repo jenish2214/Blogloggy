@@ -20,7 +20,7 @@ const FILTER_SLUGS: Record<string, string[]> = {
 
 export default function UniversitiesPage() {
   const [filter, setFilter] = useState("All");
-  const { data, loading, error } = useFetchData(() => api.universities(), []);
+  const { data, loading, error, refetch } = useFetchData(() => api.universities(), []);
 
   const overview = data?.overview ?? [];
   const descriptions: Record<string, string> = {};
@@ -59,7 +59,8 @@ export default function UniversitiesPage() {
         <AsyncLoad
           loading={loading}
           error={error}
-          label="Loading universities…"
+          onRetry={refetch}
+          label="Loading universities from API…"
           skeletonCount={8}
         >
           <div

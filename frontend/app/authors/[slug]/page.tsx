@@ -13,7 +13,7 @@ export default function AuthorDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const { data, loading, error } = useFetchData(() => api.author(slug), [slug]);
+  const { data, loading, error, refetch } = useFetchData(() => api.author(slug), [slug]);
 
   const author = data?.author ?? null;
   const papers = data?.papers ?? [];
@@ -58,10 +58,16 @@ export default function AuthorDetailPage() {
           </div>
         )}
 
-        <AsyncLoad loading={loading} error={error} label="Loading author papers…" skeletonCount={5}>
-          {!author && !loading ? (
+        <AsyncLoad
+          loading={loading}
+          error={error}
+          onRetry={refetch}
+          label="Loading author papers from API…"
+          skeletonCount={5}
+        >
+          {!loading && !author ? (
             <p className="empty-state">
-              Researcher not found. Try the{" "}
+              Researcher not found in the API. Try the{" "}
               <Link href="/authors">researchers directory</Link>.
             </p>
           ) : papers.length === 0 ? (

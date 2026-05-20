@@ -6,11 +6,11 @@ import { api } from "@/lib/api";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { StaggerList, StaggerItem } from "@/components/animations/StaggerList";
 import { ResearchCard } from "@/components/cards/ResearchCard";
-import { LoadingGrid, LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ApiSectionState } from "@/components/ui/ApiSectionState";
 import { useFetchData } from "@/lib/hooks/useFetchData";
 
 export function FeaturedPapersSection() {
-  const { data, loading } = useFetchData(() => api.research(6), []);
+  const { data, loading, error, refetch } = useFetchData(() => api.research(6), []);
 
   const papers = data?.papers?.slice(0, 6) ?? [];
 
@@ -31,16 +31,15 @@ export function FeaturedPapersSection() {
           </div>
         </ScrollReveal>
 
-        {loading ? (
-          <div className="async-load-section">
-            <LoadingSpinner label="Loading highlights…" />
-            <LoadingGrid count={3} />
-          </div>
-        ) : papers.length === 0 ? (
-          <p className="empty-state">
-            Highlights unavailable. Start the API on port 4000, then refresh.
-          </p>
-        ) : (
+        <ApiSectionState
+          loading={loading}
+          error={error}
+          onRetry={refetch}
+          loadingLabel="Loading highlights from API…"
+          skeletonCount={3}
+          isEmpty={papers.length === 0}
+          emptyMessage="No papers returned from the API right now."
+        >
           <StaggerList className="grid-3 featured-papers-grid">
             {papers.map((p) => (
               <StaggerItem key={p.id}>
@@ -48,7 +47,7 @@ export function FeaturedPapersSection() {
               </StaggerItem>
             ))}
           </StaggerList>
-        )}
+        </ApiSectionState>
 
         <motion.div
           className="featured-cta-bar"

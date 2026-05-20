@@ -5,11 +5,11 @@ import { api } from "@/lib/api";
 import { UniversityCard } from "@/components/cards/UniversityCard";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { motion } from "framer-motion";
-import { LoadingGrid, LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ApiSectionState } from "@/components/ui/ApiSectionState";
 import { useFetchData } from "@/lib/hooks/useFetchData";
 
 export function UniversitySection() {
-  const { data, loading } = useFetchData(() => api.universities(), []);
+  const { data, loading, error, refetch } = useFetchData(() => api.universities(), []);
 
   const overview = data?.overview ?? [];
 
@@ -24,12 +24,14 @@ export function UniversitySection() {
             </p>
           </div>
         </ScrollReveal>
-        {loading ? (
-          <div className="async-load-section">
-            <LoadingSpinner label="Loading university data…" />
-            <LoadingGrid count={4} />
-          </div>
-        ) : (
+        <ApiSectionState
+          loading={loading}
+          error={error}
+          onRetry={refetch}
+          loadingLabel="Loading universities from API…"
+          isEmpty={overview.length === 0}
+          emptyMessage="No university data returned from the API."
+        >
           <div className="university-scroll">
             {overview.map((u) => (
               <motion.div
@@ -41,7 +43,7 @@ export function UniversitySection() {
               </motion.div>
             ))}
           </div>
-        )}
+        </ApiSectionState>
         <p style={{ marginTop: 24 }}>
           <Link href="/universities">View all universities →</Link>
         </p>
