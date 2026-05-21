@@ -1,194 +1,150 @@
-# Research Digest Platform
+# QuantDesk — Professional Paper Trading Platform
 
-A research-grade news and papers platform with a polished UI, delayed-loading states, and **free public data only** (no API keys required).
+> Trade like a quant. Zero capital at risk.
 
-## Highlights
-
-- **News hub** (`/news`) — X-style timeline with **technology**, **AI labs** (Anthropic, OpenAI, DeepMind), **universities**, **research** (arXiv), and **Wikipedia**
-- **Research feed** — papers with detail pages
-- **Categories, topics, authors, universities** — browse by field, community, or institution
-- **Daily digest** — built from live paper abstracts
-- **Smart loading** — rotating status messages while APIs load (10–30s first fetch), skeleton UI, **Try again** on errors
-
-## Free data sources
-
-| Source | Type |
-|--------|------|
-| arXiv, Semantic Scholar, PubMed | Papers |
-| MIT, Harvard, Stanford, Oxford, Cambridge RSS | University news |
-| Hacker News, TechCrunch, The Verge, Ars Technica, MIT Tech Review | Technology |
-| **Anthropic & OpenAI blogs** (public RSS) | AI lab news |
-| **Wikipedia API** | Reference articles (AI, ML, universities) |
-| DeepMind blog | Research labs |
+A full-stack paper trading platform inspired by Jane Street — professional dark terminal UI, real-time market data, options chain, Black-Scholes pricing, and quantitative research tools.
 
 ---
 
-## Run the project — one command
+## ⚠️ Disclaimer
 
-From the **project root** (folder with `package.json`, `frontend/`, `backend/`):
+**PAPER TRADING ONLY.** All trades use virtual $100,000. This platform is for educational and demonstration purposes only. Not financial advice. Not affiliated with any real brokerage.
 
-### First-time setup
+---
+
+## 🏗 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | Next.js 14 App Router, TypeScript, Zustand |
+| **Backend API** | Express.js + TypeScript (port 4000) |
+| **Python Quant** | FastAPI + Black-Scholes, Monte Carlo (port 8000) |
+| **Market Data** | Yahoo Finance (stocks), CoinGecko (crypto) |
+| **State** | Zustand + localStorage (portfolio persists) |
+| **Production ref** | C++ HFT core, Rust market data layer |
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-cd /path/to/blogloggy
-
-npm run setup
-```
-
-Or manually:
-
-```bash
-npm install
+# Install all dependencies
 npm run install:all
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
-```
 
-### Start backend + frontend together
-
-```bash
+# Start backend + frontend
 npm run dev
 ```
 
-This single command:
-
-1. Starts the **API** on port **4000**
-2. Waits until `http://localhost:4000/api/health` is ready
-3. Starts the **website** on port **3000**
-
-Open:
-
-| Page | URL |
-|------|-----|
-| Home | http://localhost:3000 |
-| **News** | http://localhost:3000/news |
-| Papers | http://localhost:3000/research |
-| API health | http://localhost:4000/api/health |
-
-Press `Ctrl+C` to stop both servers.
-
-### Optional: run separately
+### Python Quant Service (optional)
 
 ```bash
-npm run dev:backend   # port 4000 only
-npm run dev:frontend  # port 3000 only (needs API)
+cd quant-service
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
 ```
 
 ---
 
-## Step-by-step (detailed)
+## 📄 Pages
 
-### Step 1 — Install Node.js 18+
-
-```bash
-node -v   # should be v18 or newer
-npm -v
-```
-
-### Step 2 — Clone or open the project
-
-```bash
-cd /path/to/blogloggy
-```
-
-### Step 3 — Install dependencies
-
-```bash
-npm install
-npm run install:all
-```
-
-### Step 4 — Environment files
-
-```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
-```
-
-Defaults work for local development.
-
-### Step 5 — Free port 4000 (if needed)
-
-```bash
-lsof -ti:4000 | xargs kill -9
-```
-
-### Step 6 — Start everything
-
-```bash
-npm run dev
-```
-
-### Step 7 — Use the app
-
-- First load can take **10–30 seconds** while RSS, Wikipedia, and paper APIs respond.
-- Loading screens show progress messages; use **Try again** if something fails.
-- Visit **News** for the combined technology + labs + university + Wikipedia view.
+| Page | URL | Description |
+|---|---|---|
+| **Landing** | `/` | Platform overview, live ticker, market indices |
+| **Markets** | `/markets` | Real-time stocks, crypto, top movers — sortable table |
+| **Trade** | `/trade` | Order terminal — buy/sell stocks + crypto, live chart |
+| **Portfolio** | `/portfolio` | Holdings, P&L, allocation, trade history |
+| **Options** | `/options` | Live options chain + Black-Scholes calculator |
+| **Research** | `/research` | Backtest, Sharpe ratio, max drawdown, equity curve |
 
 ---
 
-## Troubleshooting
+## 🔌 API Endpoints
 
-| Issue | Solution |
-|-------|----------|
-| Pages show error / empty | Run `npm run dev` from project root; check http://localhost:4000/api/health |
-| Port 4000 in use | `lsof -ti:4000 \| xargs kill -9` then `npm run dev` |
-| Frontend no data | Verify `frontend/.env.local`: `NEXT_PUBLIC_API_BASE=http://localhost:4000/api` |
-| CORS blocked (e.g. port 3001) | Restart the backend after pulling; in dev, any `http://localhost:*` origin is allowed. Prefer **http://localhost:3000** |
-| Slow first load | Normal — free APIs are fetched in parallel and cached on the server |
-| One feed empty | Some RSS URLs fail occasionally; other sources still load |
-| MIME type / 404 on CSS or JS | Stop all dev servers, then run `npm run dev:clean` from project root (see below) |
+### Market Data (`/api/market`)
 
-### Fix: “MIME type text/html” or 404 on `/_next/static/...`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/market/quotes?symbols=AAPL,BTC-USD` | Batch quote fetch |
+| GET | `/api/market/chart/:symbol?range=1d&interval=5m` | OHLCV candles |
+| GET | `/api/market/crypto` | Top 20 crypto (CoinGecko) |
+| GET | `/api/market/indices` | S&P 500, Dow, Nasdaq, VIX, Gold, Oil, BTC |
+| GET | `/api/market/movers` | Top gainers / losers / most active |
+| GET | `/api/market/search?q=apple` | Symbol search |
 
-This usually means the browser asked for CSS/JS but got an HTML error page instead. Common causes:
+### Trading Engine (`/api/trading`)
 
-1. **Stale dev server** — an old `next dev` still running on port 3000 with a broken `.next` folder  
-2. **Corrupted cache** — `.next` was deleted while the server was still running  
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/trading/options-chain/:symbol` | Live options chain from Yahoo Finance |
+| GET | `/api/trading/options-chain/:symbol/:expiry` | Specific expiry chain |
+| POST | `/api/trading/price-option` | Black-Scholes + Greeks |
+| GET | `/api/trading/backtest-simple?symbol=AAPL&range=1y` | Buy-and-hold backtest |
+| GET | `/api/trading/volatility/:symbol` | Historical volatility 30d |
 
-**Fix (from project root):**
+### Python Quant Service (`localhost:8000`)
 
-```bash
-# Stop anything on 3000 and 4000
-lsof -ti:3000,4000 | xargs kill -9 2>/dev/null
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/price` | Full Black-Scholes with all Greeks |
+| POST | `/implied-volatility` | Newton-Raphson IV solver |
+| POST | `/monte-carlo` | Monte Carlo option pricing |
+| POST | `/vol-surface` | Parametric volatility surface |
+| POST | `/backtest` | Strategy backtest (buy-hold, SMA cross, RSI) |
 
-# Clean cache and restart
-npm run dev:clean
-```
+### API Management (`/api`)
 
-Or manually:
-
-```bash
-rm -rf frontend/.next frontend/node_modules/.cache
-npm run dev
-```
-
-Then hard-refresh the browser (**Cmd+Shift+R**). Use only **http://localhost:3000** (not 3001/3002).
-
----
-
-## API routes
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/health` | Health check |
-| GET | `/api/research/news/hub` | Full news hub (spotlight + categories) |
-| GET | `/api/research/news?category=technology` | Filtered news list |
-| GET | `/api/research/article/:id` | Article detail |
-| GET | `/api/research/all` | Papers + news bundle |
-| GET | `/api/research/paper/:id` | Paper detail |
-| GET | `/api/categories` | Research categories |
-| GET | `/api/universities` | University hub |
-| GET | `/api/digest` | Daily digest |
+| Endpoint | Description |
+|---|---|
+| `GET /api/health` | Source health + circuit breaker states |
+| `GET /api/metrics?format=html` | Live metrics dashboard |
 
 ---
 
-## Project structure
+## 🏛 Architecture
 
 ```
-blogloggy/
-├── package.json       # npm run dev → both apps
-├── backend/           # Express API (port 4000)
-├── frontend/          # Next.js UI (port 3000)
-└── README.md
+Request → Next.js Client (Zustand portfolio state)
+           ↓
+        Backend (Express :4000)
+           ├── /api/market → Yahoo Finance API (30s cache)
+           ├── /api/trading → Options + Backtest endpoints
+           ├── /api/health + /api/metrics
+           └── API Manager Layer (circuit breaker, retry, rate limit)
+
+Python Service (:8000)
+  └── FastAPI → Black-Scholes, Monte Carlo, IV solver, backtest engine
+
+Portfolio State: Zustand + localStorage (client-side, zero server dependency)
 ```
+
+---
+
+## 💰 Portfolio Engine
+
+- Starts with **$100,000 virtual capital**
+- Supports **market orders** and **limit orders**
+- **Buy/Sell** stocks, ETFs, and crypto
+- **Persistent** across browser sessions (localStorage)
+- Real-time P&L updates with live price polling
+- Full **trade history** with order details
+
+---
+
+## 🔑 Environment Variables
+
+**Backend (`.env`)**
+```
+PORT=4000
+CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+NEWS_API_KEY=          # optional
+LOG_LEVEL=info
+```
+
+**Frontend (`.env.local`)**
+```
+NEXT_PUBLIC_API_BASE=http://localhost:4000
+```
+
+---
+
+Built by **BSJ Infotech** · [hello@bsjinfotech.com](mailto:hello@bsjinfotech.com)

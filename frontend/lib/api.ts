@@ -1,169 +1,162 @@
-import { formatApiError } from "@/lib/apiErrors";
-import type {
-  DailyDigest,
-  FeedItem,
-  NewsCategory,
-  ResearchCategory,
-  ResearchPaper,
-  UniversityConfig,
-} from "@/types";
+/**
+ * QuantDesk API client — calls Next.js API routes (deploys natively on Vercel).
+ * Falls back to Express backend for local dev if NEXT_PUBLIC_API_BASE is set.
+ */
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000/api";
-
-async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...options?.headers,
-      },
-      cache: "no-store",
-    });
-  } catch (e) {
-    throw new Error(formatApiError(e));
-  }
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(
-      formatApiError(
-        new Error((err as { error?: string }).error ?? `API error ${res.status}`)
-      )
-    );
-  }
-  return res.json() as Promise<T>;
+function apiBase() {
+  if (typeof window !== "undefined") return "";
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "";
 }
 
-export const api = {
-  health: () => fetchJSON<{ status: string; paidApis: boolean }>("/health"),
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const base = apiBase();
+  const url = `${base}${path}`;
+  const res = await fetch(url, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`API ${res.status}: ${body}`);
+  }
+  return res.json();
+}
 
-  categories: () =>
-    fetchJSON<{ categories: ResearchCategory[] }>("/categories"),
+// ── Market ────────────────────────────────────────────────────────────────────
 
-  category: (slug: string, limit = 20) =>
-    fetchJSON<{
-      category: ResearchCategory;
-      papers: ResearchPaper[];
-      feed: FeedItem[];
-    }>(`/categories/${encodeURIComponent(slug)}?limit=${limit}`),
+export interface Quote {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changePct: number;
+  open: number;
+  high: number;
+  low: number;
+  volume: number;
+  mktCap: number | null;
+  currency: string;
+  exchange: string;
+  type: "stock" | "crypto";
+  updatedAt: string;
+  error?: string;
+}
 
-  research: (limit = 30) =>
-    fetchJSON<{ papers: ResearchPaper[] }>(`/research?limit=${limit}`),
+export interface CoinQuote {
+  symbol: string;
+  name: string;
+  coingeckoId: string;
+  price: number;
+  change1h: number;
+  change24h: number;
+  change7d: number;
+  marketCap: number;
+  volume24h: number;
+  image: string;
+}
 
-  researchAll: () =>
-    fetchJSON<{
-      papers: ResearchPaper[];
-      universityPapers: ResearchPaper[];
-      news: FeedItem[];
-      sourceLog: string[];
-    }>("/research/all"),
+export interface Candle { time: number; open: number; high: number; low: number; close: number; volume: number; }
 
-  researchDirectory: () =>
-    fetchJSON<{
-      topics: {
-        slug: string;
-        name: string;
-        description: string;
-        icon: string;
-        paperCount: number;
-        memberLabel: string;
-        latestTitle?: string;
-        latestDate?: string;
-      }[];
-      authors: {
-        slug: string;
-        name: string;
-        paperCount: number;
-        topics: string[];
-        university?: string;
-        latestTitle?: string;
-        latestDate?: string;
-      }[];
-      refreshedAt: string;
-    }>("/research/directory"),
+export interface ChartData {
+  symbol: string;
+  name: string;
+  currency: string;
+  exchange: string;
+  currentPrice: number;
+  previousClose: number;
+  candles: Candle[];
+}
 
-  author: (slug: string) =>
-    fetchJSON<{
-      author: {
-        slug: string;
-        name: string;
-        paperCount: number;
-        topics: string[];
-        university?: string;
-      };
-      papers: ResearchPaper[];
-      topics: { slug: string; name: string; count: number }[];
-    }>(`/research/authors/${encodeURIComponent(slug)}`),
+export interface MoverItem { symbol: string; name: string; price: number; changePct: number; volume: number; }
+export interface IndexItem { symbol: string; name: string; price: number; change: number; changePct: number; currency: string; }
 
-  universityPapers: (limit = 8) =>
-    fetchJSON<{ papers: ResearchPaper[] }>(`/research/universities?limit=${limit}`),
-
-  newsHub: () =>
-    fetchJSON<{
-      spotlight: FeedItem[];
-      technology: FeedItem[];
-      labs: FeedItem[];
-      university: FeedItem[];
-      research: FeedItem[];
-      reference: FeedItem[];
-      all: FeedItem[];
-      refreshedAt: string;
-      fetchNote: string;
-    }>("/research/news/hub"),
-
-  news: (limit = 60, category?: NewsCategory) => {
-    const params = new URLSearchParams({ limit: String(limit) });
-    if (category) params.set("category", category);
-    return fetchJSON<{
-      items: FeedItem[];
-      refreshedAt: string;
-      category: NewsCategory | "all";
-    }>(`/research/news?${params}`);
-  },
-
-  article: (id: string) =>
-    fetchJSON<{ article: FeedItem; related: FeedItem[] }>(
-      `/research/article/${encodeURIComponent(id)}`
-    ),
-
-  liveFeed: (sources?: string[]) => {
-    const q = sources?.length ? `?sources=${sources.join(",")}` : "";
-    return fetchJSON<{ items: FeedItem[]; refreshedAt: string }>(
-      `/research/live${q}`
-    );
-  },
-
-  paper: (id: string) =>
-    fetchJSON<{
-      paper: ResearchPaper;
-      related: ResearchPaper[];
-      resolvedVia?: string;
-    }>(`/research/paper/${encodeURIComponent(id)}`),
-
-  digest: () => fetchJSON<DailyDigest>("/digest"),
-
-  universities: () =>
-    fetchJSON<{
-      universities: (UniversityConfig & { description: string })[];
-      overview: {
-        slug: string;
-        name: string;
-        accentColor: string;
-        paperCount: number;
-        lastUpdated: string;
-        latestTitles: string[];
-      }[];
-    }>("/universities"),
-
-  university: (slug: string) =>
-    fetchJSON<{
-      university: UniversityConfig & { description: string };
-      papers: ResearchPaper[];
-      feed: FeedItem[];
-      researchers: { name: string; count: number }[];
-      topCited: ResearchPaper[];
-    }>(`/universities/${encodeURIComponent(slug)}`),
+export const marketApi = {
+  getQuotes: (symbols: string[]) => apiFetch<{ quotes: Quote[] }>(`/api/market/quotes?symbols=${symbols.join(",")}`),
+  getChart: (symbol: string, range = "1d", interval = "5m") => apiFetch<{ chart: ChartData }>(`/api/market/chart/${symbol}?range=${range}&interval=${interval}`),
+  getCrypto: () => apiFetch<{ coins: CoinQuote[] }>("/api/market/crypto"),
+  getIndices: () => apiFetch<{ indices: IndexItem[] }>("/api/market/indices"),
+  getMovers: () => apiFetch<{ gainers: MoverItem[]; losers: MoverItem[]; mostActive: MoverItem[] }>("/api/market/movers"),
+  search: (q: string) => apiFetch<{ results: Array<{ symbol: string; name: string; exchange: string; type: string }> }>(`/api/market/search?q=${encodeURIComponent(q)}`),
 };
+
+// ── Trading ───────────────────────────────────────────────────────────────────
+
+export interface OptionsChain {
+  symbol: string;
+  spotPrice: number;
+  expirations: number[];
+  calls: OptionsContract[];
+  puts: OptionsContract[];
+}
+
+export interface OptionsContract {
+  contractSymbol: string;
+  strike: number;
+  lastPrice: number;
+  bid: number;
+  ask: number;
+  midpoint?: number;
+  change: number;
+  percentChange: number;
+  volume: number;
+  openInterest: number;
+  impliedVolatility: number | null;
+  inTheMoney: boolean;
+}
+
+export interface GreeksResult { price: number; delta: number; gamma: number; theta: number; vega: number; }
+
+export interface BacktestResult {
+  symbol: string;
+  range: string;
+  startPrice: number;
+  endPrice: number;
+  totalReturn: number;
+  annualReturn: number;
+  annualVolatility: number;
+  sharpeRatio: number;
+  sortinoRatio?: number;
+  maxDrawdown: number;
+  var95Day?: number;
+  cvar95Day?: number;
+  tradingDays: number;
+  equityCurve: { time: number; value: number }[];
+}
+
+export const tradingApi = {
+  getOptionsChain: (symbol: string, expiry?: string) =>
+    apiFetch<OptionsChain>(`/api/trading/options-chain/${symbol}${expiry ? `?expiry=${expiry}` : ""}`),
+
+  priceOption: (params: { S: number; K: number; T: number; r?: number; sigma: number; type: "call" | "put" }) =>
+    apiFetch<{ result: GreeksResult }>("/api/trading/price-option", { method: "POST", body: JSON.stringify(params) }),
+
+  backtest: (symbol: string, range = "1y") =>
+    apiFetch<BacktestResult>(`/api/trading/backtest?symbol=${symbol}&range=${range}`),
+
+  getVolatility: (symbol: string) =>
+    apiFetch<{ symbol: string; historicalVolatility30d: number }>(`/api/trading/volatility/${symbol}`),
+};
+
+// ── Portfolio ─────────────────────────────────────────────────────────────────
+
+export const portfolioApi = {
+  get: () => apiFetch<{ portfolio: Record<string,unknown>; positions: Record<string,unknown>[]; orders: Record<string,unknown>[] }>("/api/portfolio"),
+  placeOrder: (body: Record<string, unknown>) => apiFetch<{ success: boolean; message: string }>("/api/portfolio", { method: "POST", body: JSON.stringify({ action: "place_order", ...body }) }),
+};
+
+// ── Messages ─────────────────────────────────────────────────────────────────
+
+export const messagesApi = {
+  getAll: () => apiFetch<{ messages: Message[] }>("/api/messages"),
+  markRead: (id?: string) => apiFetch("/api/messages", { method: "PATCH", body: JSON.stringify(id ? { id } : { readAll: true }) }),
+};
+
+export interface Message {
+  id: string;
+  type: "trade" | "alert" | "system" | "info";
+  title: string;
+  body: string;
+  metadata?: Record<string, unknown>;
+  read: boolean;
+  created_at: string;
+}

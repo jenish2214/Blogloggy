@@ -1,38 +1,55 @@
-import Link from "next/link";
-import { BrandIcon } from "@/components/ui/BrandIcon";
-import { bsjInfotech } from "@/config/company";
-
 export function Footer() {
   return (
-    <footer className="site-footer">
-      <div className="container footer-inner">
-        <div>
-          <p className="footer-brand">
-            <BrandIcon size={28} className="footer-brand-icon" title="Blogloggy" />
-            <span>Blogloggy</span>
-          </p>
-          <p className="footer-tagline">
-            Discover research papers, blogs, and articles from top universities worldwide.
-          </p>
-          <p className="footer-built-by">
-            Website designed &amp; developed by{" "}
-            <Link href="/about">{bsjInfotech.name}</Link>
-          </p>
-        </div>
-        <nav className="footer-nav" aria-label="Footer">
-          <Link href="/news">News</Link>
-          <Link href="/research">Research Feed</Link>
-          <Link href="/topics">Topics</Link>
-          <Link href="/authors">Researchers</Link>
-          <Link href="/categories">Categories</Link>
-          <Link href="/universities">Universities</Link>
-          <Link href="/live">Live Feed</Link>
-          <Link href="/digest">Digest</Link>
-          <Link href="/about">About Us</Link>
-        </nav>
-        <p className="footer-copy">
-          © {new Date().getFullYear()} Blogloggy · Made by {bsjInfotech.name}
-        </p>
+    <footer
+      style={{
+        borderTop: "1px solid var(--border)",
+        padding: "20px 24px",
+        background: "var(--bg-surface)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: 12,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, fontSize: "0.8rem", color: "var(--text-primary)" }}>
+          QUANT<span style={{ color: "var(--accent-2)" }}>DESK</span>
+        </span>
+        <span
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.65rem",
+            color: "var(--warn)",
+            background: "var(--warn-soft)",
+            border: "1px solid rgba(251,191,36,0.2)",
+            padding: "1px 6px",
+            borderRadius: 2,
+          }}
+        >
+          PAPER TRADING ONLY — NOT REAL MONEY
+        </span>
+      </div>
+      <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+        {["Markets", "Trade", "Portfolio", "Research"].map((item) => (
+          <a
+            key={item}
+            href={`/${item.toLowerCase()}`}
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.7rem",
+              color: "var(--text-muted)",
+              textDecoration: "none",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}
+          >
+            {item}
+          </a>
+        ))}
+      </div>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}>
+        Built by BSJ Infotech · Prices via Yahoo Finance &amp; CoinGecko · {new Date().getFullYear()}
       </div>
     </footer>
   );

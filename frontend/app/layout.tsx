@@ -1,64 +1,45 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { PageTransition } from "@/components/animations/PageTransition";
 import "@/styles/globals.css";
 
-const dmSerif = DM_Serif_Display({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-dm-serif",
-  display: "swap",
-});
-
-const ibmPlex = IBM_Plex_Sans({
-  weight: ["400", "500", "600"],
-  subsets: ["latin"],
-  variable: "--font-ibm-plex",
-  display: "swap",
-});
-
 const ibmMono = IBM_Plex_Mono({
-  weight: ["400", "500"],
+  weight: ["300", "400", "500", "600"],
   subsets: ["latin"],
   variable: "--font-ibm-mono",
   display: "swap",
 });
 
+const ibmSans = IBM_Plex_Sans({
+  weight: ["300", "400", "500", "600"],
+  subsets: ["latin"],
+  variable: "--font-ibm-sans",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  applicationName: "Blogloggy",
+  applicationName: "QuantDesk",
   title: {
-    default: "Blogloggy",
-    template: "%s · Blogloggy",
+    default: "QuantDesk — Paper Trading Platform",
+    template: "%s · QuantDesk",
   },
   description:
-    "Browse research papers, blogs, and articles from MIT, Harvard, Stanford, and more.",
+    "Professional paper trading platform. Trade stocks, options, and crypto with virtual capital. Real-time market data powered by free APIs.",
   icons: {
-    icon: [
-      { url: "/icons/blogger-logo.svg", type: "image/svg+xml", sizes: "any" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
-    ],
-    shortcut: "/favicon.svg",
-    apple: "/apple-icon.svg",
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${dmSerif.variable} ${ibmPlex.variable} ${ibmMono.variable}`}
-    >
+    <html lang="en" className={`${ibmMono.variable} ${ibmSans.variable}`}>
+      <head>
+        <meta name="color-scheme" content="dark" />
+      </head>
       <body>
         <Navbar />
-        <PageTransition>
-          <main>{children}</main>
-        </PageTransition>
+        <main style={{ paddingTop: "var(--navbar-h)" }}>{children}</main>
         <Footer />
       </body>
     </html>
