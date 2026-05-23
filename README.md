@@ -140,10 +140,20 @@ NEWS_API_KEY=          # optional
 LOG_LEVEL=info
 ```
 
-**Frontend (`.env.local`)**
+**Frontend (`frontend/.env.local`)** — copy from `frontend/.env.example`
+
 ```
+NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_API_BASE=http://localhost:4000
 ```
+
+### Vercel deployment
+
+In the Vercel project (**Settings → Environment Variables**), add the same `NEXT_PUBLIC_*` values for **Production**, **Preview**, and **Development** (build inlines `NEXT_PUBLIC_` vars). Get URL and anon key from [Supabase → Project Settings → API](https://supabase.com/dashboard/project/_/settings/api).
+
+Set `NEXT_PUBLIC_SITE_URL` to your production URL (e.g. `https://your-app.vercel.app`) so OAuth redirects work.
 
 ---
 

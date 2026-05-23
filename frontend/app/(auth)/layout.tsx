@@ -1,3 +1,6 @@
+/** Auth pages use Supabase at runtime; skip static prerender so builds succeed without env at compile time. */
+export const dynamic = "force-dynamic";
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
