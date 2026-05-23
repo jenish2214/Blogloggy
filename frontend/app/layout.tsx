@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CloudSyncProvider } from "@/components/providers/CloudSyncProvider";
 import { BookSwitcherGate } from "@/components/wealth/BookSwitcherGate";
