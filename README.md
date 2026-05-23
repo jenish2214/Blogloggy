@@ -151,9 +151,20 @@ NEXT_PUBLIC_API_BASE=http://localhost:4000
 
 ### Vercel deployment
 
-In the Vercel project (**Settings → Environment Variables**), add the same `NEXT_PUBLIC_*` values for **Production**, **Preview**, and **Development** (build inlines `NEXT_PUBLIC_` vars). Get URL and anon key from [Supabase → Project Settings → API](https://supabase.com/dashboard/project/_/settings/api).
+The Next.js app lives in **`frontend/`** (build logs show `/vercel/path0/frontend/`). In the Vercel dashboard (**Settings → General**), set:
 
-Set `NEXT_PUBLIC_SITE_URL` to your production URL (e.g. `https://your-app.vercel.app`) so OAuth redirects work.
+| Setting | Value |
+|---------|--------|
+| **Root Directory** | `frontend` |
+| Framework Preset | Next.js |
+| Build Command | `npm run build` (default) |
+| Output Directory | `.next` (default) |
+
+The repo root [`vercel.json`](vercel.json) already sets `"rootDirectory": "frontend"`. If the dashboard Root Directory is empty or `.`, builds will fail or deploy the wrong folder.
+
+In **Settings → Environment Variables**, add the same `NEXT_PUBLIC_*` values from `frontend/.env.example` for **Production**, **Preview**, and **Development** (build inlines `NEXT_PUBLIC_` vars). Get URL and anon key from [Supabase → Project Settings → API](https://supabase.com/dashboard/project/_/settings/api).
+
+Set `NEXT_PUBLIC_SITE_URL` to your production URL (e.g. `https://blogloggy.vercel.app`) so OAuth redirects work. **Redeploy** after changing env vars or root directory.
 
 ---
 

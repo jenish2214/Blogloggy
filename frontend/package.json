@@ -13,6 +13,7 @@
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
     "@types/ws": "^8.18.1",
+    "@vercel/analytics": "^2.0.1",
     "framer-motion": "^11.15.0",
     "immer": "^11.1.8",
     "lucide-react": "^0.469.0",
