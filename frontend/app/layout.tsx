@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CloudSyncProvider } from "@/components/providers/CloudSyncProvider";
 import { BookSwitcherGate } from "@/components/wealth/BookSwitcherGate";
+import { ConfigBanner } from "@/components/system/ConfigBanner";
 import "@/styles/globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${jakarta.variable} ${jetbrains.variable}`}>
       <body>
+        <ConfigBanner />
         <div className="app-shell">
           <Sidebar />
           <main className="app-main">

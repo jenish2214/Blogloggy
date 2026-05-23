@@ -174,7 +174,11 @@ Deploy API + quant service via Blueprint [`render.yaml`](render.yaml):
 
 **https://dashboard.render.com/blueprint/new?repo=https://github.com/jenish2214/Blogloggy**
 
-Allowlist Render outbound IPs (`74.220.48.0/24`, `74.220.56.0/24`) where required. Full steps: [`docs/RENDER.md`](docs/RENDER.md)
+Allowlist Render outbound IPs (`74.220.48.0/24`, `74.220.56.0/24`) where required.
+
+**Important:** Render `quantdesk-api` only serves `/api/market` and `/api/trading`. Routes like `/api/wealth/books` are on **Vercel**. See [`docs/RENDER.md`](docs/RENDER.md) if you see `{"error":"Endpoint not found"}`.
+
+**Operations (deploy, security, incidents):** [`docs/OPERATIONS.md`](docs/OPERATIONS.md)
 
 ---
 

@@ -48,8 +48,21 @@ export function Footer() {
           </a>
         ))}
       </div>
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}>
-        Built by BSJ Infotech · Prices via Yahoo Finance &amp; CoinGecko · {new Date().getFullYear()}
+      <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+        <a
+          href="/privacy"
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.65rem",
+            color: "var(--text-muted)",
+            textDecoration: "none",
+          }}
+        >
+          Privacy
+        </a>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}>
+          Paper trading · {new Date().getFullYear()}
+        </span>
       </div>
     </footer>
   );

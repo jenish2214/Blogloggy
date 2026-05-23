@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
+import { getSupabaseAnonKey, getSupabaseUrl, hasSupabaseEnv } from "@/lib/supabase/env";
 import {
   getOnboardingRedirect,
   hasCompletedOnboarding,
@@ -32,9 +32,14 @@ function isAuthPath(path: string) {
 }
 
 export async function middleware(request: NextRequest) {
+  if (!hasSupabaseEnv()) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+  try {
+    const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -47,50 +52,52 @@ export async function middleware(request: NextRequest) {
           );
         },
       },
+    });
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const path = request.nextUrl.pathname;
+    const onboardingDone = hasCompletedOnboarding(user);
+    const isProtected = PROTECTED.some((p) => path.startsWith(p));
+
+    if (!user && isWelcomePath(path)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
     }
-  );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const path = request.nextUrl.pathname;
-  const onboardingDone = hasCompletedOnboarding(user);
-  const isProtected = PROTECTED.some((p) => path.startsWith(p));
+    if (!user && isProtected) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirect", path);
+      return NextResponse.redirect(url);
+    }
 
-  if (!user && isWelcomePath(path)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
+    if (user) {
+      if (!onboardingDone) {
+        const required = getOnboardingRedirect(user);
+        if (!isAuthPath(path) && path !== required) {
+          const url = request.nextUrl.clone();
+          url.pathname = required;
+          return NextResponse.redirect(url);
+        }
+      }
 
-  if (!user && isProtected) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("redirect", path);
-    return NextResponse.redirect(url);
-  }
-
-  if (user) {
-    if (!onboardingDone) {
-      const required = getOnboardingRedirect(user);
-      if (!isAuthPath(path) && path !== required) {
+      if (onboardingDone && isWelcomePath(path)) {
         const url = request.nextUrl.clone();
-        url.pathname = required;
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+      }
+
+      if (isAuthPath(path)) {
+        const url = request.nextUrl.clone();
+        url.pathname = onboardingDone ? "/" : getOnboardingRedirect(user);
         return NextResponse.redirect(url);
       }
     }
-
-    if (onboardingDone && isWelcomePath(path)) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
-    }
-
-    if (isAuthPath(path)) {
-      const url = request.nextUrl.clone();
-      url.pathname = onboardingDone ? "/" : getOnboardingRedirect(user);
-      return NextResponse.redirect(url);
-    }
+  } catch {
+    return NextResponse.next({ request });
   }
 
   return supabaseResponse;

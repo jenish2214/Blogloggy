@@ -1,11 +1,15 @@
 "use client";
+import { useState } from "react";
 import { createClient, SUPABASE_CONFIG_ERROR } from "@/lib/supabase/client";
 
 export function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
+  const [configError, setConfigError] = useState<string | null>(null);
+
   const handleGoogleLogin = async () => {
+    setConfigError(null);
     const supabase = createClient();
     if (!supabase) {
-      alert(SUPABASE_CONFIG_ERROR);
+      setConfigError(SUPABASE_CONFIG_ERROR);
       return;
     }
     await supabase.auth.signInWithOAuth({
@@ -18,6 +22,7 @@ export function GoogleButton({ label = "Continue with Google" }: { label?: strin
   };
 
   return (
+    <div style={{ width: "100%" }}>
     <button
       type="button"
       onClick={handleGoogleLogin}
@@ -50,5 +55,11 @@ export function GoogleButton({ label = "Continue with Google" }: { label?: strin
       </svg>
       {label}
     </button>
+    {configError ? (
+      <p role="alert" style={{ marginTop: 8, fontSize: "0.8rem", color: "var(--danger, #dc2626)" }}>
+        {configError}
+      </p>
+    ) : null}
+    </div>
   );
 }

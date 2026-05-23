@@ -45,6 +45,19 @@ app.use("/api", healthRouter);
 app.use("/api/market", marketRouter);
 app.use("/api/trading", tradingRouter);
 
+app.get("/", (_req, res) => {
+  res.json({
+    service: "QuantDesk Express API (Render: quantdesk-api)",
+    status: "ok",
+    routes: {
+      health: "GET /api/health",
+      market: "GET /api/market/quotes|chart|crypto|indices|movers|search",
+      trading: "GET|POST /api/trading/options-chain|price-option|backtest-simple|volatility|validate",
+    },
+    note: "Wealth, portfolio, wallet, orders, and auth run on Vercel Next.js at /api/* — not on this service.",
+  });
+});
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 

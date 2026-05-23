@@ -29,6 +29,9 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw Object.assign(new Error("Unauthorized"), { status: 401 });
+    }
     const body = await res.text().catch(() => "");
     let message = body;
     try {
