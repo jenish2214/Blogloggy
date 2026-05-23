@@ -27,6 +27,8 @@ A full-stack paper trading platform inspired by Jane Street — professional dar
 
 ## 🚀 Quick Start
 
+**Production:** [https://algo-street.vercel.app](https://algo-street.vercel.app)
+
 ```bash
 # Install all dependencies
 npm run install:all
@@ -164,7 +166,16 @@ The repo root [`vercel.json`](vercel.json) already sets `"rootDirectory": "front
 
 In **Settings → Environment Variables**, add the same `NEXT_PUBLIC_*` values from `frontend/.env.example` for **Production**, **Preview**, and **Development** (build inlines `NEXT_PUBLIC_` vars). Get URL and anon key from [Supabase → Project Settings → API](https://supabase.com/dashboard/project/_/settings/api).
 
-Set `NEXT_PUBLIC_SITE_URL` to your production URL (e.g. `https://blogloggy.vercel.app`) so OAuth redirects work. **Redeploy** after changing env vars or root directory.
+Set `NEXT_PUBLIC_SITE_URL` to **`https://algo-street.vercel.app`** (production) so OAuth redirects work. In [Supabase → Auth → URL configuration](https://supabase.com/dashboard/project/_/auth/url-configuration), set Site URL and redirect URL `https://algo-street.vercel.app/auth/callback`. **Redeploy** after changing env vars or root directory.
+
+### Render (optional backend)
+
+If you deploy `backend/` or `quant-service/` on [Render](https://render.com), allowlist Render **outbound** IPs where your database/API requires it:
+
+- `74.220.48.0/24`
+- `74.220.56.0/24`
+
+Details: [`docs/RENDER.md`](docs/RENDER.md) · [Render outbound IP docs](https://render.com/docs/outbound-ip-addresses)
 
 ---
 
