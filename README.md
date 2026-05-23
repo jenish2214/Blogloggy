@@ -170,12 +170,11 @@ Set `NEXT_PUBLIC_SITE_URL` to **`https://algo-street.vercel.app`** (production) 
 
 ### Render (optional backend)
 
-If you deploy `backend/` or `quant-service/` on [Render](https://render.com), allowlist Render **outbound** IPs where your database/API requires it:
+Deploy API + quant service via Blueprint [`render.yaml`](render.yaml):
 
-- `74.220.48.0/24`
-- `74.220.56.0/24`
+**https://dashboard.render.com/blueprint/new?repo=https://github.com/jenish2214/Blogloggy**
 
-Details: [`docs/RENDER.md`](docs/RENDER.md) · [Render outbound IP docs](https://render.com/docs/outbound-ip-addresses)
+Allowlist Render outbound IPs (`74.220.48.0/24`, `74.220.56.0/24`) where required. Full steps: [`docs/RENDER.md`](docs/RENDER.md)
 
 ---
 

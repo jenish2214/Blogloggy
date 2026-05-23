@@ -1,55 +1,49 @@
-# Render deployment (backend / quant-service)
+# QuantDesk — Render deployment
 
-The **Next.js app** is deployed on **Vercel**: [https://algo-street.vercel.app](https://algo-street.vercel.app) (`frontend/`, Root Directory = `frontend`).
+**Frontend stays on Vercel:** [https://algo-street.vercel.app](https://algo-street.vercel.app)
 
-Use **Render** only if you deploy the **Express API** (`backend/`) or **Python quant service** (`quant-service/`). Vercel uses different outbound IPs than Render.
+Render hosts optional backend services from this monorepo:
 
-## Render outbound IP allowlist
+| Service | Path | URL (after deploy) |
+|---------|------|---------------------|
+| `quantdesk-api` | `backend/` | `https://quantdesk-api.onrender.com` |
+| `quantdesk-quant` | `quant-service/` | `https://quantdesk-quant.onrender.com` |
 
-When a Render service calls an external system with IP restrictions (Supabase database, Redis, corporate VPN, etc.), allow these **outbound** CIDR ranges for your Render region:
+## Deploy with Blueprint
 
-| CIDR | Range |
-|------|--------|
-| `74.220.48.0/24` | 74.220.48.0 – 74.220.48.255 |
-| `74.220.56.0/24` | 74.220.56.0 – 74.220.56.255 |
+1. Commit and push [`render.yaml`](../render.yaml) to `main`
+2. Open the Blueprint deeplink (replace if repo URL differs):
 
-These are [Render outbound IPs](https://render.com/docs/outbound-ip-addresses) (Render org `RS-1125`). Ranges can change by region—confirm under **Render Dashboard → your service → Connect → Outbound**.
+   **https://dashboard.render.com/blueprint/new?repo=https://github.com/jenish2214/Blogloggy**
 
-### Where to add them
+3. Connect GitHub if prompted → **Apply**
+4. In Render Dashboard, set secret env vars (`sync: false` in blueprint):
+   - `MASSIVE_API_KEY`, `FINNHUB_API_KEY`, etc. on `quantdesk-api`
+5. After deploy, optional: set on Vercel:
 
-| Service | Location |
-|---------|----------|
-| **Supabase** | Project → **Settings → Database** → Network restrictions / allowlist (if enabled) |
-| **Supabase** | Not required for anon-key REST from browser; needed if the **server** connects with a restricted pooler |
-| **Other APIs** | Provider firewall / “allowed IPs” for server-side keys used from Render |
+   ```env
+   NEXT_PUBLIC_API_BASE=https://quantdesk-api.onrender.com
+   ```
 
-**Vercel (frontend)** does not use these IPs. For Vercel outbound IPs, see [Vercel firewall / deployment docs](https://vercel.com/docs).
+   (Default prod uses same-origin Next.js `app/api/*`; only set this if you want the Express API.)
 
-## Environment variables on Render
+## Render outbound IPs (allowlist)
 
-### Express (`backend/`)
+If Supabase or another provider requires IP allowlisting for **server** traffic from Render:
 
-```env
-PORT=4000
-NODE_ENV=production
-CORS_ORIGINS=https://algo-street.vercel.app,https://blogloggy.vercel.app
+- `74.220.48.0/24`
+- `74.220.56.0/24`
+
+Confirm in **Dashboard → service → Connect → Outbound**. See [Render outbound IP docs](https://render.com/docs/outbound-ip-addresses).
+
+## MCP / CLI
+
+Render MCP requires an API key in Cursor (`~/.cursor/mcp.json`). Get a key from [Render API keys](https://dashboard.render.com/u/settings#api-keys).
+
+Validate blueprint locally (optional):
+
+```bash
+brew install render
+export RENDER_API_KEY="rnd_..."
+render blueprints validate render.yaml
 ```
-
-Add API keys (`MASSIVE_API_KEY`, `FINNHUB_API_KEY`, etc.) as needed.
-
-### Python (`quant-service/`)
-
-```env
-# Allow Vercel frontend
-# Configure CORS in main.py for https://algo-street.vercel.app
-```
-
-## Architecture
-
-```
-Browser → Vercel (algo-street.vercel.app) → Next.js app/api/*
-Optional: Vercel or browser → Render (Express :4000 / FastAPI :8000)
-Render outbound traffic → uses 74.220.48.0/24, 74.220.56.0/24 (allowlist at target)
-```
-
-If you rely only on Next.js API routes on Vercel, you do **not** need to deploy `backend/` on Render unless you want a separate API host.

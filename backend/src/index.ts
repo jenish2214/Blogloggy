@@ -48,7 +48,7 @@ app.use("/api/trading", tradingRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+app.listen(Number(PORT), "0.0.0.0", () => {
   logger.info({ msg: "quantdesk_api_started", port: PORT });
   console.log(`QuantDesk API running on http://localhost:${PORT}`);
   console.log(`Health: http://localhost:${PORT}/api/health`);

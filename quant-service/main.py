@@ -12,6 +12,7 @@ Run: uvicorn main:app --reload --port 8000
 """
 
 import math
+import os
 import random
 from typing import Literal, Optional
 from fastapi import FastAPI, HTTPException
@@ -21,9 +22,13 @@ import statistics
 
 app = FastAPI(title="QuantDesk Python Service", version="1.0.0")
 
+_cors_origins = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:3001,https://algo-street.vercel.app",
+).split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=[o.strip() for o in _cors_origins if o.strip()],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
