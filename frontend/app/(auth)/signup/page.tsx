@@ -8,7 +8,6 @@ import { GoogleButton } from "@/components/ui/GoogleButton";
 
 export default function SignupPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +21,7 @@ export default function SignupPage() {
     setError("");
     if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
     setLoading(true);
+    const supabase = createClient();
     const { error: err } = await supabase.auth.signUp({
       email,
       password,
