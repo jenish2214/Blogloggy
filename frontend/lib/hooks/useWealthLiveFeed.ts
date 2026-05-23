@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { wealthApi, type WealthBookSummary } from "@/lib/api";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 export interface FirmSummary {
   firmAum: number;
@@ -25,6 +26,10 @@ export function useWealthLiveFeed(enabled = true) {
   const mounted = useRef(true);
 
   const refresh = useCallback(async () => {
+    if (!hasSupabaseEnv()) {
+      if (mounted.current) setLoading(false);
+      return;
+    }
     try {
       const data = await wealthApi.getBooks();
       if (!mounted.current) return;

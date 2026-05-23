@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { wealthApi, type WealthBookSummary } from "@/lib/api";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { useActiveBookStore, type ActiveBook } from "@/lib/store/activeBook";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 
@@ -27,6 +28,10 @@ export function useDualProfiles() {
   const mounted = useRef(true);
 
   const refresh = useCallback(async () => {
+    if (!hasSupabaseEnv()) {
+      if (mounted.current) setLoading(false);
+      return;
+    }
     try {
       const { books } = await wealthApi.getBooks();
       if (!mounted.current) return;

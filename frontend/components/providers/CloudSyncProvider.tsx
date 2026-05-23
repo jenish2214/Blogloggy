@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { wealthApi } from "@/lib/api";
 import { handleAuthSessionChange } from "@/lib/auth/tradingSession";
 import { useActiveBookStore } from "@/lib/store/activeBook";
@@ -10,7 +10,9 @@ import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 /** When signed in, hydrate the local session cache from Supabase (source of truth). */
 export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    if (!hasSupabaseEnv()) return;
     const supabase = createClient();
+    if (!supabase) return;
 
     const runSync = async (userId: string) => {
       if (!useActiveBookStore.getState().activeBook) {
