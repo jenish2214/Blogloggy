@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { handleAuthSessionChange } from "@/lib/auth/tradingSession";
 import type { User } from "@supabase/supabase-js";
 import { PnlStatementPanel } from "@/components/trading/PnlStatementPanel";
@@ -75,7 +75,15 @@ export function AccountProfileSection() {
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
+    if (!hasSupabaseEnv()) {
+      setLoading(false);
+      return;
+    }
     const supabase = createClient();
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
     const { data: { user: u } } = await supabase.auth.getUser();
     setUser(u);
     if (u) setMemberSince(u.created_at ?? null);
@@ -111,6 +119,7 @@ export function AccountProfileSection() {
 
   const handleSignOut = async () => {
     const supabase = createClient();
+    if (!supabase) return;
     handleAuthSessionChange(null);
     await supabase.auth.signOut();
     router.push("/login");

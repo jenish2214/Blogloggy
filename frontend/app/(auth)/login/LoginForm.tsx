@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, SUPABASE_CONFIG_ERROR } from "@/lib/supabase/client";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import { GoogleButton } from "@/components/ui/GoogleButton";
 
@@ -21,6 +21,11 @@ export function LoginForm() {
     setError("");
     setLoading(true);
     const supabase = createClient();
+    if (!supabase) {
+      setError(SUPABASE_CONFIG_ERROR);
+      setLoading(false);
+      return;
+    }
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err) { setError(err.message); setLoading(false); return; }
     await syncPortfolioFromCloud();

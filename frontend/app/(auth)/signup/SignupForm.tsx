@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, SUPABASE_CONFIG_ERROR } from "@/lib/supabase/client";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import { GoogleButton } from "@/components/ui/GoogleButton";
 
@@ -22,6 +22,11 @@ export function SignupForm() {
     if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
     setLoading(true);
     const supabase = createClient();
+    if (!supabase) {
+      setError(SUPABASE_CONFIG_ERROR);
+      setLoading(false);
+      return;
+    }
     const { error: err } = await supabase.auth.signUp({
       email,
       password,

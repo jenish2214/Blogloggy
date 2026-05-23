@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { handleAuthSessionChange } from "@/lib/auth/tradingSession";
 import type { User } from "@supabase/supabase-js";
 
@@ -112,7 +112,9 @@ export function Sidebar() {
     // Auth pages: no supabase subscription needed
     if (isAuthPage) return;
     setMounted(true);
+    if (!hasSupabaseEnv()) return;
     const supabase = createClient();
+    if (!supabase) return;
 
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -126,6 +128,7 @@ export function Sidebar() {
 
   const handleSignOut = async () => {
     const supabase = createClient();
+    if (!supabase) return;
     handleAuthSessionChange(null);
     await supabase.auth.signOut();
     router.push("/login");

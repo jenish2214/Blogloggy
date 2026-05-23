@@ -1,9 +1,13 @@
 "use client";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, SUPABASE_CONFIG_ERROR } from "@/lib/supabase/client";
 
 export function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
   const handleGoogleLogin = async () => {
     const supabase = createClient();
+    if (!supabase) {
+      alert(SUPABASE_CONFIG_ERROR);
+      return;
+    }
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { wealthApi } from "@/lib/api";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import styles from "./BookSwitcher.module.css";
@@ -23,6 +24,7 @@ export function BookSwitcher() {
   >([]);
 
   useEffect(() => {
+    if (!hasSupabaseEnv()) return;
     wealthApi
       .getBooks()
       .then(({ books: list }) => {

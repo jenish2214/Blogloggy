@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { messagesApi, type Message } from "@/lib/api";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 
 const TYPE_ICONS: Record<string, string> = { trade: "⚡", alert: "🔔", system: "🖥", info: "ℹ" };
 const TYPE_COLORS: Record<string, string> = { trade: "var(--accent-2)", alert: "var(--warn)", system: "var(--text-secondary)", info: "var(--text-secondary)" };
@@ -30,7 +30,9 @@ export default function MessagesPage() {
 
   useEffect(() => {
     load();
+    if (!hasSupabaseEnv()) return;
     const supabase = createClient();
+    if (!supabase) return;
     const channel = supabase.channel("messages_page").on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => load()).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
