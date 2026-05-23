@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 
 const Analytics = dynamic(
-  () => import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })),
+  () => import("@vercel/analytics/next").then((m) => ({ default: m.Analytics })),
   { ssr: false }
 );
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
