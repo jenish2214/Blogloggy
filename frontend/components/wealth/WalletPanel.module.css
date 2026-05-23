@@ -1,0 +1,391 @@
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+
+.panelNested {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.headRail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.railBook {
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 4px 0 0;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.clientTag {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sumCard {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sumPlus {
+  border-color: var(--up-border);
+  background: var(--up-soft);
+}
+
+.sumMinus {
+  border-color: var(--down-border);
+  background: var(--down-soft);
+}
+
+.sumSign {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--up);
+  line-height: 1;
+}
+
+.sumMinus .sumSign {
+  color: var(--down);
+}
+
+.sumSignNeutral {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.sumLabel {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.sumVal {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sumPlus .sumVal {
+  color: var(--up);
+}
+
+.sumMinus .sumVal {
+  color: var(--down);
+}
+
+.sumMeta {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.netUp {
+  color: var(--up);
+}
+
+.netDown {
+  color: var(--down);
+}
+
+.sub {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 4px 0 0;
+  max-width: 420px;
+}
+
+.balance {
+  text-align: right;
+}
+
+.balanceL {
+  display: block;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.balanceV {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.limits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  background: var(--bg-base);
+  border-radius: var(--radius-sm);
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  padding: 3px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.tab:hover {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+}
+
+.tabSign {
+  font-weight: 800;
+  margin-right: 3px;
+}
+
+.tabPlus.tabOnPlus,
+.tabMinus.tabOnMinus {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+.tabPlus.tabOnPlus .tabSign {
+  color: var(--up);
+}
+
+.tabMinus.tabOnMinus .tabSign {
+  color: var(--down);
+}
+
+.actionRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.actionRow .btn {
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.signCellPlus,
+.signCellMinus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.signCellPlus {
+  background: var(--up-soft);
+  color: var(--up);
+}
+
+.signCellMinus {
+  background: var(--down-soft);
+  color: var(--down);
+}
+
+.rowIn {
+  background: rgba(5, 150, 105, 0.03);
+}
+
+.rowOut {
+  background: rgba(220, 38, 38, 0.03);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 360px;
+  margin-bottom: 18px;
+}
+
+.warn {
+  font-size: 0.78rem;
+  color: var(--down);
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--down-soft);
+  border-radius: var(--radius-sm);
+}
+
+.ok {
+  font-size: 0.78rem;
+  color: var(--up);
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--up-soft);
+  border-radius: var(--radius-sm);
+}
+
+.muted {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.historyHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.historyTitle {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.table th {
+  text-align: left;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 8px 10px 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.table td {
+  padding: 10px 10px 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.noteCell {
+  font-family: var(--font-sans);
+  color: var(--text-secondary);
+  max-width: 200px;
+}
+
+.badgeIn {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--up-soft);
+  color: var(--up);
+}
+
+.badgeOut {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--down-soft);
+  color: var(--down);
+}
+
+.amountIn {
+  color: var(--up);
+  font-weight: 600;
+}
+
+.amountOut {
+  color: var(--down);
+  font-weight: 600;
+}

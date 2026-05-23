@@ -1,0 +1,143 @@
+.liveBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface-2);
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  animation: livePulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.liveText {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 160px;
+}
+
+.sym {
+  font-weight: 700;
+  color: var(--accent-2);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.name {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.buyPrice {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.livePrice {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.subCell {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+.returnMain {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.up {
+  color: var(--up);
+}
+
+.down {
+  color: var(--down);
+}
+
+.walletHint {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.retBadge {
+  margin-top: 4px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 88px;
+}
+
+.exitConfirm {
+  margin: 12px 16px;
+  padding: 12px 14px;
+  background: var(--down-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.exitConfirmActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.exitMsg {
+  margin: 0 16px 12px;
+  padding: 10px 12px;
+  background: var(--up-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--up);
+}
+
+.rowPulse {
+  opacity: 0.92;
+}
+
+.totalsRow td {
+  background: var(--bg-surface-2);
+  border-top: 2px solid var(--border);
+  padding: 14px 16px;
+  font-size: 0.82rem;
+}

@@ -1,5 +1,18 @@
-import { PageLoader } from "@/components/ui/LoadingSpinner";
-
 export default function Loading() {
-  return <PageLoader label="Loading page…" />;
+  return (
+    <div
+      style={{
+        minHeight: "60vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "var(--font-mono)",
+        color: "var(--text-muted)",
+        fontSize: "0.78rem",
+        letterSpacing: "0.1em",
+      }}
+    >
+      LOADING...
+    </div>
+  );
 }

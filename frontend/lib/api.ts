@@ -1,159 +1,485 @@
-import type {
-  DailyDigest,
-  FeedItem,
-  NewsCategory,
-  ResearchCategory,
-  ResearchPaper,
-  UniversityConfig,
-} from "@/types";
+/**
+ * QuantDesk API client — calls Next.js API routes (deploys natively on Vercel).
+ * Falls back to Express backend for local dev if NEXT_PUBLIC_API_BASE is set.
+ */
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:4000/api";
-
-async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...options?.headers,
-    },
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? `API error ${res.status}`);
-  }
-  return res.json() as Promise<T>;
+function apiBase() {
+  if (typeof window !== "undefined") return "";
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "";
 }
 
-export const api = {
-  health: () => fetchJSON<{ status: string; paidApis: boolean }>("/health"),
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const base = apiBase();
+  const url = `${base}${path}`;
 
-  categories: () =>
-    fetchJSON<{ categories: ResearchCategory[] }>("/categories"),
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    });
+  } catch (err) {
+    const hint =
+      typeof window !== "undefined" && !navigator.onLine
+        ? "You appear to be offline."
+        : "Check that the dev server is running.";
+    const msg = err instanceof Error ? err.message : "Network request failed";
+    throw new Error(`${msg}. ${hint}`);
+  }
 
-  category: (slug: string, limit = 20) =>
-    fetchJSON<{
-      category: ResearchCategory;
-      papers: ResearchPaper[];
-      feed: FeedItem[];
-    }>(`/categories/${encodeURIComponent(slug)}?limit=${limit}`),
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    let message = body;
+    try {
+      const parsed = JSON.parse(body) as { message?: string; error?: string };
+      message = parsed.message ?? parsed.error ?? body;
+    } catch {
+      /* plain text */
+    }
+    throw new Error(message || `API ${res.status}`);
+  }
+  return res.json();
+}
 
-  research: (limit = 30) =>
-    fetchJSON<{ papers: ResearchPaper[] }>(`/research?limit=${limit}`),
+// ── Market ────────────────────────────────────────────────────────────────────
 
-  researchAll: () =>
-    fetchJSON<{
-      papers: ResearchPaper[];
-      universityPapers: ResearchPaper[];
-      news: FeedItem[];
-      sourceLog: string[];
-    }>("/research/all"),
+export interface Quote {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changePct: number;
+  open: number;
+  high: number;
+  low: number;
+  volume: number;
+  mktCap: number | null;
+  currency: string;
+  exchange: string;
+  country?: string;
+  type: "stock" | "crypto";
+  updatedAt: string;
+  error?: string;
+}
 
-  researchDirectory: () =>
-    fetchJSON<{
-      topics: {
-        slug: string;
-        name: string;
-        description: string;
-        icon: string;
-        paperCount: number;
-        memberLabel: string;
-        latestTitle?: string;
-        latestDate?: string;
-      }[];
-      authors: {
-        slug: string;
-        name: string;
-        paperCount: number;
-        topics: string[];
-        university?: string;
-        latestTitle?: string;
-        latestDate?: string;
-      }[];
-      refreshedAt: string;
-    }>("/research/directory"),
+export type MarketRegion = "us" | "india" | "uk" | "europe" | "asia" | "indices";
 
-  author: (slug: string) =>
-    fetchJSON<{
-      author: {
-        slug: string;
-        name: string;
-        paperCount: number;
-        topics: string[];
-        university?: string;
-      };
-      papers: ResearchPaper[];
-      topics: { slug: string; name: string; count: number }[];
-    }>(`/research/authors/${encodeURIComponent(slug)}`),
+export interface MarketRegionInfo {
+  id: MarketRegion;
+  label: string;
+  flag: string;
+  currency: string;
+  exchange: string;
+  count: number;
+}
 
-  universityPapers: (limit = 8) =>
-    fetchJSON<{ papers: ResearchPaper[] }>(`/research/universities?limit=${limit}`),
+export interface CoinQuote {
+  symbol: string;
+  name: string;
+  coingeckoId: string;
+  price: number;
+  change1h: number;
+  change24h: number;
+  change7d: number;
+  marketCap: number;
+  volume24h: number;
+  image: string;
+}
 
-  newsHub: () =>
-    fetchJSON<{
-      spotlight: FeedItem[];
-      technology: FeedItem[];
-      labs: FeedItem[];
-      university: FeedItem[];
-      research: FeedItem[];
-      reference: FeedItem[];
-      all: FeedItem[];
-      refreshedAt: string;
-      fetchNote: string;
-    }>("/research/news/hub"),
+export interface Candle { time: number; open: number; high: number; low: number; close: number; volume: number; }
 
-  news: (limit = 60, category?: NewsCategory) => {
-    const params = new URLSearchParams({ limit: String(limit) });
-    if (category) params.set("category", category);
-    return fetchJSON<{
-      items: FeedItem[];
-      refreshedAt: string;
-      category: NewsCategory | "all";
-    }>(`/research/news?${params}`);
-  },
+export interface ChartData {
+  symbol: string;
+  name: string;
+  currency: string;
+  exchange: string;
+  currentPrice: number;
+  previousClose: number;
+  candles: Candle[];
+}
 
-  article: (id: string) =>
-    fetchJSON<{ article: FeedItem; related: FeedItem[] }>(
-      `/research/article/${encodeURIComponent(id)}`
-    ),
+export interface MoverItem { symbol: string; name: string; price: number; changePct: number; volume: number; }
+export interface IndexItem { symbol: string; name: string; price: number; change: number; changePct: number; currency: string; }
 
-  liveFeed: (sources?: string[]) => {
-    const q = sources?.length ? `?sources=${sources.join(",")}` : "";
-    return fetchJSON<{ items: FeedItem[]; refreshedAt: string }>(
-      `/research/live${q}`
+export interface ForexQuote {
+  symbol: string;
+  label: string;
+  base: string;
+  quote: string;
+  flag: string;
+  price: number;
+  change: number;
+  changePct: number;
+  bid: number;
+  ask: number;
+  updatedAt: string;
+}
+
+export const marketApi = {
+  getQuotes: (symbols: string[], fresh = false) => {
+    const list = symbols.filter(Boolean).slice(0, 30);
+    if (list.length === 0) {
+      return Promise.resolve({ quotes: [] as Quote[] });
+    }
+    const freshParam = fresh ? "&fresh=1" : "";
+    return apiFetch<{ quotes: Quote[] }>(
+      `/api/market/quotes?symbols=${encodeURIComponent(list.join(","))}${freshParam}`
     );
   },
-
-  paper: (id: string) =>
-    fetchJSON<{
-      paper: ResearchPaper;
-      related: ResearchPaper[];
-      resolvedVia?: string;
-    }>(`/research/paper/${encodeURIComponent(id)}`),
-
-  digest: () => fetchJSON<DailyDigest>("/digest"),
-
-  universities: () =>
-    fetchJSON<{
-      universities: (UniversityConfig & { description: string })[];
-      overview: {
-        slug: string;
-        name: string;
-        accentColor: string;
-        paperCount: number;
-        lastUpdated: string;
-        latestTitles: string[];
-      }[];
-    }>("/universities"),
-
-  university: (slug: string) =>
-    fetchJSON<{
-      university: UniversityConfig & { description: string };
-      papers: ResearchPaper[];
-      feed: FeedItem[];
-      researchers: { name: string; count: number }[];
-      topCited: ResearchPaper[];
-    }>(`/universities/${encodeURIComponent(slug)}`),
+  getQuotesByRegion: (region: MarketRegion) => apiFetch<{ quotes: Quote[]; region: string }>(`/api/market/quotes?region=${region}`),
+  getRegions: () => apiFetch<{ regions: MarketRegionInfo[] }>("/api/market/regions"),
+  getForex: () => apiFetch<{ pairs: ForexQuote[]; cached?: boolean }>("/api/market/forex"),
+  getChart: (symbol: string, range = "1d", interval = "5m") => apiFetch<{ chart: ChartData }>(`/api/market/chart/${symbol}?range=${range}&interval=${interval}`),
+  getCrypto: () => apiFetch<{ coins: CoinQuote[] }>("/api/market/crypto"),
+  getIndices: () => apiFetch<{ indices: IndexItem[] }>("/api/market/indices"),
+  getMovers: () => apiFetch<{ gainers: MoverItem[]; losers: MoverItem[]; mostActive: MoverItem[] }>("/api/market/movers"),
+  search: (q: string) => apiFetch<{ results: Array<{ symbol: string; name: string; exchange: string; type: string }> }>(`/api/market/search?q=${encodeURIComponent(q)}`),
 };
+
+// ── Trading ───────────────────────────────────────────────────────────────────
+
+export interface OptionsChain {
+  symbol: string;
+  spotPrice: number;
+  expirations: number[];
+  calls: OptionsContract[];
+  puts: OptionsContract[];
+}
+
+export interface OptionsContract {
+  contractSymbol: string;
+  strike: number;
+  lastPrice: number;
+  bid: number;
+  ask: number;
+  midpoint?: number;
+  change: number;
+  percentChange: number;
+  volume: number;
+  openInterest: number;
+  impliedVolatility: number | null;
+  inTheMoney: boolean;
+}
+
+export interface GreeksResult { price: number; delta: number; gamma: number; theta: number; vega: number; }
+
+export interface BacktestResult {
+  symbol: string;
+  range: string;
+  startPrice: number;
+  endPrice: number;
+  totalReturn: number;
+  annualReturn: number;
+  annualVolatility: number;
+  sharpeRatio: number;
+  sortinoRatio?: number;
+  maxDrawdown: number;
+  var95Day?: number;
+  cvar95Day?: number;
+  tradingDays: number;
+  equityCurve: { time: number; value: number }[];
+}
+
+export interface AlgoSignalsResult {
+  symbol: string;
+  currentPrice: number;
+  rsi: { value: number; signal: "buy" | "sell" | "neutral" };
+  sma: { sma20: number; sma50: number; signal: "buy" | "sell" | "neutral" };
+  macd: { macd: number; signal_line: number; histogram: number; signal: "buy" | "sell" };
+  bollingerBands: { upper: number; middle: number; lower: number; pct: number; signal: "buy" | "sell" | "neutral" };
+  volume: { ratio: number; avgVol: number; lastVol: number };
+  composite: "strong_buy" | "buy" | "neutral" | "sell" | "strong_sell";
+  change5d: number;
+  change20d: number;
+  dataPoints: number;
+}
+
+export const tradingApi = {
+  getOptionsChain: (symbol: string, expiry?: string) =>
+    apiFetch<OptionsChain>(`/api/trading/options-chain/${symbol}${expiry ? `?expiry=${expiry}` : ""}`),
+
+  priceOption: (params: { S: number; K: number; T: number; r?: number; sigma: number; type: "call" | "put" }) =>
+    apiFetch<{ result: GreeksResult }>("/api/trading/price-option", { method: "POST", body: JSON.stringify(params) }),
+
+  backtest: (symbol: string, range = "1y") =>
+    apiFetch<BacktestResult>(`/api/trading/backtest?symbol=${symbol}&range=${range}`),
+
+  getVolatility: (symbol: string) =>
+    apiFetch<{ symbol: string; historicalVolatility30d: number }>(`/api/trading/volatility/${symbol}`),
+
+  getSignals: (symbol: string) =>
+    apiFetch<AlgoSignalsResult>(`/api/trading/signals/${encodeURIComponent(symbol)}`),
+};
+
+// ── Portfolio ─────────────────────────────────────────────────────────────────
+
+export interface ActiveBookPayload {
+  portfolioId: string;
+  clientId: string | null;
+  accountType: "personal" | "client";
+  label: string;
+}
+
+export interface BookMetrics {
+  cash: number;
+  /** Market value of open holdings (live price × qty). */
+  invested: number;
+  /** Sum of avg buy price × qty (cost basis in stocks). */
+  costBasis: number;
+  totalValue: number;
+  startingCapital: number;
+  totalPnl: number;
+  totalPnlPct: number;
+  unrealizedPnl: number;
+  openPositions: number;
+  orderCount: number;
+}
+
+export interface WealthBookSummary {
+  portfolioId: string;
+  clientId: string | null;
+  accountType: "personal" | "client";
+  accountLabel: string;
+  clientCode: string | null;
+  clientName: string | null;
+  tier: string | null;
+  riskProfile: string | null;
+  status: string;
+  metrics: BookMetrics;
+  lastUpdated: string;
+}
+
+export interface WealthClient {
+  id: string;
+  client_code: string;
+  display_name: string;
+  email: string | null;
+  tier: string;
+  risk_profile: string;
+  status: string;
+  initial_capital: number;
+  notes: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface ClientFormPayload {
+  displayName: string;
+  clientCode: string;
+  email?: string;
+  tier?: string;
+  riskProfile?: string;
+  status?: string;
+  initialCapital?: number;
+  notes?: string;
+}
+
+export interface ClientDetailResponse {
+  client: WealthClient;
+  portfolio: Record<string, unknown> | null;
+  stats: { orderCount: number };
+}
+
+function bookQuery(book?: { portfolioId?: string; clientId?: string | null }) {
+  if (!book?.portfolioId && !book?.clientId) return "";
+  const q = new URLSearchParams();
+  if (book.portfolioId) q.set("portfolioId", book.portfolioId);
+  if (book.clientId) q.set("clientId", book.clientId);
+  return `?${q.toString()}`;
+}
+
+export const portfolioApi = {
+  get: (book?: { portfolioId?: string; clientId?: string | null }) =>
+    apiFetch<{
+      portfolio: Record<string, unknown>;
+      positions: Record<string, unknown>[];
+      orders: Record<string, unknown>[];
+      activeBook?: ActiveBookPayload;
+    }>(`/api/portfolio${bookQuery(book)}`),
+  placeOrder: (body: Record<string, unknown>) =>
+    apiFetch<{ success: boolean; message: string; order?: Record<string, unknown> }>(
+      "/api/portfolio",
+      { method: "POST", body: JSON.stringify({ action: "place_order", ...body }) }
+    ),
+  syncPrices: (prices: Record<string, number>, book?: { portfolioId?: string; clientId?: string | null }) =>
+    apiFetch<{ success: boolean; updated: number }>("/api/portfolio", {
+      method: "POST",
+      body: JSON.stringify({ action: "sync_prices", prices, ...book }),
+    }),
+};
+
+export const wealthApi = {
+  getBooks: () =>
+    apiFetch<{
+      books: WealthBookSummary[];
+      summary: {
+        firmAum: number;
+        clientCount: number;
+        personalAum: number;
+        clientAum: number;
+        totalCash: number;
+        totalUnrealized: number;
+        openPositions: number;
+        lastUpdated: string;
+      };
+    }>("/api/wealth/books"),
+  getBook: (book: { portfolioId?: string; clientId?: string | null }) =>
+    apiFetch<{ book: Record<string, unknown> }>(`/api/wealth/books${bookQuery(book)}`),
+  getClients: () => apiFetch<{ clients: WealthClient[] }>("/api/wealth/clients"),
+  getClient: (id: string) => apiFetch<ClientDetailResponse>(`/api/wealth/clients/${id}`),
+  createClient: (body: ClientFormPayload) =>
+    apiFetch<{ client: WealthClient; portfolio: Record<string, unknown> }>("/api/wealth/clients", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  updateClient: (id: string, body: Partial<ClientFormPayload>) =>
+    apiFetch<{ client: WealthClient }>(`/api/wealth/clients/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+  deleteClient: (id: string) =>
+    apiFetch<{ success: boolean; deletedId: string }>(`/api/wealth/clients/${id}`, {
+      method: "DELETE",
+    }),
+  seedDemoClients: () =>
+    apiFetch<{ success: boolean; seeded: number }>("/api/wealth/clients/seed", { method: "POST" }),
+};
+
+export interface OrderHistoryResponse {
+  orders: Record<string, unknown>[];
+  stats: {
+    total: number;
+    returned: number;
+    buyCount: number;
+    sellCount: number;
+    totalVolume: number;
+    truncated: boolean;
+  };
+}
+
+export interface StockSuggestionItem {
+  symbol: string;
+  name: string;
+  price: number;
+  changePct: number;
+  suggestedShares: number;
+  estimatedCost: number;
+  pctOfCash: number;
+  reason: string;
+}
+
+export const suggestionsApi = {
+  getStocks: (book?: { portfolioId?: string; clientId?: string | null }) =>
+    apiFetch<{
+      cash: number;
+      bookLabel: string;
+      isNewUser: boolean;
+      suggestions: StockSuggestionItem[];
+      totalSuggested?: number;
+      cashAfterSuggestions?: number;
+    }>(`/api/suggestions/stocks${bookQuery(book)}`),
+};
+
+export const ordersApi = {
+  getAll: (book?: { portfolioId?: string; clientId?: string | null }) =>
+    apiFetch<OrderHistoryResponse>(`/api/orders${bookQuery(book)}`),
+};
+
+export interface WalletTransaction {
+  id: string;
+  portfolio_id: string;
+  client_id: string | null;
+  tx_type: "deposit" | "withdrawal";
+  amount: number;
+  status: string;
+  note: string | null;
+  balance_after: number | null;
+  created_at: string;
+}
+
+export interface WalletSummaryResponse {
+  book: {
+    portfolioId: string;
+    clientId: string | null;
+    accountType: string;
+    label: string;
+    cash: number;
+  };
+  limits: {
+    maxDepositPerTx: number;
+    maxWithdrawal24h: number;
+    withdrawn24h: number;
+    withdrawalRemaining24h: number;
+  };
+  stats: {
+    totalDeposits: number;
+    totalWithdrawals: number;
+    depositCount: number;
+    withdrawalCount: number;
+  };
+  transactions: WalletTransaction[];
+}
+
+export const walletApi = {
+  get: (book?: { portfolioId?: string; clientId?: string | null }) =>
+    apiFetch<WalletSummaryResponse>(`/api/wallet${bookQuery(book)}`),
+  deposit: (body: {
+    amount: number;
+    note?: string;
+    portfolioId?: string;
+    clientId?: string | null;
+  }) =>
+    apiFetch<{ success: boolean; message: string; cash?: number }>("/api/wallet", {
+      method: "POST",
+      body: JSON.stringify({ action: "deposit", ...body }),
+    }),
+  withdraw: (body: {
+    amount: number;
+    note?: string;
+    portfolioId?: string;
+    clientId?: string | null;
+  }) =>
+    apiFetch<{ success: boolean; message: string; cash?: number }>("/api/wallet", {
+      method: "POST",
+      body: JSON.stringify({ action: "withdraw", ...body }),
+    }),
+};
+
+export interface WatchlistItem {
+  id: string;
+  symbol: string;
+  name: string | null;
+  asset_class: string;
+  added_at: string;
+}
+
+export const watchlistApi = {
+  getAll: () => apiFetch<{ items: WatchlistItem[] }>("/api/watchlist"),
+  add: (body: { symbol: string; name?: string; assetClass?: string }) =>
+    apiFetch<{ item: WatchlistItem }>("/api/watchlist", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  remove: (symbol: string) =>
+    apiFetch<{ success: boolean }>(`/api/watchlist?symbol=${encodeURIComponent(symbol)}`, {
+      method: "DELETE",
+    }),
+};
+
+// ── Messages ─────────────────────────────────────────────────────────────────
+
+export const messagesApi = {
+  getAll: () => apiFetch<{ messages: Message[] }>("/api/messages"),
+  markRead: (id?: string) => apiFetch("/api/messages", { method: "PATCH", body: JSON.stringify(id ? { id } : { readAll: true }) }),
+};
+
+export interface Message {
+  id: string;
+  type: "trade" | "alert" | "system" | "info";
+  title: string;
+  body: string;
+  metadata?: Record<string, unknown>;
+  read: boolean;
+  created_at: string;
+}

@@ -1,89 +1,23 @@
-export interface Author {
+// ── Trading Platform Types ──────────────────────────────────────────────────
+
+export type AssetClass = "stock" | "crypto" | "option";
+export type Side = "buy" | "sell";
+export type OrderType = "market" | "limit";
+export type OrderStatus = "filled" | "pending" | "cancelled";
+
+export interface MarketQuote {
+  symbol: string;
   name: string;
-  affiliation?: string;
-}
-
-export type DataSource =
-  | "arxiv"
-  | "semantic-scholar"
-  | "pubmed"
-  | "mit-rss"
-  | "harvard-rss"
-  | "stanford-rss"
-  | "oxford-rss"
-  | "cambridge-rss"
-  | "deepmind-rss"
-  | "hn-rss"
-  | "techcrunch-rss"
-  | "verge-rss"
-  | "arstechnica-rss"
-  | "mit-tr-rss"
-  | "anthropic-rss"
-  | "openai-rss"
-  | "wikipedia";
-
-export type NewsCategory =
-  | "technology"
-  | "research"
-  | "university"
-  | "labs"
-  | "reference";
-
-export interface ResearchPaper {
-  id: string;
-  title: string;
-  abstract: string;
-  authors: Author[];
-  university: string;
-  universitySlug: string;
-  source: DataSource;
-  sourceUrl: string;
-  publishedAt: string;
-  year: number;
-  citationCount?: number;
-  categories?: string[];
-  category?: string;
-  impactScore?: number;
-}
-
-export interface UniversityConfig {
-  slug: string;
-  name: string;
-  accentColor: string;
-  description: string;
-}
-
-export interface ResearchCategory {
-  slug: string;
-  name: string;
-  description: string;
-  icon: string;
-}
-
-export interface DigestEntry {
-  title: string;
-  university: string;
-  summary: string;
-  whyItMatters: string;
-  impactScore: number;
-  sourceUrl: string;
-}
-
-export interface DailyDigest {
-  generatedAt: string;
-  topPapers: DigestEntry[];
-  weeklyThemes: string[];
-}
-
-export interface FeedItem {
-  id: string;
-  title: string;
-  link: string;
-  pubDate: string;
-  contentSnippet: string;
-  source: DataSource;
-  sourceUrl: string;
-  logoKey: string;
-  newsCategory: NewsCategory;
-  handle: string;
+  price: number;
+  change: number;
+  changePct: number;
+  open: number;
+  high: number;
+  low: number;
+  volume: number;
+  mktCap: number | null;
+  currency: string;
+  exchange: string;
+  type: "stock" | "crypto";
+  updatedAt: string;
 }

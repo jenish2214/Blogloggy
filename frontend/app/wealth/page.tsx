@@ -1,0 +1,362 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import type { WealthBookSummary } from "@/lib/api";
+import { wealthApi } from "@/lib/api";
+import { ClientCrudPanel } from "@/components/wealth/ClientCrudPanel";
+import { ClientsTable } from "@/components/wealth/ClientsTable";
+import { useClientsCrud } from "@/lib/hooks/useClientsCrud";
+import { useWealthLiveFeed } from "@/lib/hooks/useWealthLiveFeed";
+import { useActiveBookStore } from "@/lib/store/activeBook";
+import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
+import styles from "./wealth.module.css";
+
+function fmtUsd(n: number, compact = false) {
+  if (compact && Math.abs(n) >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
+  if (compact && Math.abs(n) >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
+  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function fmtPct(n: number) {
+  const sign = n > 0 ? "+" : "";
+  return `${sign}${n.toFixed(2)}%`;
+}
+
+function fmtClock(iso: string | undefined) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function pnlClass(n: number) {
+  return n >= 0 ? styles.pnlUp : styles.pnlDown;
+}
+
+export default function WealthDeskPage() {
+  const [deskTab, setDeskTab] = useState<"books" | "clients">("clients");
+  const { books, summary, loading, error, tick, refresh } = useWealthLiveFeed(true);
+  const setActiveBook = useActiveBookStore((s) => s.setActiveBook);
+  const clearActiveBook = useActiveBookStore((s) => s.clearActiveBook);
+  const activeBook = useActiveBookStore((s) => s.activeBook);
+  const [view, setView] = useState<"all" | "personal" | "clients">("all");
+  const [seeding, setSeeding] = useState(false);
+
+  const crud = useClientsCrud(refresh);
+
+  const bookByClientId = useMemo(() => {
+    const m = new Map<string, WealthBookSummary>();
+    for (const b of books) {
+      if (b.clientId) m.set(b.clientId, b);
+    }
+    return m;
+  }, [books]);
+
+  const filtered = books.filter((b) => {
+    if (view === "personal") return b.accountType === "personal";
+    if (view === "clients") return b.accountType === "client";
+    return true;
+  });
+
+  const activateBook = async (book: WealthBookSummary) => {
+    setActiveBook({
+      portfolioId: book.portfolioId,
+      clientId: book.clientId,
+      accountType: book.accountType,
+      clientCode: book.clientCode ?? undefined,
+      label: book.accountLabel,
+    });
+    await syncPortfolioFromCloud();
+  };
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      await wealthApi.seedDemoClients();
+      await refresh();
+      await crud.refresh();
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const handleDeleteFromTable = async (id: string) => {
+    const client = crud.clients.find((c) => c.id === id);
+    const name = client?.display_name ?? "this client";
+    if (!window.confirm(`Delete ${name}? This removes the client record and managed book from Supabase.`)) {
+      return;
+    }
+    await crud.remove(id);
+    if (activeBook?.clientId === id) clearActiveBook();
+  };
+
+  const handleDeleteFromPanel = async (id: string) => {
+    await crud.remove(id);
+    if (activeBook?.clientId === id) clearActiveBook();
+  };
+
+  const displayError = error ?? crud.error;
+  const liveLabel = tick > 0 ? "Live · 5s refresh" : "Connecting…";
+
+  return (
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <div>
+          <h1 className={styles.title}>Wealth Desk</h1>
+          <p className={styles.sub}>
+            Your firm books in Supabase — cash, holdings, and returns refresh with live
+            market prices. Only your signed-in account is shown.
+          </p>
+          {summary?.lastUpdated && (
+            <p className={styles.dataStamp}>
+              Last updated {fmtClock(summary.lastUpdated)} · Yahoo Finance quotes
+            </p>
+          )}
+        </div>
+        <div className={styles.actions}>
+          <span className={styles.live} title="Polling /api/wealth/books">
+            <span className={styles.liveDot} />
+            {liveLabel}
+          </span>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => {
+              refresh();
+              void crud.refresh();
+            }}
+          >
+            Refresh
+          </button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={handleSeed} disabled={seeding}>
+            {seeding ? "Seeding…" : "Sample clients"}
+          </button>
+          <button type="button" className="btn btn-primary btn-sm" onClick={crud.openCreate}>
+            + New client
+          </button>
+          <Link href="/desk?section=wallet" className="btn btn-ghost btn-sm">
+            Client wallet →
+          </Link>
+        </div>
+      </header>
+
+      {displayError && (
+        <div className={styles.errorBanner}>
+          {displayError}
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => crud.setError(null)}>
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      <div className={styles.deskTabs}>
+        <button
+          type="button"
+          className={`${styles.deskTab} ${deskTab === "clients" ? styles.deskTabActive : ""}`}
+          onClick={() => setDeskTab("clients")}
+        >
+          Client registry ({crud.allCount})
+        </button>
+        <button
+          type="button"
+          className={`${styles.deskTab} ${deskTab === "books" ? styles.deskTabActive : ""}`}
+          onClick={() => setDeskTab("books")}
+        >
+          Books &amp; AUM ({books.length})
+        </button>
+      </div>
+
+      <section className={styles.summaryGrid}>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Firm AUM</div>
+          <div className={styles.statValue}>{summary ? fmtUsd(summary.firmAum, true) : "—"}</div>
+          <div className={styles.statSub}>Personal + all client books (live)</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Aggregate cash</div>
+          <div className={styles.statValue}>{summary ? fmtUsd(summary.totalCash, true) : "—"}</div>
+          <div className={styles.statSub}>Wallet across all books</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Unrealized P&amp;L</div>
+          <div
+            className={`${styles.statValue} ${
+              summary ? pnlClass(summary.totalUnrealized) : ""
+            }`}
+          >
+            {summary ? fmtUsd(summary.totalUnrealized, true) : "—"}
+          </div>
+          <div className={styles.statSub}>
+            {summary ? `${summary.openPositions} open position(s)` : "Open holdings"}
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Personal AUM</div>
+          <div className={styles.statValue}>{summary ? fmtUsd(summary.personalAum, true) : "—"}</div>
+          <div className={styles.statSub}>Your sleeve</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Client AUM</div>
+          <div className={styles.statValue}>{summary ? fmtUsd(summary.clientAum, true) : "—"}</div>
+          <div className={styles.statSub}>
+            {summary ? `${summary.clientCount} managed book(s)` : "Managed books"}
+          </div>
+        </div>
+      </section>
+
+      {deskTab === "clients" && (
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <span className={styles.panelTitle}>Client registry — live book metrics</span>
+            <input
+              className={`input ${styles.search}`}
+              placeholder="Search name, code, email…"
+              value={crud.search}
+              onChange={(e) => crud.setSearch(e.target.value)}
+            />
+          </div>
+          <ClientsTable
+            clients={crud.clients}
+            loading={crud.loading}
+            activeClientId={crud.selectedId}
+            bookByClientId={bookByClientId}
+            onView={crud.openRead}
+            onEdit={crud.openUpdate}
+            onDelete={handleDeleteFromTable}
+          />
+        </section>
+      )}
+
+      {deskTab === "books" && (
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <span className={styles.panelTitle}>Books of record — Supabase + live prices</span>
+            <div className={styles.tabs}>
+              {(["all", "personal", "clients"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`${styles.tab} ${view === t ? styles.tabActive : ""}`}
+                  onClick={() => setView(t)}
+                >
+                  {t === "all" ? "All" : t === "personal" ? "Personal" : "Clients"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {loading && books.length === 0 ? (
+            <div className={styles.empty}>Loading your books from Supabase…</div>
+          ) : filtered.length === 0 ? (
+            <div className={styles.empty}>
+              No books yet. Add clients in the <strong>Client registry</strong> tab or trade on
+              your personal book.
+            </div>
+          ) : (
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Code</th>
+                    <th>Starting</th>
+                    <th>Cash wallet</th>
+                    <th>Holdings</th>
+                    <th>Cost basis</th>
+                    <th>Total value</th>
+                    <th>Return</th>
+                    <th>Return %</th>
+                    <th>Unrealized</th>
+                    <th>Pos.</th>
+                    <th>Orders</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((b) => (
+                    <tr key={b.portfolioId}>
+                      <td>
+                        <strong>{b.accountLabel}</strong>
+                        {activeBook?.portfolioId === b.portfolioId && (
+                          <span className={styles.activeTag}>ACTIVE</span>
+                        )}
+                      </td>
+                      <td className={styles.mono}>{b.clientCode ?? "—"}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.startingCapital, true)}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.cash, true)}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.invested, true)}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.costBasis, true)}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.totalValue, true)}</td>
+                      <td className={`${styles.mono} ${pnlClass(b.metrics.totalPnl)}`}>
+                        {fmtUsd(b.metrics.totalPnl, true)}
+                      </td>
+                      <td className={`${styles.mono} ${pnlClass(b.metrics.totalPnlPct)}`}>
+                        {fmtPct(b.metrics.totalPnlPct)}
+                      </td>
+                      <td className={`${styles.mono} ${pnlClass(b.metrics.unrealizedPnl)}`}>
+                        {fmtUsd(b.metrics.unrealizedPnl, true)}
+                      </td>
+                      <td className={styles.mono}>{b.metrics.openPositions}</td>
+                      <td className={styles.mono}>{b.metrics.orderCount}</td>
+                      <td>
+                        <button type="button" className={styles.rowBtn} onClick={() => activateBook(b)}>
+                          Manage
+                        </button>{" "}
+                        {b.clientId && (
+                          <button
+                            type="button"
+                            className={styles.rowBtn}
+                            onClick={() => crud.openRead(b.clientId!)}
+                          >
+                            Details
+                          </button>
+                        )}{" "}
+                        <Link
+                          href="/trade"
+                          className={styles.rowBtn}
+                          style={{ textDecoration: "none", display: "inline-block" }}
+                          onClick={() => void activateBook(b)}
+                        >
+                          Trade
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {activeBook && (
+        <p className={styles.activeHint}>
+          Active book: <strong>{activeBook.label}</strong> — trades and portfolio sync to this
+          sleeve in Supabase.
+        </p>
+      )}
+
+      <ClientCrudPanel
+        mode={crud.mode}
+        form={crud.form}
+        setForm={crud.setForm}
+        detail={crud.detail}
+        liveBook={
+          crud.selectedId ? bookByClientId.get(crud.selectedId) ?? null : null
+        }
+        saving={crud.saving}
+        selectedId={crud.selectedId}
+        onClose={crud.closePanel}
+        onCreate={crud.create}
+        onUpdate={crud.update}
+        onDelete={handleDeleteFromPanel}
+        onEdit={() => crud.selectedId && crud.openUpdate(crud.selectedId)}
+      />
+    </div>
+  );
+}

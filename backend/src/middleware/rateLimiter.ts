@@ -1,6 +1,6 @@
-import rateLimit from "express-rate-limit";
+import * as RateLimit from "express-rate-limit";
 
-export const apiLimiter = rateLimit({
+export const apiLimiter = RateLimit.default({
   windowMs: 60 * 1000,
   max: 120,
   standardHeaders: true,

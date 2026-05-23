@@ -1,65 +1,48 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { PageTransition } from "@/components/animations/PageTransition";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { CloudSyncProvider } from "@/components/providers/CloudSyncProvider";
+import { BookSwitcherGate } from "@/components/wealth/BookSwitcherGate";
 import "@/styles/globals.css";
 
-const dmSerif = DM_Serif_Display({
-  weight: "400",
+const jakarta = Plus_Jakarta_Sans({
+  weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
-  variable: "--font-dm-serif",
+  variable: "--font-jakarta",
   display: "swap",
 });
 
-const ibmPlex = IBM_Plex_Sans({
-  weight: ["400", "500", "600"],
+const jetbrains = JetBrains_Mono({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
-  variable: "--font-ibm-plex",
-  display: "swap",
-});
-
-const ibmMono = IBM_Plex_Mono({
-  weight: ["400", "500"],
-  subsets: ["latin"],
-  variable: "--font-ibm-mono",
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  applicationName: "Blogloggy",
+  applicationName: "QuantDesk",
   title: {
-    default: "Blogloggy",
-    template: "%s · Blogloggy",
+    default: "QuantDesk — Paper Trading Platform",
+    template: "%s · QuantDesk",
   },
   description:
-    "Browse research papers, blogs, and articles from MIT, Harvard, Stanford, and more.",
+    "Professional paper trading platform. Trade stocks, options, and crypto with virtual capital. Real-time market data powered by free APIs.",
   icons: {
-    icon: [
-      { url: "/icons/blogger-logo.svg", type: "image/svg+xml", sizes: "any" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
-    ],
-    shortcut: "/favicon.svg",
-    apple: "/apple-icon.svg",
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${dmSerif.variable} ${ibmPlex.variable} ${ibmMono.variable}`}
-    >
+    <html lang="en" className={`${jakarta.variable} ${jetbrains.variable}`}>
       <body>
-        <Navbar />
-        <PageTransition>
-          <main>{children}</main>
-        </PageTransition>
-        <Footer />
+        <div className="app-shell">
+          <Sidebar />
+          <main className="app-main">
+            <BookSwitcherGate />
+            <CloudSyncProvider>{children}</CloudSyncProvider>
+          </main>
+        </div>
       </body>
     </html>
   );

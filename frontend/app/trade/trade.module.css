@@ -1,0 +1,12 @@
+.tradeGrid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .tradeGrid {
+    grid-template-columns: 1fr;
+  }
+}
