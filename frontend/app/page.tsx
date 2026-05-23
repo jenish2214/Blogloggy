@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { NewUserStockSuggestions } from "@/components/dashboard/NewUserStockSuggestions";
+import { ClientOnly } from "@/components/system/ClientOnly";
 import { TickerTape } from "@/components/trading/TickerTape";
 import { MarketIndices } from "@/components/trading/MarketIndices";
 import { LiveMarketWatch } from "@/components/trading/LiveMarketWatch";
@@ -81,7 +82,9 @@ export default function LandingPage() {
             ))}
           </section>
 
-          <NewUserStockSuggestions />
+          <ClientOnly>
+            <NewUserStockSuggestions />
+          </ClientOnly>
 
           <div className={styles.mainGrid}>
             <div className={styles.primary}>

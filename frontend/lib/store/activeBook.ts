@@ -26,6 +26,9 @@ export const useActiveBookStore = create<ActiveBookState>()(
       setActiveBook: (book) => set({ activeBook: book }),
       clearActiveBook: () => set({ activeBook: null }),
     }),
-    { name: "quantdesk-active-book-v1" }
+    {
+      name: "quantdesk-active-book-v1",
+      skipHydration: true,
+    }
   )
 );

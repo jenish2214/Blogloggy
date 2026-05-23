@@ -16,6 +16,7 @@ const PROTECTED = [
   "/desk",
   "/options",
   "/research",
+  "/quant-lab",
   "/orders",
   "/profile",
   "/algo",

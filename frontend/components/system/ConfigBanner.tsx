@@ -1,14 +1,22 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { hasSupabaseEnv } from "@/lib/supabase/client";
 
-/** Shown when Supabase is not configured — app stays usable in guest/demo mode. */
+/** Shown when Supabase is not configured — client-only to avoid hydration mismatch. */
 export function ConfigBanner() {
-  if (hasSupabaseEnv()) return null;
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    setShow(!hasSupabaseEnv());
+  }, []);
+
+  if (!show) return null;
 
   return (
     <div
       role="status"
+      suppressHydrationWarning
       style={{
         padding: "10px 16px",
         background: "var(--warn-soft, #fef3c7)",

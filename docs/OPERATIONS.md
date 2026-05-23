@@ -47,6 +47,15 @@ cd frontend && cp .env.example .env.local
 npm run dev
 ```
 
+## Docker
+
+```bash
+cp .env.docker.example .env.docker
+docker compose up --build
+```
+
+Details: [`DOCKER.md`](DOCKER.md).
+
 Optional: `NEXT_PUBLIC_API_BASE=http://localhost:5000` with `backend` running for market routes only.
 
 ## Privacy & compliance

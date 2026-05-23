@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { hasSupabaseEnv } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import type { StockSuggestion } from "@/lib/trading/stockSuggestions";
 import styles from "./NewUserStockSuggestions.module.css";
@@ -45,6 +47,26 @@ export function NewUserStockSuggestions() {
   }, []);
 
   const load = useCallback(async () => {
+    if (!hasSupabaseEnv()) {
+      setGuest(true);
+      setData(null);
+      setLoading(false);
+      return;
+    }
+    const supabase = createClient();
+    if (!supabase) {
+      setGuest(true);
+      setLoading(false);
+      return;
+    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setGuest(true);
+      setData(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const q = new URLSearchParams();

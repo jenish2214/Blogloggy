@@ -23,7 +23,14 @@ export async function GET(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    return NextResponse.json({
+      cash: 0,
+      bookLabel: "Guest",
+      isNewUser: false,
+      suggestions: [],
+      guest: true,
+      disclaimer: "Sign in to see personalized paper-wallet suggestions.",
+    });
   }
 
   await ensurePersonalPortfolio(supabase, user.id);

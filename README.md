@@ -37,13 +37,26 @@ npm run install:all
 npm run dev
 ```
 
+### Docker (full stack)
+
+```bash
+cp .env.docker.example .env.docker
+npm run docker:up
+# → http://localhost:3000 (web), :4000 (API), :8000 (quant)
+```
+
+See [`docs/DOCKER.md`](docs/DOCKER.md).
+
 ### Python Quant Service (optional)
 
 ```bash
 cd quant-service
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
+
+Open **Quant Lab** at http://localhost:3000/quant-lab (requires quant service + `QUANT_SERVICE_URL` in `frontend/.env.local`).
 
 ---
 

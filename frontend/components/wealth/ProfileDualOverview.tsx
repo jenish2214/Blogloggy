@@ -54,7 +54,7 @@ export function ProfileDualOverview() {
   }, [clientBook?.portfolioId, clientBook?.clientId]);
 
   if (compact) {
-    const activeType = isPersonalActive ? "personal" : "client";
+    const activeType = isClientActive && !isPersonalActive ? "client" : "personal";
     const snap = activeType === "personal" ? personalSnap : clientSnap;
     const label =
       activeType === "personal"

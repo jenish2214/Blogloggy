@@ -198,7 +198,7 @@ export const usePortfolioStore = create<PortfolioState>()(
         set({ orders: [order, ...state.orders] });
       },
     }),
-    { name: "quantdesk-portfolio-v1" }
+    { name: "quantdesk-portfolio-v1", skipHydration: true }
   )
 );
 

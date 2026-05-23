@@ -60,7 +60,10 @@ export function Footer() {
         >
           Privacy
         </a>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}>
+        <span
+          suppressHydrationWarning
+          style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}
+        >
           Paper trading · {new Date().getFullYear()}
         </span>
       </div>

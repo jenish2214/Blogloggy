@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDualProfiles } from "@/lib/hooks/useDualProfiles";
+import { useActiveBookStore } from "@/lib/store/activeBook";
 import type { WealthBookSummary } from "@/lib/api";
 import styles from "./DualProfileBar.module.css";
 
@@ -28,6 +29,7 @@ export function DualProfileBar({ variant = "full" }: DualProfileBarProps) {
     personal,
     clientBook,
     clientBooks,
+    activeBook,
     loading,
     isPersonalActive,
     isClientActive,
@@ -37,10 +39,22 @@ export function DualProfileBar({ variant = "full" }: DualProfileBarProps) {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [hydrated, setHydrated] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const mode: "personal" | "client" = isPersonalActive ? "personal" : "client";
-  const activeBook = mode === "personal" ? personal : clientBook;
+  useEffect(() => {
+    const done = () => setHydrated(true);
+    const p = useActiveBookStore.persist.rehydrate();
+    if (p && typeof (p as Promise<void>).then === "function") {
+      void (p as Promise<void>).then(done);
+    } else {
+      done();
+    }
+  }, []);
+
+  // Default personal when unset — avoids SSR/client mismatch (was: false → "client")
+  const mode: "personal" | "client" = activeBook?.accountType === "client" ? "client" : "personal";
+  const activeBookDisplay = mode === "personal" ? personal : clientBook;
 
   const filteredClients = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -63,8 +77,25 @@ export function DualProfileBar({ variant = "full" }: DualProfileBarProps) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const m = activeBook?.metrics;
+  const m = activeBookDisplay?.metrics;
   const pnlUp = (m?.totalPnl ?? 0) >= 0;
+
+  if (!hydrated) {
+    return (
+      <header className={`${styles.desk} ${variant === "compact" ? styles.deskCompact : ""}`}>
+        <div className={styles.inner}>
+          <div className={styles.brand}>
+            <span className={styles.brandMark}>QD</span>
+            <div>
+              <span className={styles.brandTitle}>QuantDesk</span>
+              <span className={styles.brandSub}>Wealth Management Desk</span>
+            </div>
+          </div>
+          <span className={styles.metricEmpty}>Loading desk…</span>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className={`${styles.desk} ${variant === "compact" ? styles.deskCompact : ""}`}>
@@ -165,7 +196,7 @@ export function DualProfileBar({ variant = "full" }: DualProfileBarProps) {
         )}
 
         <div className={styles.metrics}>
-          {activeBook ? (
+          {activeBookDisplay ? (
             <>
               <div className={styles.metric}>
                 <span className={styles.metricL}>AUM</span>

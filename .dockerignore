@@ -1,0 +1,26 @@
+# Dependencies & build output
+**/node_modules
+**/.next
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/*.pyc
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+# Git & IDE
+.git
+.gitignore
+.cursor
+.vscode
+*.md
+!docs/DOCKER.md
+
+# Misc
+**/.DS_Store
+**/coverage
+**/npm-debug.log*

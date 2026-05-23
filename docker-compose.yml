@@ -1,0 +1,63 @@
+# QuantDesk — run the full stack locally or on any Docker host
+# Usage: cp .env.docker.example .env.docker && docker compose up --build
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: quantdesk-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      MASSIVE_API_KEY: ${MASSIVE_API_KEY:-}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY:-}
+      ALPHAVANTAGE_API_KEY: ${ALPHAVANTAGE_API_KEY:-}
+      NEWS_API_KEY: ${NEWS_API_KEY:-}
+    env_file:
+      - path: .env.docker
+        required: false
+
+  quant:
+    build:
+      context: ./quant-service
+      dockerfile: Dockerfile
+    container_name: quantdesk-quant
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-https://placeholder.supabase.co}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1wbGFjZWhvbGRlciJ9.build}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    container_name: quantdesk-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      QUANT_SERVICE_URL: http://quant:8000
+      MASSIVE_API_KEY: ${MASSIVE_API_KEY:-}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY:-}
+      ALPHAVANTAGE_API_KEY: ${ALPHAVANTAGE_API_KEY:-}
+      NEXT_PUBLIC_FINNHUB_API_KEY: ${NEXT_PUBLIC_FINNHUB_API_KEY:-}
+    env_file:
+      - path: .env.docker
+        required: false
+    depends_on:
+      api:
+        condition: service_healthy
+      quant:
+        condition: service_healthy

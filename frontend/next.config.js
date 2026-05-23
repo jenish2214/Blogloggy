@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   reactStrictMode: true,
   env: {
     // Ensure @supabase/ssr never receives empty strings during Vercel build when vars are unset
