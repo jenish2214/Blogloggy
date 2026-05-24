@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { handleAuthSessionChange } from "@/lib/auth/tradingSession";
 import type { User } from "@supabase/supabase-js";
-
-// ── Nav items ─────────────────────────────────────────────────────────────────
+import styles from "./Sidebar.module.css";
 
 const NAV = [
   {
@@ -103,8 +102,6 @@ const NAV = [
   },
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 export function Sidebar() {
   const path = usePathname();
   const router = useRouter();
@@ -118,7 +115,6 @@ export function Sidebar() {
     path.startsWith("/welcome");
 
   useEffect(() => {
-    // Auth pages: no supabase subscription needed
     if (isAuthPage) return;
     setMounted(true);
     if (!hasSupabaseEnv()) return;
@@ -147,38 +143,27 @@ export function Sidebar() {
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? "??";
   const username = user?.email?.split("@")[0] ?? "";
 
-  // Auth pages: inject CSS override so app-main has no left margin
   if (isAuthPage) {
     return <style>{":root{--sidebar-w:0px !important}"}</style>;
   }
 
   return (
     <aside className="sidebar">
-      {/* Logo */}
-      <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid var(--border)" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          {/* Logo mark */}
-          <div style={{
-            width: 32, height: 32, borderRadius: 8,
-            background: "var(--accent)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0,
-          }}>
+      <div className={styles.logoBlock}>
+        <Link href="/" className={styles.logoLink} aria-label="QuantDesk home">
+          <div className={styles.logoMark}>
             <svg width="16" height="16" viewBox="0 0 22 22" fill="none">
               <polyline points="3,16 7,10 11,13 15,6 19,9" stroke="#fff" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round" />
             </svg>
           </div>
           <div className="sidebar-logo-text">
-            <div style={{ fontSize: "0.925rem", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-              QuantDesk
-            </div>
-            <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: 1 }}>Paper Trading</div>
+            <div className={styles.logoTitle}>QuantDesk</div>
+            <div className={styles.logoSub}>Paper Trading</div>
           </div>
         </Link>
       </div>
 
-      {/* Navigation */}
-      <nav style={{ flex: 1, padding: "12px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
+      <nav className={styles.nav} aria-label="Main navigation">
         {NAV.map(({ href, label, icon }) => {
           const base = href.split("?")[0];
           const isActive = base === "/" ? path === "/" : path.startsWith(base);
@@ -187,113 +172,54 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "10px 12px",
-                borderRadius: "var(--radius-sm)",
-                textDecoration: "none",
-                color: isActive ? "#FFFFFF" : "var(--text-secondary)",
-                background: isActive ? "var(--accent)" : "transparent",
-                fontWeight: isActive ? 600 : 400,
-                fontSize: "0.9rem",
-                transition: "var(--t-fast)",
-                position: "relative",
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "var(--bg-surface-2)";
-                  e.currentTarget.style.color = "var(--text-primary)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "var(--text-secondary)";
-                }
-              }}
+              className={`${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
+              aria-label={label}
+              title={label}
             >
-              <span style={{ flexShrink: 0 }}>{icon}</span>
+              <span className={styles.navIcon}>{icon}</span>
               <span className="sidebar-label">{label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Live data indicator */}
-      <div style={{
-        padding: "12px 20px",
-        borderTop: "1px solid var(--border-subtle)",
-        display: "flex", alignItems: "center", gap: 8,
-      }}>
-        <span style={{
-          width: 7, height: 7, borderRadius: "50%",
-          background: "var(--live)",
-          boxShadow: "0 0 0 2px rgba(16,185,129,0.15)",
-          display: "inline-block",
-          animation: "pulse 2s infinite",
-          flexShrink: 0,
-        }} />
-        <span className="sidebar-label" style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 500 }}>
-          Live Market Data
-        </span>
-        <style>{`@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.35; } }`}</style>
+      <div className={styles.liveRow} title="Live Market Data">
+        <span className={styles.liveDot} aria-hidden />
+        <span className={`sidebar-label ${styles.liveLabel}`}>Live Market Data</span>
       </div>
 
-      {/* User section */}
       {mounted && (
-        <div style={{ padding: "12px 10px", borderTop: "1px solid var(--border)" }}>
+        <div className={styles.userBlock}>
           {user ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div className={styles.userStack}>
               <Link
                 href="/desk?section=profile"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "8px 10px",
-                  borderRadius: "var(--radius-sm)",
-                  textDecoration: "none",
-                  transition: "var(--t-fast)",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-surface-2)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                className={styles.profileLink}
+                aria-label={`Profile: ${username}`}
+                title={username}
               >
-                <div style={{
-                  width: 34, height: 34, borderRadius: "50%",
-                  background: "var(--accent)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontFamily: "var(--font-mono)", fontSize: "0.72rem", fontWeight: 700, color: "#fff",
-                  flexShrink: 0,
-                }}>
-                  {initials}
-                </div>
-                <div className="sidebar-label" style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {username}
-                  </div>
-                  <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
-                    View profile →
-                  </span>
+                <div className={styles.avatar}>{initials}</div>
+                <div className={`sidebar-label ${styles.profileMeta}`}>
+                  <div className={styles.profileName}>{username}</div>
+                  <span className={styles.profileHint}>View profile →</span>
                 </div>
               </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="btn btn-ghost btn-sm sidebar-label"
-                style={{ justifyContent: "center", margin: "0 2px" }}
+                className={`btn btn-ghost btn-sm ${styles.signOutBtn}`}
+                title="Sign out"
               >
-                Sign out
+                <span className="sidebar-label">Sign out</span>
               </button>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "0 2px" }}>
-              <Link href="/login" className="btn btn-ghost btn-sm" style={{ justifyContent: "center" }}>
+            <div className={styles.authStack}>
+              <Link href="/login" className={`btn btn-ghost btn-sm ${styles.authBtn}`} title="Sign In">
                 <span className="sidebar-label">Sign In</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
               </Link>
-              <Link href="/signup" className="btn btn-primary btn-sm" style={{ justifyContent: "center" }}>
+              <Link href="/signup" className={`btn btn-primary btn-sm ${styles.authBtn}`} title="Sign Up Free">
                 <span className="sidebar-label">Sign Up Free</span>
               </Link>
             </div>

@@ -8,6 +8,7 @@ import {
   type Side,
 } from "@/lib/store/portfolio";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
+import { canPlaceMarketOrders, getTradingBlockReason } from "@/lib/trading/marketHours";
 import { mapServerOrder } from "@/lib/trading/orders";
 import { notifyOrderPlaced } from "@/lib/trading/orderEvents";
 
@@ -47,6 +48,10 @@ function buildOrderRecord(
 export async function executePlaceOrder(
   params: PlaceOrderInput
 ): Promise<{ success: boolean; message: string }> {
+  if (!canPlaceMarketOrders()) {
+    return { success: false, message: getTradingBlockReason() ?? "Market closed" };
+  }
+
   const fillPrice =
     params.orderType === "limit" && params.limitPrice
       ? params.limitPrice

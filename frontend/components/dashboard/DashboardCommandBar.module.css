@@ -1,0 +1,109 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-bottom: 2px solid var(--border-strong);
+  font-family: var(--font-mono);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.sep {
+  color: var(--border-strong);
+  font-weight: 300;
+}
+
+.tag {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.statusLive {
+  color: var(--up);
+  border-color: var(--up-border);
+  background: var(--up-soft);
+}
+
+.statusLive .statusDot {
+  background: var(--live);
+}
+
+.statusClosed {
+  color: var(--warn);
+  border-color: rgba(217, 119, 6, 0.3);
+  background: var(--warn-soft);
+}
+
+.statusClosed .statusDot {
+  background: var(--warn);
+}
+
+.statusFrozen {
+  color: var(--text-secondary);
+}
+
+.clock {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .center {
+    order: 3;
+    width: 100%;
+  }
+}

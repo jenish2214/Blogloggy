@@ -18,6 +18,12 @@ import {
 import { subscribeOrderPlaced } from "@/lib/trading/orderEvents";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { exitAllPositions } from "@/lib/trading/exitAllPositions";
+import { canPlaceMarketOrders, getUSMarketStatus } from "@/lib/trading/marketHours";
+import { MarketStatusBanner } from "@/components/portfolio/MarketStatusBanner";
+import { HoldingsDetailSection } from "@/components/portfolio/HoldingsDetailSection";
+import tabStyles from "./portfolio.module.css";
+
+type PortfolioTab = "overview" | "holdings";
 
 function fmt(n: number | null | undefined, dec = 2) {
   if (n == null || isNaN(n)) return "—";
@@ -73,6 +79,8 @@ export default function PortfolioPage() {
   const [liveTotals, setLiveTotals] = useState<PortfolioLiveTotals | null>(null);
   const [pnlOpen, setPnlOpen] = useState(true);
   const [realizedOpen, setRealizedOpen] = useState(true);
+  const [tab, setTab] = useState<PortfolioTab>("holdings");
+  const isWeekend = getUSMarketStatus() === "weekend";
 
   const refreshSnapshot = useCallback(async () => {
     setLoading(true);
@@ -191,7 +199,8 @@ export default function PortfolioPage() {
               type="button"
               className="btn btn-sell btn-sm"
               onClick={() => setExitConfirm(true)}
-              disabled={exiting}
+              disabled={exiting || !canPlaceMarketOrders()}
+              title={!canPlaceMarketOrders() ? "Not available Saturday & Sunday" : undefined}
             >
               Exit all
             </button>
@@ -234,6 +243,45 @@ export default function PortfolioPage() {
         </div>
       )}
 
+      <MarketStatusBanner />
+
+      <nav className={tabStyles.tabs} aria-label="Portfolio sections">
+        <button
+          type="button"
+          className={tab === "holdings" ? tabStyles.tabActive : tabStyles.tab}
+          onClick={() => setTab("holdings")}
+        >
+          My Holdings
+        </button>
+        <button
+          type="button"
+          className={tab === "overview" ? tabStyles.tabActive : tabStyles.tab}
+          onClick={() => setTab("overview")}
+        >
+          Overview &amp; History
+        </button>
+      </nav>
+
+      {tab === "holdings" && (
+        <div className={`card ${tabStyles.tabPanel}`} style={{ marginBottom: 20, overflow: "hidden" }}>
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)" }}>
+            <span className="label-caps">Your holdings · buy history · live P&amp;L</span>
+            <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", margin: "8px 0 0" }}>
+              Each card shows where you bought, how much you spent, and live profit. Buy / Sell disabled Sat–Sun.
+            </p>
+          </div>
+          <HoldingsDetailSection
+            positions={displayPositions}
+            orders={displayOrders}
+            cash={cash}
+            frozen={isWeekend}
+            onRefresh={() => void refreshSnapshot()}
+          />
+        </div>
+      )}
+
+      {tab === "overview" && (
+        <div className={tabStyles.tabPanel}>
       {resetConfirm && (
         <div style={{
           padding: "12px 16px", marginBottom: 16, background: "var(--down-soft)",
@@ -339,10 +387,7 @@ export default function PortfolioPage() {
       <div className="card" style={{ marginBottom: 20 }}>
         <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-muted)" }}>
-            YOUR HOLDINGS · buy vs current · return ({displayPositions.length})
-          </span>
-          <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>
-            Your fills · {activeBook?.label ?? "this book"}
+            QUICK TABLE · live marks ({displayPositions.length})
           </span>
         </div>
         <PortfolioHoldingsTable
@@ -397,6 +442,8 @@ export default function PortfolioPage() {
           emptyMessage="No orders yet — trades appear here after each buy or sell."
         />
       </div>
+        </div>
+      )}
 
     </div>
   );

@@ -8,6 +8,9 @@ const supabase = resolveSupabasePublicEnv();
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
+  experimental: {
+    serverComponentsExternalPackages: ["finnhub"],
+  },
   env: {
     NEXT_PUBLIC_SITE_URL: siteUrl,
     // NEXT_PUBLIC_* or Vercel Supabase integration (SUPABASE_URL / SUPABASE_ANON_KEY)

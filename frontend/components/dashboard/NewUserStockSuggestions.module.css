@@ -9,7 +9,7 @@
 .head {
   padding: 16px 18px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--bg-surface-2) 0%, var(--bg-surface) 100%);
+  background: var(--bg-surface-2);
 }
 
 .badge {

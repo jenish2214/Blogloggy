@@ -13,6 +13,9 @@ import {
 } from "recharts";
 import { marketApi } from "@/lib/api";
 import { quantApi, type PredictSuiteResult } from "@/lib/quantApi";
+import { useQuantLabStore } from "@/lib/store/quantLab";
+import { ExplainerPanel, QuantLabError } from "./QuantLabShared";
+import { sentimentTag } from "./quantLabLabels";
 import styles from "./quant-lab.module.css";
 
 function signalClass(sig: string) {
@@ -23,7 +26,7 @@ function signalClass(sig: string) {
 }
 
 export function PredictionsHub({ engineOk }: { engineOk: boolean }) {
-  const [symbol, setSymbol] = useState("AAPL");
+  const { activeSymbol, liveQuote, quantLabMode } = useQuantLabStore();
   const [horizon, setHorizon] = useState(5);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,18 +36,18 @@ export function PredictionsHub({ engineOk }: { engineOk: boolean }) {
     setLoading(true);
     setError(null);
     try {
-      const { chart } = await marketApi.getChart(symbol, "1y", "1d");
+      const { chart } = await marketApi.getChart(activeSymbol, "1y", "1d");
       const prices = chart.candles.map((c) => c.close);
       const volumes = chart.candles.map((c) => c.volume);
       const res = await quantApi.predictSuite({
         prices,
         volumes,
-        symbol,
+        symbol: activeSymbol,
         horizon_days: horizon,
       });
       setSuite(res);
-    } catch (e) {
-      setError((e as Error).message);
+    } catch {
+      setError("Predictions failed. Check symbol and quant engine.");
       setSuite(null);
     } finally {
       setLoading(false);
@@ -67,23 +70,21 @@ export function PredictionsHub({ engineOk }: { engineOk: boolean }) {
       ]
     : [];
 
+  const displaySignal = (sig: string) => {
+    if (quantLabMode === "beginner") return sentimentTag(sig.includes("bull") ? 60 : sig.includes("bear") ? 0 : 30, sig.includes("bear") ? 60 : 0);
+    return sig.replace("_", " ").toUpperCase();
+  };
+
   return (
-    <section className={styles.panel} style={{ gridColumn: "1 / -1", marginBottom: 0 }}>
-      <h2 className={styles.panelTitle}>Predictions · Algorithms + Machine Learning</h2>
-      <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: "0 0 14px", lineHeight: 1.5 }}>
-        RSI, SMA, MACD, Bollinger (rules) plus Ridge regression, Random Forest, and Gradient Boosting on 1Y daily
-        data. Ensemble blends ML direction with algorithm votes.
+    <section className={styles.tabPanel}>
+      <h2 className={styles.sectionHeader}>Predictions · Algorithms + ML</h2>
+      <p className={styles.sectionSub}>
+        RSI, SMA, MACD, Bollinger plus Ridge, Random Forest, and Gradient Boosting on 1Y daily data for{" "}
+        <strong>{activeSymbol}</strong>
+        {liveQuote?.c != null && liveQuote.c > 0 ? ` (live $${liveQuote.c.toFixed(2)})` : ""}.
       </p>
 
       <div className={styles.formRow}>
-        <div>
-          <label className={styles.label}>Symbol</label>
-          <input
-            className={styles.input}
-            value={symbol}
-            onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-          />
-        </div>
         <div>
           <label className={styles.label}>Forecast days</label>
           <select
@@ -104,7 +105,7 @@ export function PredictionsHub({ engineOk }: { engineOk: boolean }) {
         {loading ? "RUNNING ALL MODELS…" : "RUN ALL PREDICTIONS"}
       </button>
 
-      {error && <p className={styles.error}>{error}</p>}
+      {error && <QuantLabError message={error} onRetry={runAll} />}
 
       {suite && (
         <>
@@ -122,22 +123,22 @@ export function PredictionsHub({ engineOk }: { engineOk: boolean }) {
               </div>
             </div>
             <div className={styles.heroCard}>
-              <div className={styles.metricLabel}>ML direction</div>
+              <div className={styles.metricLabel}>{quantLabMode === "pro" ? "ML direction" : "ML Signal"}</div>
               <div className={`${styles.heroValue} ${signalClass(suite.direction)}`}>
-                {suite.direction.toUpperCase()}
+                {displaySignal(suite.direction)}
               </div>
             </div>
             <div className={styles.heroCard}>
               <div className={styles.metricLabel}>Ensemble</div>
               <div className={`${styles.heroValue} ${signalClass(suite.ensemble.signal)}`}>
-                {suite.ensemble.signal.replace("_", " ").toUpperCase()}
+                {displaySignal(suite.ensemble.signal)}
               </div>
               <div className={styles.metricLabel}>{suite.ensemble.confidence_pct}% conf.</div>
             </div>
             <div className={styles.heroCard}>
               <div className={styles.metricLabel}>Algo composite</div>
               <div className={`${styles.heroValue} ${signalClass(suite.algorithm.composite)}`}>
-                {suite.algorithm.composite.replace("_", " ").toUpperCase()}
+                {displaySignal(suite.algorithm.composite)}
               </div>
             </div>
           </div>
@@ -227,6 +228,10 @@ export function PredictionsHub({ engineOk }: { engineOk: boolean }) {
           <p className={styles.disclaimerInline}>{suite.disclaimer}</p>
         </>
       )}
+
+      <ExplainerPanel mode={quantLabMode}>
+        <p>Forecasts blend rule-based signals with ML models trained on historical prices. Not investment advice.</p>
+      </ExplainerPanel>
     </section>
   );
 }

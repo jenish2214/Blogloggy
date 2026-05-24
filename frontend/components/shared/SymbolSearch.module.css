@@ -1,0 +1,121 @@
+.wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 60;
+}
+
+.option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  transition: background 0.15s ease;
+}
+
+.option:hover {
+  background: var(--bg-hover);
+}
+
+.sym {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-2);
+  min-width: 72px;
+}
+
+.name {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.type {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+}
+
+.alphaBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg-elevated);
+  z-index: 1;
+}
+
+.alphaBtn,
+.alphaOn {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.alphaOn {
+  background: var(--accent);
+  color: var(--bg-base);
+  border-color: var(--accent);
+}
+
+.empty {
+  padding: 12px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}

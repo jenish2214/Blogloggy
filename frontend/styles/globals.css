@@ -167,6 +167,7 @@ h4 { font-size: var(--text-lg); }
   flex-direction: column;
   z-index: 100;
   overflow-y: auto;
+  overflow-x: visible;
   transition: width var(--t-smooth);
 }
 
@@ -175,8 +176,11 @@ h4 { font-size: var(--text-lg); }
   margin-left: var(--sidebar-w);
   min-height: 100dvh;
   min-width: 0;
+  width: 100%;
   overflow-x: hidden;
   background: var(--bg-base);
+  transition: margin-left var(--t-smooth);
+  box-sizing: border-box;
 }
 
 .auth-shell {
@@ -189,11 +193,24 @@ h4 { font-size: var(--text-lg); }
 /* ─────────────────────────────────────────────────────────────────────────── */
 .page {
   min-height: 100dvh;
+  min-width: 0;
   padding: var(--page-pad-y) var(--page-pad-x) calc(var(--page-pad-y) * 1.6);
   max-width: var(--max-w);
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Prevent wide data (tables, charts) from breaking the shell */
+.app-main table {
+  max-width: 100%;
+}
+
+.data-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
@@ -512,10 +529,8 @@ select.input { cursor: pointer; }
 /* ─────────────────────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .sidebar        { width: 64px; }
-  .sidebar-label  { display: none !important; }
-  .sidebar-logo-text { display: none !important; }
   .app-main       { margin-left: 64px; }
-  :root           { --sidebar-w: 64px; }
+  :root           { --sidebar-w: 64px; --page-pad-x: clamp(12px, 2.5vw, 24px); }
 }
 
 @media (max-width: 768px) {

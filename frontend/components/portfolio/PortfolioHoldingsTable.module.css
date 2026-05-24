@@ -121,14 +121,43 @@
   flex-wrap: wrap;
 }
 
-.exitMsg {
+.exitMsgSuccess {
   margin: 0 16px 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--up-soft);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(16, 185, 129, 0.35);
   border-radius: var(--radius-sm);
   font-size: 0.82rem;
   color: var(--up);
+  font-family: var(--font-mono);
+  line-height: 1.5;
+}
+
+.exitMsgError {
+  margin: 0 16px 12px;
+  padding: 12px 14px;
+  background: var(--down-soft);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--down);
+}
+
+.rowExitActive {
+  background: rgba(99, 102, 241, 0.06);
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.inlinePnl {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
 }
 
 .rowPulse {
@@ -140,4 +169,17 @@
   border-top: 2px solid var(--border);
   padding: 14px 16px;
   font-size: 0.82rem;
+}
+
+.marketOpen {
+  color: var(--up);
+}
+
+.marketClosed {
+  color: var(--warn);
+}
+
+.frozenSection {
+  opacity: 0.88;
+  filter: saturate(0.85);
 }
