@@ -5,14 +5,15 @@ Production: **https://algo-street.vercel.app** (Vercel). Optional market API: Re
 ## Deploy checklist (Vercel)
 
 1. **Root directory:** `frontend` (see root `vercel.json`).
-2. **Environment variables** (Production + Preview + Development), then **Redeploy** (not an old commit):
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_SITE_URL` = `https://algo-street.vercel.app`
-3. **Supabase Auth → URL configuration:**
-   - Site URL: `https://algo-street.vercel.app`
-   - Redirect: `https://algo-street.vercel.app/auth/callback`
-4. Confirm build succeeds and login works. Do **not** redeploy commit `c3f87e2` (broken static signup).
+2. **Enable system env vars:** Project → **Settings → Environment Variables** → check [**Enable access to System Environment Variables**](https://vercel.com/docs/environment-variables/system-environment-variables). This exposes `VERCEL_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, etc. at build and runtime so `NEXT_PUBLIC_SITE_URL` can be inferred automatically.
+3. **Environment variables** (Production + Preview + Development), then **Redeploy**:
+   - `NEXT_PUBLIC_SUPABASE_URL` — **required** (Demo mode until set)
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — **required**
+   - `NEXT_PUBLIC_SITE_URL` — **optional on Vercel** if system vars are enabled (defaults to production/preview URL)
+4. **Supabase Auth → URL configuration:**
+   - Site URL: your production URL (e.g. `https://jame-street.vercel.app`)
+   - Redirect: `https://<your-domain>/auth/callback` (add preview URLs if testing branches)
+5. Confirm build succeeds and login works.
 
 ## Database security
 

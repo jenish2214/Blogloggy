@@ -26,7 +26,9 @@ export function ConfigBanner() {
         lineHeight: 1.45,
       }}
     >
-      <strong>Demo mode.</strong> Cloud sign-in and portfolio sync are disabled until Supabase env vars are set on the host and redeployed.
+      <strong>Demo mode.</strong> Cloud sign-in and portfolio sync are disabled until{" "}
+      <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> are set on
+      Vercel (Settings → Environment Variables) and redeployed.
     </div>
   );
 }

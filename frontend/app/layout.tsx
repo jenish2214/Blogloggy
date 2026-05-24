@@ -1,10 +1,5 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
-
-const Analytics = dynamic(
-  () => import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })),
-  { ssr: false }
-);
+import { Analytics } from "@vercel/analytics/next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CloudSyncProvider } from "@/components/providers/CloudSyncProvider";

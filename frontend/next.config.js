@@ -1,13 +1,18 @@
+const { resolveSiteUrl } = require("./lib/siteUrl.js");
+const { resolveSupabasePublicEnv } = require("./lib/supabaseEnv.js");
+
+const siteUrl = resolveSiteUrl();
+const supabase = resolveSupabasePublicEnv();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   env: {
-    // Ensure @supabase/ssr never receives empty strings during Vercel build when vars are unset
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
-    NEXT_PUBLIC_SUPABASE_ANON_KEY:
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1wbGFjZWhvbGRlciJ9.build",
+    NEXT_PUBLIC_SITE_URL: siteUrl,
+    // NEXT_PUBLIC_* or Vercel Supabase integration (SUPABASE_URL / SUPABASE_ANON_KEY)
+    NEXT_PUBLIC_SUPABASE_URL: supabase.url,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: supabase.anonKey,
   },
   images: {
     remotePatterns: [
