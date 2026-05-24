@@ -21,6 +21,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^3.8.1",
+    "typescript": "^5.7.2",
     "yahoo-finance2": "^3.14.1",
     "zustand": "^5.0.2"
   },
@@ -29,7 +30,6 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.35",
-    "typescript": "^5.7.2"
+    "eslint-config-next": "14.2.35"
   }
 }
