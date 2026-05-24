@@ -60,6 +60,8 @@ npm run dev:quant
 
 Open **Quant Lab** at http://localhost:3000/quant-lab (`QUANT_SERVICE_URL` is set in `frontend/.env.example`).
 
+Full feature guide: [`docs/QUANT_LAB.md`](docs/QUANT_LAB.md).
+
 ---
 
 ## 📄 Pages

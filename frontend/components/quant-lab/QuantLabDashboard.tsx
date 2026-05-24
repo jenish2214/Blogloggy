@@ -134,9 +134,25 @@ export function QuantLabDashboard() {
           {engineOk === false && (
             <span>
               {" "}
-              Start the Python engine locally (
-              <code>cd quant-service && uvicorn main:app --port 8000</code>) or set{" "}
-              <code>QUANT_SERVICE_URL</code> on Vercel to your deployed quant service.
+              {error?.includes("not_configured") || error?.includes("not_deployed") ? (
+                <>
+                  Deploy the Python engine on{" "}
+                  <a
+                    href="https://dashboard.render.com/blueprint/new?repo=https://github.com/jenish2214/Blogloggy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Render (Blueprint)
+                  </a>{" "}
+                  and set <code>QUANT_SERVICE_URL</code> on Vercel — or locally run{" "}
+                  <code>npm run dev</code> (starts quant on port 8000).
+                </>
+              ) : (
+                <>
+                  Start the Python engine locally (
+                  <code>npm run dev</code>) or check <code>QUANT_SERVICE_URL</code> on Vercel.
+                </>
+              )}
             </span>
           )}
         </p>

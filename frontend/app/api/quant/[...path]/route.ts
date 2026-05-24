@@ -45,6 +45,16 @@ async function proxy(req: NextRequest, pathSegments: string[]) {
       cache: "no-store",
     });
     const text = await res.text();
+    if (res.status === 404 && text.trim() === "Not Found") {
+      return NextResponse.json(
+        {
+          error: "quant_service_not_deployed",
+          hint:
+            "Deploy quant-service on Render: https://dashboard.render.com/blueprint/new?repo=https://github.com/jenish2214/Blogloggy — then verify GET /health on QUANT_SERVICE_URL.",
+        },
+        { status: 503 }
+      );
+    }
     return new NextResponse(text, {
       status: res.status,
       headers: { "content-type": res.headers.get("content-type") ?? "application/json" },

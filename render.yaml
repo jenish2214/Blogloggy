@@ -23,7 +23,7 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: CORS_ORIGINS
-        value: https://algo-street.vercel.app,https://blogloggy.vercel.app
+        value: https://algo-street.vercel.app,https://jame-street.vercel.app,https://blogloggy.vercel.app
       - key: MASSIVE_API_KEY
         sync: false
       - key: FINNHUB_API_KEY
@@ -43,7 +43,7 @@ services:
     rootDir: quant-service
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /docs
+    healthCheckPath: /health
     buildFilter:
       paths:
         - quant-service/**
