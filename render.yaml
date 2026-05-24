@@ -11,7 +11,7 @@ services:
     branch: main
     autoDeploy: true
     rootDir: backend
-    buildCommand: npm ci && npm run build
+    buildCommand: NPM_CONFIG_PRODUCTION=false npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     buildFilter:
