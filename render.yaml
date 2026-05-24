@@ -51,4 +51,4 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.11
       - key: CORS_ORIGINS
-        value: https://algo-street.vercel.app,http://localhost:3000
+        value: https://algo-street.vercel.app,https://jame-street.vercel.app,http://localhost:3000

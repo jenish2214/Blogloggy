@@ -30,12 +30,14 @@ A full-stack paper trading platform inspired by Jane Street — professional dar
 **Production:** [https://algo-street.vercel.app](https://algo-street.vercel.app)
 
 ```bash
-# Install all dependencies
-npm run install:all
+# One-time setup (Node deps + Python venv + .env files)
+npm run setup
 
-# Start backend + frontend
+# Start Express API (:4000), Python quant (:8000), and Next.js (:3000)
 npm run dev
 ```
+
+Then open http://localhost:3000 — **Quant Lab** at `/quant-lab` works automatically (uses `QUANT_SERVICE_URL=http://localhost:8000` from `frontend/.env.local`).
 
 ### Docker (full stack)
 
@@ -47,16 +49,16 @@ npm run docker:up
 
 See [`docs/DOCKER.md`](docs/DOCKER.md).
 
-### Python Quant Service (optional)
+### Python Quant Service
+
+Started automatically by `npm run dev`. To run it alone:
 
 ```bash
-cd quant-service
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+npm run dev:quant
+# or: npm run setup:quant   # venv + pip install only
 ```
 
-Open **Quant Lab** at http://localhost:3000/quant-lab (requires quant service + `QUANT_SERVICE_URL` in `frontend/.env.local`).
+Open **Quant Lab** at http://localhost:3000/quant-lab (`QUANT_SERVICE_URL` is set in `frontend/.env.example`).
 
 ---
 

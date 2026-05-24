@@ -32,7 +32,7 @@ app = FastAPI(
 
 _cors_origins = os.getenv(
     "CORS_ORIGINS",
-    "http://localhost:3000,http://localhost:3001,https://algo-street.vercel.app",
+    "http://localhost:3000,http://localhost:3001,https://algo-street.vercel.app,https://jame-street.vercel.app",
 ).split(",")
 app.add_middleware(
     CORSMiddleware,
@@ -208,7 +208,7 @@ def var_endpoint(req: PortfolioVarRequest):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {
         "status": "ok",

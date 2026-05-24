@@ -128,7 +128,19 @@ export function QuantLabDashboard() {
         </div>
       </header>
 
-      {error && <p className={styles.error}>{error}</p>}
+      {error && (
+        <p className={styles.error}>
+          {error}
+          {engineOk === false && (
+            <span>
+              {" "}
+              Start the Python engine locally (
+              <code>cd quant-service && uvicorn main:app --port 8000</code>) or set{" "}
+              <code>QUANT_SERVICE_URL</code> on Vercel to your deployed quant service.
+            </span>
+          )}
+        </p>
+      )}
 
       <PredictionsHub engineOk={engineOk === true} />
 

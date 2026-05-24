@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const QUANT_BASE =
-  process.env.QUANT_SERVICE_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
+function resolveQuantBase(): { base: string } | { error: string; hint: string } {
+  const configured = process.env.QUANT_SERVICE_URL?.trim().replace(/\/$/, "");
+  const isVercel = !!process.env.VERCEL;
+
+  if (configured) return { base: configured };
+
+  if (isVercel) {
+    return {
+      error: "quant_service_not_configured",
+      hint: "Set QUANT_SERVICE_URL on Vercel (e.g. https://quantdesk-quant.onrender.com) and deploy quant-service on Render.",
+    };
+  }
+
+  return { base: "http://localhost:8000" };
+}
 
 async function proxy(req: NextRequest, pathSegments: string[]) {
+  const resolved = resolveQuantBase();
+  if ("error" in resolved) {
+    return NextResponse.json(
+      { error: resolved.error, hint: resolved.hint },
+      { status: 503 }
+    );
+  }
+
   const path = "/" + pathSegments.join("/");
-  const url = `${QUANT_BASE}${path}${req.nextUrl.search}`;
+  const url = `${resolved.base}${path}${req.nextUrl.search}`;
 
   const headers = new Headers();
   const contentType = req.headers.get("content-type");
@@ -29,12 +50,13 @@ async function proxy(req: NextRequest, pathSegments: string[]) {
       headers: { "content-type": res.headers.get("content-type") ?? "application/json" },
     });
   } catch (err) {
+    const detail = (err as Error).message;
+    const hint =
+      detail.includes("ECONNREFUSED") || detail.includes("fetch failed")
+        ? "Start quant-service locally: cd quant-service && pip install -r requirements.txt && uvicorn main:app --port 8000 — or set QUANT_SERVICE_URL to a deployed engine."
+        : "Check QUANT_SERVICE_URL and that the quant engine is running.";
     return NextResponse.json(
-      {
-        error: "quant_service_unavailable",
-        detail: (err as Error).message,
-        hint: "Start quant-service: cd quant-service && pip install -r requirements.txt && uvicorn main:app --port 8000",
-      },
+      { error: "quant_service_unavailable", detail, hint },
       { status: 503 }
     );
   }
