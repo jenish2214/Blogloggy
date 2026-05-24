@@ -16,6 +16,12 @@ export function fromCache<T>(key: string): T | null {
   return null;
 }
 
+/** Expired server cache — used when upstream APIs fail (stale-while-revalidate). */
+export function fromCacheStale<T>(key: string): T | null {
+  const hit = cache.get(key);
+  return hit ? (hit.data as T) : null;
+}
+
 export function toCache(key: string, data: unknown, ttlMs: number) {
   cache.set(key, { data, expiresAt: Date.now() + ttlMs });
 }

@@ -35,7 +35,7 @@ export async function GET(
     return NextResponse.json(
       {
         error: "finnhub_not_configured",
-        hint: "Set FINNHUB_API_KEY or NEXT_PUBLIC_FINNHUB_API_KEY",
+        hint: "Set FINNHUB_API_KEY (server-only)",
       },
       { status: 503 }
     );
@@ -76,9 +76,18 @@ export async function GET(
     if (message === "from_and_to_required") {
       return NextResponse.json({ error: message }, { status: 400 });
     }
+
+    const stale = cache.get(key);
+    if (stale) {
+      return new NextResponse(stale.body, {
+        status: stale.status,
+        headers: { "content-type": "application/json", "x-cache": "STALE" },
+      });
+    }
+
     return NextResponse.json(
       { error: "finnhub_fetch_failed", detail: message },
-      { status: 502 }
+      { status: message.includes("429") ? 429 : 502 }
     );
   }
 }

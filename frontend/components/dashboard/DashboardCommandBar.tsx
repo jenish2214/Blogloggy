@@ -15,7 +15,7 @@ export function DashboardCommandBar() {
       const d = new Date();
       setNow(d);
       setStatus(getUSMarketStatus(d));
-      setLabel(getMarketStatusLabel(d));
+      setLabel(getMarketStatusLabel({}, d));
     };
     tick();
     const id = setInterval(tick, 1000);

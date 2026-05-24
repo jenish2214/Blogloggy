@@ -9,7 +9,7 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   experimental: {
-    serverComponentsExternalPackages: ["finnhub"],
+    serverComponentsExternalPackages: ["finnhub", "screener-india"],
   },
   env: {
     NEXT_PUBLIC_SITE_URL: siteUrl,

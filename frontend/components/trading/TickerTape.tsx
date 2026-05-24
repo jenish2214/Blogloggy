@@ -11,9 +11,11 @@ export function TickerTape() {
 
   useEffect(() => {
     let alive = true;
+    let first = true;
     const load = async () => {
       try {
-        const { quotes: q } = await marketApi.getQuotes(DEFAULT_SYMBOLS, true);
+        const { quotes: q } = await marketApi.getQuotes(DEFAULT_SYMBOLS, !first);
+        first = false;
         if (!alive) return;
         setQuotes(q.filter((qt) => !qt.error && qt.price != null));
       } catch {

@@ -48,8 +48,13 @@ function buildOrderRecord(
 export async function executePlaceOrder(
   params: PlaceOrderInput
 ): Promise<{ success: boolean; message: string }> {
-  if (!canPlaceMarketOrders()) {
-    return { success: false, message: getTradingBlockReason() ?? "Market closed" };
+  if (!canPlaceMarketOrders({ symbol: params.symbol, assetClass: params.assetClass })) {
+    return {
+      success: false,
+      message:
+        getTradingBlockReason({ symbol: params.symbol, assetClass: params.assetClass }) ??
+        "Market closed",
+    };
   }
 
   const fillPrice =

@@ -22,9 +22,11 @@ export function LiveMarketWatch() {
   useEffect(() => {
     let alive = true;
 
+    let first = true;
     const load = async () => {
       try {
-        const { quotes: q } = await marketApi.getQuotes(WATCH, true);
+        const { quotes: q } = await marketApi.getQuotes(WATCH, !first);
+        first = false;
         if (!alive) return;
         const valid = q.filter((qt) => qt.price != null && !qt.error);
         const nextFlash: Record<string, "up" | "down"> = {};

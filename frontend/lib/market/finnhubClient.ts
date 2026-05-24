@@ -65,11 +65,7 @@ let client: FinnhubSdk | null = null;
 let DefaultApiCtor: (new (key: string) => FinnhubSdk) | null = null;
 
 export function getFinnhubApiKey(): string | null {
-  return (
-    process.env.FINNHUB_API_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_FINNHUB_API_KEY?.trim() ||
-    null
-  );
+  return process.env.FINNHUB_API_KEY?.trim() || null;
 }
 
 export function isFinnhubConfigured(): boolean {

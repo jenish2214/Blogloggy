@@ -2,12 +2,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { portfolioApi } from "@/lib/api";
 import { fetchLivePrices } from "@/lib/market/fetchLivePrices";
-import { isFinnhubWebSocketEnabled } from "@/lib/market/finnhubSymbols";
-import { useFinnhubWebSocket } from "@/lib/hooks/useFinnhubWebSocket";
 import { usePortfolioStore } from "@/lib/store/portfolio";
 
 const DEFAULT_INTERVAL_MS = 10_000;
-const WS_BACKUP_INTERVAL_MS = 60_000;
 
 export interface LivePriceFeedOptions {
   intervalMs?: number;
@@ -35,8 +32,6 @@ export function useLivePriceFeed(
   const inFlightRef = useRef(false);
   persistRef.current = persist;
 
-  const useFinnhubWs = isFinnhubWebSocketEnabled();
-
   const symbolKey = useMemo(
     () => Array.from(new Set(symbols.filter(Boolean))).sort().join(","),
     [symbols]
@@ -56,12 +51,6 @@ export function useLivePriceFeed(
       }
     },
     [updatePrices]
-  );
-
-  const finnhubWs = useFinnhubWebSocket(
-    symbolKey ? symbolKey.split(",") : [],
-    applyPrices,
-    enabled && useFinnhubWs
   );
 
   const refresh = useCallback(async () => {
@@ -88,21 +77,20 @@ export function useLivePriceFeed(
   useEffect(() => {
     if (!enabled || !symbolKey) return;
     void refresh();
-    const pollMs = useFinnhubWs && finnhubWs.connected ? WS_BACKUP_INTERVAL_MS : intervalMs;
-    const id = setInterval(() => void refresh(), pollMs);
+    const id = setInterval(() => void refresh(), intervalMs);
     return () => clearInterval(id);
-  }, [enabled, symbolKey, intervalMs, refresh, useFinnhubWs, finnhubWs.connected]);
+  }, [enabled, symbolKey, intervalMs, refresh]);
 
   return {
     livePrices,
     lastUpdated,
     loading,
-    error: error ?? finnhubWs.error,
+    error,
     refresh,
     unrealizedTotal,
     totalPnl,
     totalValue,
-    finnhubConnected: finnhubWs.connected,
-    stream: useFinnhubWs ? ("finnhub-ws" as const) : ("poll" as const),
+    finnhubConnected: false,
+    stream: "poll" as const,
   };
 }

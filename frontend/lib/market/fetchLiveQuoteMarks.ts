@@ -9,14 +9,15 @@ export interface LiveQuoteMark {
 
 /** Live price + day change for portfolio marks. Never throws. */
 export async function fetchLiveQuoteMarks(
-  portfolioSymbols: string[]
+  portfolioSymbols: string[],
+  force = false
 ): Promise<{ marks: Record<string, LiveQuoteMark>; error?: string }> {
   const unique = Array.from(new Set(portfolioSymbols.filter(Boolean)));
   if (unique.length === 0) return { marks: {} };
 
   try {
     const { yahooSymbols, yahooToPortfolio } = buildQuoteBatch(unique);
-    const { quotes } = await marketApi.getQuotes(yahooSymbols, true);
+    const { quotes } = await marketApi.getQuotes(yahooSymbols, force);
     const marks: Record<string, LiveQuoteMark> = {};
 
     for (const q of quotes) {

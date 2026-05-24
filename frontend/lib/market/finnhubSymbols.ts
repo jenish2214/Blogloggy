@@ -51,10 +51,7 @@ export function buildFinnhubSymbolMap(portfolioSymbols: string[]) {
   };
 }
 
-export function getFinnhubPublicToken(): string | undefined {
-  return process.env.NEXT_PUBLIC_FINNHUB_API_KEY?.trim();
-}
-
+/** Browser WebSocket disabled — Finnhub key stays server-side; use HTTP polling instead. */
 export function isFinnhubWebSocketEnabled(): boolean {
-  return !!getFinnhubPublicToken();
+  return false;
 }

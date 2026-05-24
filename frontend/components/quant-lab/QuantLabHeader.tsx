@@ -110,11 +110,13 @@ export function QuantLabHeader({ benchmark }: QuantLabHeaderProps) {
   );
 }
 
-/** Engine bootstrap hook — used by shell */
+/** Engine bootstrap hook — polls /health every 5s while cold (Render free tier). */
 export function useQuantEngine() {
   const setEngineOk = useQuantLabStore((s) => s.setEngineOk);
   const [benchmark, setBenchmark] = useState<ModelBenchmark | null>(null);
   const [engineError, setEngineError] = useState<string | null>(null);
+  const [warming, setWarming] = useState(false);
+  const [warmupSeconds, setWarmupSeconds] = useState(0);
 
   const loadEngine = useCallback(async () => {
     try {
@@ -123,10 +125,12 @@ export function useQuantEngine() {
       setEngineOk(true);
       setBenchmark(v.benchmark);
       setEngineError(null);
+      setWarming(false);
     } catch (e) {
       setEngineOk(false);
       setBenchmark(null);
       setEngineError((e as Error).message);
+      setWarming(true);
     }
   }, [setEngineOk]);
 
@@ -134,5 +138,15 @@ export function useQuantEngine() {
     void loadEngine();
   }, [loadEngine]);
 
-  return { benchmark, engineError, reloadEngine: loadEngine };
+  useEffect(() => {
+    if (!warming) return;
+    const poll = setInterval(() => void loadEngine(), 5_000);
+    const clock = setInterval(() => setWarmupSeconds((s) => s + 1), 1_000);
+    return () => {
+      clearInterval(poll);
+      clearInterval(clock);
+    };
+  }, [warming, loadEngine]);
+
+  return { benchmark, engineError, reloadEngine: loadEngine, warming, warmupSeconds };
 }

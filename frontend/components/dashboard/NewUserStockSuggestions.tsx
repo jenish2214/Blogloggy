@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { hasSupabaseEnv } from "@/lib/supabase/client";
 import { createClient } from "@/lib/supabase/client";
@@ -32,6 +33,7 @@ function fmtPct(n: number) {
 }
 
 export function NewUserStockSuggestions() {
+  const reduce = useReducedMotion();
   const activeBook = useActiveBookStore((s) => s.activeBook);
   const [data, setData] = useState<SuggestionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,16 +112,27 @@ export function NewUserStockSuggestions() {
 
   if (loading) {
     return (
-      <div className={styles.card}>
+      <motion.div
+        className={styles.card}
+        initial={reduce ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className={styles.loading}>Loading suggestions for your wallet…</div>
-      </div>
+      </motion.div>
     );
   }
 
   if (!data?.isNewUser || !data.suggestions?.length) return null;
 
   return (
-    <section className={styles.card} aria-labelledby="stock-suggestions-title">
+    <motion.section
+      className={styles.card}
+      aria-labelledby="stock-suggestions-title"
+      initial={reduce ? false : { opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className={styles.head}>
         <span className={styles.badge}>New here · Education</span>
         <h2 id="stock-suggestions-title" className={styles.title}>
@@ -206,6 +219,6 @@ export function NewUserStockSuggestions() {
           </button>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { CloudSyncProvider } from "@/components/providers/CloudSyncProvider";
 import { BookSwitcherGate } from "@/components/wealth/BookSwitcherGate";
 import { ConfigBanner } from "@/components/system/ConfigBanner";
+import { GuestModeBanner } from "@/components/system/GuestModeBanner";
 import "@/styles/globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Sidebar />
           <main className="app-main">
             <BookSwitcherGate />
+            <GuestModeBanner />
             <CloudSyncProvider>{children}</CloudSyncProvider>
           </main>
         </div>

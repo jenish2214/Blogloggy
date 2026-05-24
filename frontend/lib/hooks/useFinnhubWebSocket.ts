@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { finnhubWsManager } from "@/lib/market/finnhubWsManager";
-import { getFinnhubPublicToken } from "@/lib/market/finnhubSymbols";
+import { useMemo } from "react";
 
 export interface FinnhubWsState {
   connected: boolean;
@@ -10,40 +8,13 @@ export interface FinnhubWsState {
 }
 
 /**
- * Real-time trades from Finnhub WebSocket (shared singleton connection).
- * @see https://finnhub.io/docs/api/websocket
+ * Finnhub WebSocket is disabled — API keys stay server-side.
+ * Use `useLivePriceFeed` or `fetchLivePrices` for HTTP polling instead.
  */
 export function useFinnhubWebSocket(
-  portfolioSymbols: string[],
-  onPrices: (prices: Record<string, number>) => void,
-  enabled = true
+  _portfolioSymbols: string[],
+  _onPrices: (prices: Record<string, number>) => void,
+  _enabled = true
 ): FinnhubWsState {
-  const [connected, setConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const symbolKey = useMemo(
-    () => portfolioSymbols.filter(Boolean).sort().join(","),
-    [portfolioSymbols]
-  );
-
-  useEffect(() => {
-    const token = getFinnhubPublicToken();
-    if (!enabled || !token || !symbolKey) {
-      setConnected(false);
-      setError(null);
-      return;
-    }
-
-    const symbols = symbolKey.split(",");
-    return finnhubWsManager.subscribe(
-      symbols,
-      onPrices,
-      (isConnected, err) => {
-        setConnected(isConnected);
-        setError(err);
-      }
-    );
-  }, [enabled, symbolKey, onPrices]);
-
-  return { connected, error };
+  return useMemo(() => ({ connected: false, error: null }), []);
 }

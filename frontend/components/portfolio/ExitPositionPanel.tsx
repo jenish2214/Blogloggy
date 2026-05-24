@@ -43,7 +43,11 @@ export function ExitPositionPanel({
   );
 
   const isProfit = pnl.profit >= 0;
-  const tradingAllowed = canPlaceMarketOrders();
+  const marketCtx = {
+    symbol: position.symbol,
+    assetClass: position.assetClass as "stock" | "crypto" | "option" | "forex",
+  };
+  const tradingAllowed = canPlaceMarketOrders(marketCtx);
 
   return (
     <div className={styles.panel} role="dialog" aria-labelledby="exit-panel-title">
@@ -58,7 +62,7 @@ export function ExitPositionPanel({
       </div>
 
       {!tradingAllowed && (
-        <p className={styles.weekendNote}>{getTradingBlockReason()}</p>
+        <p className={styles.weekendNote}>{getTradingBlockReason(marketCtx)}</p>
       )}
 
       <div className={styles.hero}>

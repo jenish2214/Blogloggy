@@ -108,26 +108,28 @@ export async function fetchMarketQuotes(symbols: string[]): Promise<{
   if (unique.length === 0) return { quotes: [], provider: "yahoo" };
 
   const bySymbol = new Map<string, UnifiedQuote>();
-  let skipped = [...unique];
 
-  if (isMassiveConfigured()) {
-    const { quotes: massiveQuotes, skipped: mSkip } = await fetchMassiveQuotes(unique);
-    for (const q of massiveQuotes) {
-      bySymbol.set(q.symbol.toUpperCase(), { ...q, provider: "massive" });
+  const massiveP = isMassiveConfigured()
+    ? fetchMassiveQuotes(unique)
+    : Promise.resolve({ quotes: [] as UnifiedQuote[], skipped: [...unique] });
+  const finnhubP =
+    isFinnhubConfigured()
+      ? fetchFinnhubQuotes(unique)
+      : Promise.resolve({ quotes: [] as MarketQuoteRow[], skipped: [...unique] });
+
+  const [massiveRes, fhRes] = await Promise.all([massiveP, finnhubP]);
+
+  for (const q of massiveRes.quotes) {
+    bySymbol.set(q.symbol.toUpperCase(), { ...q, provider: "massive" });
+  }
+  for (const q of fhRes.quotes) {
+    const key = q.symbol.toUpperCase();
+    if (!bySymbol.has(key)) {
+      bySymbol.set(key, { ...q, provider: "finnhub" });
     }
-    skipped = mSkip;
   }
 
-  if (skipped.length > 0 && isFinnhubConfigured()) {
-    const { quotes: fhQuotes, skipped: fhSkip } = await fetchFinnhubQuotes(skipped);
-    for (const q of fhQuotes) {
-      const key = q.symbol.toUpperCase();
-      if (!bySymbol.has(key)) {
-        bySymbol.set(key, { ...q, provider: "finnhub" });
-      }
-    }
-    skipped = fhSkip;
-  }
+  let skipped = unique.filter((s) => !bySymbol.has(s.toUpperCase()));
 
   if (skipped.length > 0) {
     const yahooQuotes = await fetchYahooQuotes(skipped);

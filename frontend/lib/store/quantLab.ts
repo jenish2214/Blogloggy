@@ -15,6 +15,8 @@ export type QuantLabTabId =
 
 export type QuantLabMode = "beginner" | "pro";
 
+export const QUANT_LAB_MODE_STORAGE_KEY = "quantdesk:quant-lab-mode";
+
 interface QuantLabState {
   activeSymbol: string;
   activeTab: QuantLabTabId;
@@ -44,7 +46,12 @@ export const useQuantLabStore = create<QuantLabState>((set, get) => ({
   engineOk: null,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
-  setQuantLabMode: (mode) => set({ quantLabMode: mode }),
+  setQuantLabMode: (mode) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(QUANT_LAB_MODE_STORAGE_KEY, mode);
+    }
+    set({ quantLabMode: mode });
+  },
   setEngineOk: (ok) => set({ engineOk: ok }),
   setLiveQuote: (quote) => set({ liveQuote: quote }),
   setCompanyProfile: (profile) => set({ companyProfile: profile }),

@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuantLabStore, type QuantLabTabId } from "@/lib/store/quantLab";
+import {
+  useQuantLabStore,
+  QUANT_LAB_MODE_STORAGE_KEY,
+  type QuantLabTabId,
+  type QuantLabMode,
+} from "@/lib/store/quantLab";
 import { BacktestTab } from "./BacktestTab";
 import { MarketOverviewTab } from "./MarketOverviewTab";
 import { MonteCarloTab } from "./MonteCarloTab";
@@ -23,21 +28,39 @@ const TABS: { id: QuantLabTabId; label: string }[] = [
 ];
 
 export function QuantLabDashboard() {
-  const { activeTab, setActiveTab, engineOk, refreshLiveData, quantLabMode } = useQuantLabStore();
-  const { benchmark, engineError } = useQuantEngine();
+  const { activeTab, setActiveTab, engineOk, refreshLiveData, quantLabMode, setQuantLabMode } =
+    useQuantLabStore();
+  const { benchmark, engineError, warming, warmupSeconds } = useQuantEngine();
+
+  useEffect(() => {
+    const saved = localStorage.getItem(QUANT_LAB_MODE_STORAGE_KEY) as QuantLabMode | null;
+    if (saved === "beginner" || saved === "pro") setQuantLabMode(saved);
+  }, [setQuantLabMode]);
 
   useEffect(() => {
     void refreshLiveData();
   }, [refreshLiveData]);
 
   const engineOnline = engineOk === true;
+  const showWarmup = engineOk === false && warming;
 
   return (
     <div className={`${styles.root} ${quantLabMode === "pro" ? styles.proMode : styles.beginnerMode}`}>
       <QuantLabHeader benchmark={benchmark} />
       <QuantLabMarketStrip />
 
-      {engineError && engineOk === false && (
+      {showWarmup && (
+        <div className={styles.warmupScreen} role="status">
+          <div className={styles.warmupSpinner} aria-hidden />
+          <h2 className={styles.warmupTitle}>Engine is warming up…</h2>
+          <p className={styles.warmupText}>
+            The quant service may take 30–60 seconds on Render free tier after idle. Retrying every 5 seconds
+            {warmupSeconds > 0 ? ` (${warmupSeconds}s)` : ""}.
+          </p>
+        </div>
+      )}
+
+      {engineError && engineOk === false && !showWarmup && (
         <div className={styles.engineBanner}>
           <p>
             Quant engine offline.{" "}
@@ -73,7 +96,9 @@ export function QuantLabDashboard() {
         ))}
       </nav>
 
-      <div className={styles.tabContent}>
+      <div className={styles.tabContent} aria-hidden={showWarmup}>
+        {showWarmup ? null : (
+          <>
         <QuantLabMiniChart title={`${activeTab.replace(/-/g, " ")} · price history`} />
         {activeTab === "market-overview" && <MarketOverviewTab />}
         {activeTab === "predictions" && <PredictionsHub engineOk={engineOnline} />}
@@ -81,6 +106,8 @@ export function QuantLabDashboard() {
         {activeTab === "monte-carlo" && <MonteCarloTab engineOk={engineOnline} benchmark={benchmark} />}
         {activeTab === "backtest" && <BacktestTab engineOk={engineOnline} />}
         {activeTab === "news-sentiment" && <NewsSentimentTab />}
+          </>
+        )}
       </div>
 
       <p className={styles.disclaimer}>

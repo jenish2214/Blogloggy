@@ -22,6 +22,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^3.8.1",
+    "screener-india": "^1.0.1",
     "yahoo-finance2": "^3.14.1",
     "zustand": "^5.0.2"
   },

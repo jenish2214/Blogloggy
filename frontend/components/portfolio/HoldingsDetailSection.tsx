@@ -10,6 +10,7 @@ import { enrichPositionMetrics } from "@/lib/trading/portfolioSnapshot";
 import { computeExitPnl, formatPctSigned, formatProfitSigned } from "@/lib/trading/exitPnl";
 import {
   canPlaceMarketOrders,
+  detectMarketCalendar,
   getTradingBlockReason,
 } from "@/lib/trading/marketHours";
 import { executePlaceOrder } from "@/lib/trading/placeOrder";
@@ -69,20 +70,31 @@ export function HoldingsDetailSection({
     });
   }, [positions, marks]);
 
+  const pausePolling =
+    frozen &&
+    positions.length > 0 &&
+    positions.every(
+      (p) =>
+        detectMarketCalendar({
+          symbol: p.symbol,
+          assetClass: p.assetClass as "stock" | "crypto" | "option" | "forex",
+        }) === "US_EQUITIES"
+    );
+
   const refreshPrices = useCallback(async () => {
-    if (frozen || positions.length === 0) return;
+    if (pausePolling || positions.length === 0) return;
     const syms = positions.map((p) => p.symbol);
     const { marks: next } = await fetchLiveQuoteMarks(syms);
     setMarks(next);
     setLastUpdated(new Date());
-  }, [frozen, positions]);
+  }, [pausePolling, positions]);
 
   useEffect(() => {
-    if (frozen) return;
+    if (pausePolling) return;
     void refreshPrices();
     const id = setInterval(() => void refreshPrices(), LIVE_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [frozen, refreshPrices]);
+  }, [pausePolling, refreshPrices]);
 
   const exitPosition = exitSymbol
     ? livePositions.find((p) => p.symbol === exitSymbol) ?? null
@@ -91,11 +103,13 @@ export function HoldingsDetailSection({
     ? marks[exitPosition.symbol]?.price ?? exitPosition.currentPrice
     : 0;
 
-  const tradingAllowed = canPlaceMarketOrders() && !frozen;
-  const blockReason = getTradingBlockReason();
-
   const handleSell = async () => {
-    if (!exitPosition || !tradingAllowed) return;
+    if (!exitPosition) return;
+    const exitCtx = {
+      symbol: exitPosition.symbol,
+      assetClass: exitPosition.assetClass as "stock" | "crypto" | "option" | "forex",
+    };
+    if (!canPlaceMarketOrders(exitCtx)) return;
     setExitLoading(true);
     const price = marks[exitPosition.symbol]?.price ?? exitPosition.currentPrice;
     const pnl = computeExitPnl(exitPosition.qty, exitPosition.avgPrice, price, exitPosition.costBasis);
@@ -178,6 +192,12 @@ export function HoldingsDetailSection({
 
       <div className={styles.cardList}>
         {holdings.map((h) => {
+          const posCtx = {
+            symbol: h.symbol,
+            assetClass: h.assetClass as "stock" | "crypto" | "option" | "forex",
+          };
+          const holdingTradingAllowed = canPlaceMarketOrders(posCtx);
+          const blockReason = getTradingBlockReason(posCtx);
           const pos = livePositions.find((p) => p.symbol === h.symbol);
           const hasPosition = !!pos && pos.qty > 0;
           const livePrice = pos
@@ -277,7 +297,7 @@ export function HoldingsDetailSection({
               </div>
 
               <div className={styles.actions}>
-                {tradingAllowed ? (
+                {holdingTradingAllowed ? (
                   <>
                     <Link
                       href={`/trade?symbol=${encodeURIComponent(h.symbol)}&name=${encodeURIComponent(h.name)}&class=${h.assetClass}`}

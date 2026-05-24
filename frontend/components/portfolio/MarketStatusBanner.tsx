@@ -36,7 +36,7 @@ export function MarketStatusBanner() {
         <strong>{label}</strong>
         {!tradingAllowed && (
           <span className={styles.sub}>
-            Holdings show last prices · buy &amp; sell disabled until Monday
+            US equities: weekend freeze · Crypto trades 24/7 · India follows NSE calendar
           </span>
         )}
         {tradingAllowed && isLive && (

@@ -18,7 +18,7 @@ import {
 import { subscribeOrderPlaced } from "@/lib/trading/orderEvents";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { exitAllPositions } from "@/lib/trading/exitAllPositions";
-import { canPlaceMarketOrders, getUSMarketStatus } from "@/lib/trading/marketHours";
+import { canPlaceMarketOrders, isUSEquityWeekend } from "@/lib/trading/marketHours";
 import { MarketStatusBanner } from "@/components/portfolio/MarketStatusBanner";
 import { HoldingsDetailSection } from "@/components/portfolio/HoldingsDetailSection";
 import tabStyles from "./portfolio.module.css";
@@ -80,7 +80,7 @@ export default function PortfolioPage() {
   const [pnlOpen, setPnlOpen] = useState(true);
   const [realizedOpen, setRealizedOpen] = useState(true);
   const [tab, setTab] = useState<PortfolioTab>("holdings");
-  const isWeekend = getUSMarketStatus() === "weekend";
+  const isWeekend = isUSEquityWeekend();
 
   const refreshSnapshot = useCallback(async () => {
     setLoading(true);

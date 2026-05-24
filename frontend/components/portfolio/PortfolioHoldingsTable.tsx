@@ -4,17 +4,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { fetchLiveQuoteMarks, type LiveQuoteMark } from "@/lib/market/fetchLiveQuoteMarks";
-import { isFinnhubWebSocketEnabled } from "@/lib/market/finnhubSymbols";
-import { useFinnhubWebSocket } from "@/lib/hooks/useFinnhubWebSocket";
 import { portfolioApi } from "@/lib/api";
 import { enrichPositionMetrics, type SnapshotPosition } from "@/lib/trading/portfolioSnapshot";
 import { computePortfolioTotals } from "@/lib/trading/portfolioTotals";
 import { executePlaceOrder } from "@/lib/trading/placeOrder";
 import {
   canPlaceMarketOrders,
+  detectMarketCalendar,
   formatExitTimestamp,
   getMarketStatusLabel,
-  getUSMarketStatus,
+  getTradingBlockReason,
+  isUSEquityWeekend,
   isUSMarketOpen,
 } from "@/lib/trading/marketHours";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
@@ -101,8 +101,16 @@ export function PortfolioHoldingsTable({
   }, []);
 
   const marketOpen = isUSMarketOpen();
-  const isWeekend = getUSMarketStatus() === "weekend";
-  const tradingAllowed = canPlaceMarketOrders();
+  const isWeekend = isUSEquityWeekend();
+  const allUsOnly =
+    initialPositions.length > 0 &&
+    initialPositions.every(
+      (p) =>
+        detectMarketCalendar({
+          symbol: p.symbol,
+          assetClass: p.assetClass as "stock" | "crypto" | "option" | "forex",
+        }) === "US_EQUITIES"
+    );
 
   const symbolKey = useMemo(
     () => initialPositions.map((p) => p.symbol).sort().join(","),
@@ -139,39 +147,13 @@ export function PortfolioHoldingsTable({
     });
   }, [symbolKey, cash, startingCapital, onTotalsChange]);
 
-  const applyWsPrices = useCallback(
-    (prices: Record<string, number>) => {
-      const at = new Date();
-      setLastUpdated(at);
-      setMarks((prev) => {
-        const next: Record<string, LiveQuoteMark> = { ...prev };
-        for (const [sym, price] of Object.entries(prices)) {
-          next[sym] = {
-            price,
-            change: prev[sym]?.change ?? 0,
-            changePct: prev[sym]?.changePct ?? 0,
-          };
-        }
-        pushTotals(initialPositions, next, at);
-        return next;
-      });
-    },
-    [initialPositions, pushTotals]
-  );
-
-  const finnhubWs = useFinnhubWebSocket(
-    symbolKey ? symbolKey.split(",") : [],
-    applyWsPrices,
-    isFinnhubWebSocketEnabled() && initialPositions.length > 0 && !isWeekend
-  );
-
   const refreshLivePrices = useCallback(async () => {
     if (!symbolKey) return;
     const syms = symbolKey.split(",");
     setPriceLoading(true);
     setPriceError(null);
     try {
-      const { marks: nextMarks, error } = await fetchLiveQuoteMarks(syms);
+      const { marks: nextMarks, error } = await fetchLiveQuoteMarks(syms, true);
       if (error) setPriceError(error);
       setMarks(nextMarks);
       const at = new Date();
@@ -198,11 +180,11 @@ export function PortfolioHoldingsTable({
   }, [symbolKey, initialPositions, pushTotals, useServerData, activeBook]);
 
   useEffect(() => {
-    if (!symbolKey || isWeekend) return;
+    if (!symbolKey) return;
     void refreshLivePrices();
     const id = setInterval(() => void refreshLivePrices(), LIVE_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [symbolKey, refreshLivePrices, isWeekend]);
+  }, [symbolKey, refreshLivePrices]);
 
   const exitLivePosition = useMemo(() => {
     if (!exitTarget) return null;
@@ -214,7 +196,12 @@ export function PortfolioHoldingsTable({
     : 0;
 
   const handleExitFull = async () => {
-    if (!exitLivePosition || !tradingAllowed) return;
+    if (!exitLivePosition) return;
+    const exitCtx = {
+      symbol: exitLivePosition.symbol,
+      assetClass: exitLivePosition.assetClass as "stock" | "crypto" | "option" | "forex",
+    };
+    if (!canPlaceMarketOrders(exitCtx)) return;
     setExitLoading(true);
     setExitMsg(null);
     const pos = exitLivePosition;
@@ -261,17 +248,13 @@ export function PortfolioHoldingsTable({
   }
 
   return (
-    <div className={isWeekend ? styles.frozenSection : undefined}>
+    <div className={isWeekend && allUsOnly ? styles.frozenSection : undefined}>
       <div className={styles.liveBar}>
         <span className={styles.liveDot} aria-hidden />
         <span className={styles.liveText}>
-          {finnhubWs.connected ? "Finnhub live" : "Live marks"}
+          Live marks
           {lastUpdated ? ` · ${fmtTime(lastUpdated)}` : ""}
-          {priceLoading
-            ? " · refreshing…"
-            : finnhubWs.connected
-              ? " · WebSocket stream"
-              : ` · every ${LIVE_INTERVAL_MS / 1000}s`}
+          {priceLoading ? " · refreshing…" : ` · every ${LIVE_INTERVAL_MS / 1000}s`}
           {" · "}
           <span className={marketOpen ? styles.marketOpen : styles.marketClosed}>{marketLabel}</span>
         </span>
@@ -326,6 +309,11 @@ export function PortfolioHoldingsTable({
           </thead>
           <tbody>
             {positions.map((pos) => {
+              const posCtx = {
+                symbol: pos.symbol,
+                assetClass: pos.assetClass as "stock" | "crypto" | "option" | "forex",
+              };
+              const posTradingAllowed = canPlaceMarketOrders(posCtx);
               const up = pos.unrealizedPnl >= 0;
               const dayPct = pos.dayChangePct ?? marks[pos.symbol]?.changePct ?? 0;
               const isExiting = exitTarget?.symbol === pos.symbol;
@@ -399,11 +387,11 @@ export function PortfolioHoldingsTable({
                           setExitTarget(pos);
                           setExitMsg(null);
                         }}
-                        disabled={!tradingAllowed}
+                        disabled={!posTradingAllowed}
                         title={
-                          tradingAllowed
+                          posTradingAllowed
                             ? "Sell entire position at live price"
-                            : "Sell not available Saturday & Sunday"
+                            : getTradingBlockReason(posCtx) ?? "Market closed"
                         }
                       >
                         {isExiting ? "Selected" : "Exit"}
@@ -411,7 +399,7 @@ export function PortfolioHoldingsTable({
                       <button
                         type="button"
                         className="btn btn-ghost btn-sm"
-                        disabled={!tradingAllowed}
+                        disabled={!posTradingAllowed}
                         onClick={() =>
                           setSellTarget({
                             symbol: pos.symbol,
@@ -439,15 +427,22 @@ export function PortfolioHoldingsTable({
                 <strong>Portfolio totals (live)</strong>
               </td>
               <td className={styles.mono}>
-                <span
-                  className={
-                    positions.reduce((s, p) => s + p.unrealizedPnl, 0) >= 0 ? styles.up : styles.down
-                  }
-                >
-                  {positions.reduce((s, p) => s + p.unrealizedPnl, 0) >= 0 ? "+" : "−"}$
-                  {fmt(Math.abs(positions.reduce((s, p) => s + p.unrealizedPnl, 0)))}
-                </span>
-                <div className={styles.subCell}>unrealized on open holdings</div>
+                {(() => {
+                  const totalUnreal = positions.reduce((s, p) => s + p.unrealizedPnl, 0);
+                  const totalCost = positions.reduce((s, p) => s + p.costBasis, 0);
+                  const totalPct = totalCost > 0 ? (totalUnreal / totalCost) * 100 : 0;
+                  return (
+                    <>
+                      <span className={totalUnreal >= 0 ? styles.up : styles.down}>
+                        {totalUnreal >= 0 ? "+" : "−"}${fmt(Math.abs(totalUnreal))}
+                      </span>
+                      <div className={styles.subCell}>
+                        {totalPct >= 0 ? "+" : ""}
+                        {fmt(totalPct)}% unrealized
+                      </div>
+                    </>
+                  );
+                })()}
               </td>
               <td className={styles.mono}>
                 ${fmt(positions.reduce((s, p) => s + p.costBasis, 0))}

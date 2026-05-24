@@ -3,12 +3,18 @@
  * Falls back to Express backend for local dev if NEXT_PUBLIC_API_BASE is set.
  */
 
+import { cachedFetch } from "@/lib/clientFetchCache";
+
+const MARKET_CACHE_MS = 20_000;
+const MARKET_SLOW_CACHE_MS = 60_000;
+const INDIA_CACHE_MS = 90_000;
+
 function apiBase() {
   if (typeof window !== "undefined") return "";
   return process.env.NEXT_PUBLIC_SITE_URL ?? "";
 }
 
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+async function apiFetchRaw<T>(path: string, init?: RequestInit): Promise<T> {
   const base = apiBase();
   const url = `${base}${path}`;
 
@@ -43,6 +49,21 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message || `API ${res.status}`);
   }
   return res.json();
+}
+
+async function apiFetch<T>(
+  path: string,
+  init?: RequestInit,
+  options?: { cacheTtlMs?: number; force?: boolean }
+): Promise<T> {
+  const method = init?.method ?? "GET";
+  if (method !== "GET" || !options?.cacheTtlMs) {
+    return apiFetchRaw<T>(path, init);
+  }
+  const key = `GET:${path}`;
+  return cachedFetch<T>(key, options.cacheTtlMs, () => apiFetchRaw<T>(path, init), {
+    force: options.force,
+  });
 }
 
 // ── Market ────────────────────────────────────────────────────────────────────
@@ -126,17 +147,60 @@ export const marketApi = {
       return Promise.resolve({ quotes: [] as Quote[] });
     }
     const freshParam = fresh ? "&fresh=1" : "";
-    return apiFetch<{ quotes: Quote[] }>(
-      `/api/market/quotes?symbols=${encodeURIComponent(list.join(","))}${freshParam}`
-    );
+    const path = `/api/market/quotes?symbols=${encodeURIComponent(list.join(","))}${freshParam}`;
+    return apiFetch<{ quotes: Quote[] }>(path, undefined, {
+      cacheTtlMs: MARKET_CACHE_MS,
+      force: fresh,
+    });
   },
-  getQuotesByRegion: (region: MarketRegion) => apiFetch<{ quotes: Quote[]; region: string }>(`/api/market/quotes?region=${region}`),
-  getRegions: () => apiFetch<{ regions: MarketRegionInfo[] }>("/api/market/regions"),
-  getForex: () => apiFetch<{ pairs: ForexQuote[]; cached?: boolean }>("/api/market/forex"),
-  getChart: (symbol: string, range = "1d", interval = "5m") => apiFetch<{ chart: ChartData }>(`/api/market/chart/${symbol}?range=${range}&interval=${interval}`),
-  getCrypto: () => apiFetch<{ coins: CoinQuote[] }>("/api/market/crypto"),
-  getIndices: () => apiFetch<{ indices: IndexItem[] }>("/api/market/indices"),
-  getMovers: () => apiFetch<{ gainers: MoverItem[]; losers: MoverItem[]; mostActive: MoverItem[] }>("/api/market/movers"),
+  getQuotesByRegion: (region: MarketRegion, fresh = false) => {
+    const path = `/api/market/quotes?region=${region}${fresh ? "&fresh=1" : ""}`;
+    return apiFetch<{ quotes: Quote[]; region: string }>(path, undefined, {
+      cacheTtlMs: MARKET_CACHE_MS,
+      force: fresh,
+    });
+  },
+  getIndiaMarket: (fresh = false) => {
+    const path = `/api/market/india${fresh ? "?fresh=1" : ""}`;
+    return apiFetch<{
+      quotes: import("@/types/india-market").IndiaMarketQuote[];
+      cached?: boolean;
+      provider?: string;
+      fundamentalsAvailable?: boolean;
+    }>(path, undefined, { cacheTtlMs: INDIA_CACHE_MS, force: fresh });
+  },
+  getIndiaCompany: (symbol: string) =>
+    apiFetch<{ company: import("@/types/india-market").IndiaCompanyDetail; cached?: boolean }>(
+      `/api/market/india/${encodeURIComponent(symbol.replace(/\.(NS|BO)$/i, ""))}`
+    ),
+  getRegions: () =>
+    apiFetch<{ regions: MarketRegionInfo[] }>("/api/market/regions", undefined, {
+      cacheTtlMs: 300_000,
+    }),
+  getForex: () =>
+    apiFetch<{ pairs: ForexQuote[]; cached?: boolean }>("/api/market/forex", undefined, {
+      cacheTtlMs: MARKET_SLOW_CACHE_MS,
+    }),
+  getChart: (symbol: string, range = "1d", interval = "5m") =>
+    apiFetch<{ chart: ChartData }>(
+      `/api/market/chart/${symbol}?range=${range}&interval=${interval}`,
+      undefined,
+      { cacheTtlMs: 30_000 }
+    ),
+  getCrypto: () =>
+    apiFetch<{ coins: CoinQuote[] }>("/api/market/crypto", undefined, {
+      cacheTtlMs: MARKET_SLOW_CACHE_MS,
+    }),
+  getIndices: () =>
+    apiFetch<{ indices: IndexItem[] }>("/api/market/indices", undefined, {
+      cacheTtlMs: MARKET_CACHE_MS,
+    }),
+  getMovers: () =>
+    apiFetch<{ gainers: MoverItem[]; losers: MoverItem[]; mostActive: MoverItem[] }>(
+      "/api/market/movers",
+      undefined,
+      { cacheTtlMs: MARKET_SLOW_CACHE_MS }
+    ),
   search: (q: string) => apiFetch<{ results: Array<{ symbol: string; name: string; exchange: string; type: string }> }>(`/api/market/search?q=${encodeURIComponent(q)}`),
 };
 

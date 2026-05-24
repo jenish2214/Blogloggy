@@ -1,0 +1,108 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.modal {
+  width: min(420px, 100%);
+  padding: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 16px;
+  margin: 0 0 16px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.grid dt {
+  color: var(--text-muted);
+}
+
+.grid dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+}
+
+.buy {
+  color: var(--up);
+}
+
+.sell {
+  color: var(--down);
+}
+
+.note {
+  margin: 0 0 16px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancel,
+.confirmBuy,
+.confirmSell {
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.cancel {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.confirmBuy {
+  background: var(--up-soft);
+  color: var(--up);
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.confirmSell {
+  background: var(--down-soft);
+  color: var(--down);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.cancel:disabled,
+.confirmBuy:disabled,
+.confirmSell:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, type CSSProperties } from "react";
 import Link from "next/link";
+import { IndiaStockDetailPanel } from "@/components/markets/IndiaStockDetailPanel";
 import { marketApi, type Quote, type CoinQuote, type MoverItem, type MarketRegion, type MarketRegionInfo } from "@/lib/api";
+import type { IndiaMarketQuote } from "@/types/india-market";
 
 type Tab = "stocks" | "crypto" | "movers";
 
@@ -40,22 +42,48 @@ export default function MarketsPage() {
   const [tab, setTab] = useState<Tab>("stocks");
   const [region, setRegion] = useState<MarketRegion>("us");
   const [regions, setRegions] = useState<MarketRegionInfo[]>([]);
-  const [stocks, setStocks] = useState<Quote[]>([]);
+  const [stocks, setStocks] = useState<(Quote | IndiaMarketQuote)[]>([]);
   const [crypto, setCrypto] = useState<CoinQuote[]>([]);
   const [movers, setMovers] = useState<{ gainers: MoverItem[]; losers: MoverItem[]; mostActive: MoverItem[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<{ col: string; dir: 1 | -1 }>({ col: "mktCap", dir: -1 });
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [indiaDetailSymbol, setIndiaDetailSymbol] = useState<string | null>(null);
+  const [indiaLoading, setIndiaLoading] = useState(false);
+  const [fundamentalsAvailable, setFundamentalsAvailable] = useState(true);
+  const [marketsError, setMarketsError] = useState<string | null>(null);
+  const stocksRef = useRef(stocks);
+  stocksRef.current = stocks;
 
   useEffect(() => {
     marketApi.getRegions().then(({ regions: r }) => setRegions(r)).catch(() => {});
   }, []);
 
-  const loadStocks = useCallback(async () => {
-    const { quotes } = await marketApi.getQuotesByRegion(region);
-    setStocks(quotes.filter((q) => !q.error));
-    setLastUpdated(new Date().toLocaleTimeString());
+  const loadStocks = useCallback(async (force = false) => {
+    setMarketsError(null);
+    const hasData = stocksRef.current.length > 0;
+    if (!hasData) setLoading(true);
+    if (region === "india") setIndiaLoading(true);
+
+    try {
+      if (region === "india") {
+        const { quotes, fundamentalsAvailable: fa } = await marketApi.getIndiaMarket(force);
+        setStocks(quotes.filter((q) => !q.error));
+        setFundamentalsAvailable(fa !== false);
+      } else {
+        const { quotes } = await marketApi.getQuotesByRegion(region, force);
+        setStocks(quotes.filter((q) => !q.error));
+        setFundamentalsAvailable(true);
+      }
+      setLastUpdated(new Date().toLocaleTimeString());
+    } catch (e) {
+      setMarketsError(e instanceof Error ? e.message : "Failed to load markets");
+      if (!hasData) setStocks([]);
+    } finally {
+      setLoading(false);
+      setIndiaLoading(false);
+    }
   }, [region]);
 
   const loadCrypto = useCallback(async () => {
@@ -71,15 +99,36 @@ export default function MarketsPage() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([loadStocks(), loadCrypto(), loadMovers()]).finally(() => setLoading(false));
+    if (tab === "stocks") {
+      void loadStocks(false);
+    } else if (tab === "crypto") {
+      if (crypto.length === 0) setLoading(true);
+      void loadCrypto().finally(() => setLoading(false));
+    } else {
+      if (!movers) setLoading(true);
+      void loadMovers().finally(() => setLoading(false));
+    }
+  }, [tab, region, loadStocks, loadCrypto, loadMovers, crypto.length, movers]);
+
+  useEffect(() => {
     const id = setInterval(() => {
-      if (tab === "stocks") loadStocks();
-      if (tab === "crypto") loadCrypto();
-      if (tab === "movers") loadMovers();
+      if (tab === "stocks") void loadStocks(true);
+      else if (tab === "crypto") void loadCrypto();
+      else void loadMovers();
     }, 30_000);
     return () => clearInterval(id);
-  }, [tab, region, loadStocks, loadCrypto, loadMovers]);
+  }, [tab, loadStocks, loadCrypto, loadMovers]);
+
+  useEffect(() => {
+    if (tab !== "crypto" && crypto.length === 0) {
+      void loadCrypto();
+    }
+    if (tab !== "movers" && !movers) {
+      void loadMovers();
+    }
+  }, [tab, crypto.length, movers, loadCrypto, loadMovers]);
+
+  const isIndia = region === "india";
 
   const sortedStocks = [...stocks]
     .filter((q) => !search || q.symbol.toLowerCase().includes(search.toLowerCase()) || q.name?.toLowerCase().includes(search.toLowerCase()))
@@ -102,6 +151,18 @@ export default function MarketsPage() {
       {label} {sort.col === col ? (sort.dir === -1 ? "↓" : "↑") : ""}
     </th>
   );
+
+  const thStyle: CSSProperties = {
+    padding: "6px 12px",
+    color: "var(--text-muted)",
+    fontFamily: "var(--font-mono)",
+    fontSize: "0.68rem",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+    borderBottom: "1px solid var(--border)",
+    textAlign: "left",
+  };
 
   return (
     <div className="page">
@@ -175,7 +236,33 @@ export default function MarketsPage() {
         </div>
       )}
 
-      {loading ? (
+      {isIndia && !fundamentalsAvailable && !loading && (
+        <p
+          role="status"
+          style={{
+            margin: "0 0 12px",
+            padding: "10px 14px",
+            fontSize: "0.82rem",
+            color: "var(--text-secondary)",
+            background: "rgba(251, 191, 36, 0.08)",
+            border: "1px solid rgba(251, 191, 36, 0.35)",
+            borderRadius: "var(--radius-sm)",
+          }}
+        >
+          Fundamentals temporarily unavailable — showing live prices only.
+        </p>
+      )}
+
+      {marketsError && (
+        <p style={{ color: "var(--down)", fontSize: "0.82rem", marginBottom: 12 }}>
+          {marketsError}{" "}
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => void loadStocks()}>
+            Retry
+          </button>
+        </p>
+      )}
+
+      {loading || (isIndia && indiaLoading) ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {Array.from({ length: 12 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 40, borderRadius: 2 }} />)}
         </div>
@@ -189,6 +276,14 @@ export default function MarketsPage() {
                 <th style={{ padding: "6px 12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid var(--border)", textAlign: "left" }}>Country</th>
                 <SortBtn col="price" label="Price" />
                 <SortBtn col="changePct" label="Change %" />
+                {isIndia && fundamentalsAvailable && (
+                  <>
+                    <th style={thStyle}>P/E</th>
+                    <th style={thStyle}>ROE</th>
+                    <th style={thStyle}>Div %</th>
+                    <th style={thStyle}>Screener cap</th>
+                  </>
+                )}
                 <SortBtn col="change" label="Change" />
                 <th style={{ padding: "6px 12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid var(--border)", textAlign: "left" }}>Exchange</th>
                 <SortBtn col="volume" label="Volume" />
@@ -197,7 +292,10 @@ export default function MarketsPage() {
               </tr>
             </thead>
             <tbody>
-              {sortedStocks.map((q) => (
+              {sortedStocks.map((row) => {
+                const q = row as IndiaMarketQuote;
+                const f = q.fundamentals;
+                return (
                 <tr key={q.symbol}>
                   <td>
                     <span style={{ fontWeight: 600, color: "var(--accent-2)", fontFamily: "var(--font-mono)", fontSize: "0.82rem" }}>{q.symbol}</span>
@@ -208,6 +306,14 @@ export default function MarketsPage() {
                   <td><span className="badge badge-neutral">{q.country ?? "—"}</span></td>
                   <td style={{ fontWeight: 600, fontFamily: "var(--font-mono)" }}>{fmtPrice(q.price, q.currency)}</td>
                   <td><DeltaBadge pct={q.changePct} /></td>
+                  {isIndia && fundamentalsAvailable && (
+                    <>
+                      <td style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem" }}>{f?.pe ?? "—"}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem" }}>{f?.roe ?? "—"}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem" }}>{f?.dividendYield ?? "—"}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", maxWidth: 120 }}>{f?.marketCapInr ?? "—"}</td>
+                    </>
+                  )}
                   <td style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: (q.change ?? 0) >= 0 ? "var(--up)" : "var(--down)" }}>
                     {(q.change ?? 0) >= 0 ? "+" : ""}{fmt(q.change)}
                   </td>
@@ -215,12 +321,24 @@ export default function MarketsPage() {
                   <td style={{ fontFamily: "var(--font-mono)", color: "var(--text-secondary)" }}>{q.volume ? (q.volume / 1e6).toFixed(1) + "M" : "—"}</td>
                   <td style={{ fontFamily: "var(--font-mono)", color: "var(--text-secondary)" }}>{fmtLarge(q.mktCap, q.currency)}</td>
                   <td>
-                    <Link href={`/trade?symbol=${encodeURIComponent(q.symbol)}&name=${encodeURIComponent(q.name ?? q.symbol)}`} className="btn btn-ghost btn-sm">
-                      Trade
-                    </Link>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {isIndia && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => setIndiaDetailSymbol(q.symbol)}
+                        >
+                          Details
+                        </button>
+                      )}
+                      <Link href={`/trade?symbol=${encodeURIComponent(q.symbol)}&name=${encodeURIComponent(q.name ?? q.symbol)}`} className="btn btn-ghost btn-sm">
+                        Trade
+                      </Link>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>
@@ -297,6 +415,13 @@ export default function MarketsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {indiaDetailSymbol && (
+        <IndiaStockDetailPanel
+          symbol={indiaDetailSymbol}
+          onClose={() => setIndiaDetailSymbol(null)}
+        />
       )}
     </div>
   );

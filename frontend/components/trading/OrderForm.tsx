@@ -3,6 +3,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePortfolioStore, type AssetClass } from "@/lib/store/portfolio";
 import { executePlaceOrder } from "@/lib/trading/placeOrder";
+import {
+  canPlaceMarketOrders,
+  getTradingBlockReason,
+} from "@/lib/trading/marketHours";
+import {
+  OrderConfirmModal,
+  type OrderConfirmDetails,
+} from "@/components/trading/OrderConfirmModal";
 
 interface Props {
   symbol: string;
@@ -20,19 +28,49 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
   const [limitPrice, setLimitPrice] = useState("");
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingConfirm, setPendingConfirm] = useState<OrderConfirmDetails | null>(null);
 
   const { cash, positions } = usePortfolioStore();
+  const marketCtx = { symbol, assetClass };
+  const tradingBlocked = !canPlaceMarketOrders(marketCtx);
+  const blockReason = getTradingBlockReason(marketCtx);
   const fillPrice = orderType === "limit" && limitPrice ? parseFloat(limitPrice) : currentPrice;
   const total = parseFloat(qty) * fillPrice || 0;
   const position = positions[symbol];
   const sellQty = parseFloat(qty) || 0;
   const realizedPnl = side === "sell" && position ? (fillPrice - position.avgPrice) * sellQty : 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const q = parseFloat(qty);
-    if (!q || q <= 0) { setResult({ success: false, message: "Enter a valid quantity" }); return; }
+    if (!q || q <= 0) {
+      setResult({ success: false, message: "Enter a valid quantity" });
+      return;
+    }
+    if (tradingBlocked) {
+      setResult({ success: false, message: blockReason ?? "Market closed" });
+      return;
+    }
 
+    const cashAfter = side === "buy" ? cash - total : cash + total;
+    setPendingConfirm({
+      symbol,
+      name,
+      side,
+      orderType,
+      qty: q,
+      fillPrice,
+      total,
+      cashAfter,
+      realizedPnl: side === "sell" && position ? realizedPnl : undefined,
+    });
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!pendingConfirm) return;
+    const q = pendingConfirm.qty;
     setSubmitting(true);
     const res = await executePlaceOrder({
       symbol,
@@ -45,6 +83,8 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
       limitPrice: orderType === "limit" ? parseFloat(limitPrice) : undefined,
     });
     setSubmitting(false);
+    setConfirmOpen(false);
+    setPendingConfirm(null);
     setResult(res);
     if (res.success) {
       setQty("");
@@ -53,7 +93,13 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {tradingBlocked && blockReason && (
+        <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--down)", fontFamily: "var(--font-mono)" }}>
+          {blockReason}
+        </p>
+      )}
       {/* Buy / Sell toggle */}
       <div style={{ display: "flex", gap: 1 }}>
         <button
@@ -232,7 +278,7 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
       {/* Submit */}
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || tradingBlocked}
         style={{
           padding: "10px",
           fontFamily: "var(--font-mono)",
@@ -274,5 +320,17 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
         </div>
       )}
     </form>
+
+    <OrderConfirmModal
+      open={confirmOpen}
+      details={pendingConfirm}
+      submitting={submitting}
+      onConfirm={() => void handleConfirmOrder()}
+      onCancel={() => {
+        setConfirmOpen(false);
+        setPendingConfirm(null);
+      }}
+    />
+    </>
   );
 }

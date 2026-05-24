@@ -62,6 +62,8 @@ Open **Quant Lab** at http://localhost:3000/quant-lab (`QUANT_SERVICE_URL` is se
 
 Full feature guide: [`docs/QUANT_LAB.md`](docs/QUANT_LAB.md).
 
+**Complete platform guide (every page, feature, and how logic works):** [`docs/PLATFORM_GUIDE.md`](docs/PLATFORM_GUIDE.md)
+
 ---
 
 ## 📄 Pages

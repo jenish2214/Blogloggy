@@ -3,7 +3,7 @@
  * Handles reconnect, ping/pong, and React Strict Mode mount/unmount races.
  */
 
-import { buildFinnhubSymbolMap, getFinnhubPublicToken, toFinnhubSymbol } from "@/lib/market/finnhubSymbols";
+import { buildFinnhubSymbolMap, toFinnhubSymbol } from "@/lib/market/finnhubSymbols";
 
 type PriceListener = (prices: Record<string, number>) => void;
 type StateListener = (connected: boolean, error: string | null) => void;
@@ -65,71 +65,7 @@ class FinnhubWsManager {
   }
 
   private openSocket() {
-    const token = getFinnhubPublicToken();
-    if (!token || this.disabled || this.priceListeners.size === 0) return;
-
-    this.syncSymbolMap();
-    const fhSymbols = Object.keys(this.finnhubToPortfolio);
-    if (fhSymbols.length === 0) return;
-
-    const gen = ++this.generation;
-    const ws = new WebSocket(`wss://ws.finnhub.io?token=${token}`);
-    this.ws = ws;
-    this.subscribed.clear();
-
-    ws.addEventListener("open", () => {
-      if (gen !== this.generation) return;
-      this.retryCount = 0;
-      this.emitState(true, null);
-      this.subscribeAll(ws);
-    });
-
-    ws.addEventListener("message", (event) => {
-      if (gen !== this.generation) return;
-      try {
-        const msg = JSON.parse(String(event.data)) as {
-          type?: string;
-          data?: Array<{ s?: string; p?: number }>;
-        };
-
-        if (msg.type === "ping") {
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: "pong" }));
-          }
-          return;
-        }
-
-        if (msg.type !== "trade" || !Array.isArray(msg.data)) return;
-
-        const prices: Record<string, number> = {};
-        for (const tick of msg.data) {
-          const fh = tick.s;
-          const price = tick.p;
-          if (!fh || !price || price <= 0) continue;
-          const portfolio = this.finnhubToPortfolio[fh];
-          if (portfolio) prices[portfolio] = price;
-        }
-
-        if (Object.keys(prices).length > 0) {
-          Array.from(this.priceListeners).forEach((listener) => listener(prices));
-        }
-      } catch {
-        /* ignore malformed */
-      }
-    });
-
-    ws.addEventListener("error", () => {
-      if (gen !== this.generation) return;
-      this.emitState(false, null);
-    });
-
-    ws.addEventListener("close", () => {
-      if (gen !== this.generation) return;
-      this.ws = null;
-      this.subscribed.clear();
-      this.emitState(false, null);
-      this.scheduleRetry();
-    });
+    /* Browser WebSocket disabled — Finnhub API key must not ship to the client. */
   }
 
   private subscribeAll(ws: WebSocket) {
