@@ -2,7 +2,7 @@
 import { Play, Pause, Square, Shield, Link2 } from "lucide-react";
 import { useAlgoTradingStore, STRATEGY_LABELS } from "@/store/algoTradingStore";
 import type { StrategyType } from "@/types/algoTrading";
-import styles from "@/app/algo-trading/algo-trading.module.css";
+import styles from "@/app/(platform)/algo-trading/algo-trading.module.css";
 
 const STRATEGIES: { id: StrategyType; desc: string }[] = [
   { id: "meanReversion", desc: "Buy below 2σ band · Sell above" },

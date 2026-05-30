@@ -1,7 +1,7 @@
 "use client";
 import { memo, useEffect, useMemo, useState } from "react";
 import { mulberry32 } from "@/lib/priceDataGenerator";
-import styles from "@/app/algo-trading/algo-trading.module.css";
+import styles from "@/app/(platform)/algo-trading/algo-trading.module.css";
 
 export interface OrderBookProps {
   symbol: string;

@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getClientUserId } from "@/lib/auth/clientSession";
 import { portfolioApi } from "@/lib/api";
 import { fetchLivePrices } from "@/lib/market/fetchLivePrices";
 import { usePortfolioStore } from "@/lib/store/portfolio";
@@ -45,8 +46,9 @@ export function useLivePriceFeed(
       updatePrices(prices);
 
       if (persistRef.current) {
-        void portfolioApi.syncPrices(prices).catch(() => {
-          /* not logged in */
+        void getClientUserId().then((uid) => {
+          if (!uid) return;
+          void portfolioApi.syncPrices(prices).catch(() => {});
         });
       }
     },

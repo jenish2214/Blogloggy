@@ -8,7 +8,6 @@ Quant Lab is QuantDesk’s research and pricing desk. It runs institutional-styl
 ---
 
 ## Prerequisites
-
 | Environment | Requirement |
 |-------------|-------------|
 | **Local** | `npm run dev` from repo root (starts API, Python quant, and Next.js) |

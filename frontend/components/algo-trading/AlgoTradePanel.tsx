@@ -12,7 +12,7 @@ import {
 } from "@/lib/algoPortfolioBridge";
 import { getSymbolConfig } from "@/types/algoTrading";
 import { useLivePricesOptional } from "@/components/algo-trading/LivePriceProvider";
-import styles from "@/app/algo-trading/algo-trading.module.css";
+import styles from "@/app/(platform)/algo-trading/algo-trading.module.css";
 
 function fmtPrice(n: number, forex?: boolean) {
   return n.toLocaleString("en-US", {

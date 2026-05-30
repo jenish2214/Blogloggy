@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { handleAuthSessionChange } from "@/lib/auth/tradingSession";
 import type { User } from "@supabase/supabase-js";
+import { useFeatureAccess } from "@/lib/hooks/useFeatureAccess";
+import { filterNavByAccess } from "@/lib/user/featureAccess";
 import styles from "./Sidebar.module.css";
 
 const NAV = [
@@ -92,6 +94,25 @@ const NAV = [
     ),
   },
   {
+    href: "/risk",
+    label: "Risk Desk",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    ),
+  },
+  {
+    href: "/screener",
+    label: "Screener",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    ),
+  },
+  {
     href: "/research",
     label: "Research",
     icon: (
@@ -107,6 +128,8 @@ export function Sidebar() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
+  const { access: featureAccess } = useFeatureAccess();
+  const navItems = filterNavByAccess(NAV, featureAccess);
 
   const isAuthPage =
     path === "/login" ||
@@ -164,7 +187,7 @@ export function Sidebar() {
       </div>
 
       <nav className={styles.nav} aria-label="Main navigation">
-        {NAV.map(({ href, label, icon }) => {
+        {navItems.map(({ href, label, icon }) => {
           const base = href.split("?")[0];
           const isActive = base === "/" ? path === "/" : path.startsWith(base);
 
@@ -193,7 +216,7 @@ export function Sidebar() {
           {user ? (
             <div className={styles.userStack}>
               <Link
-                href="/desk?section=profile"
+                href="/profile"
                 className={styles.profileLink}
                 aria-label={`Profile: ${username}`}
                 title={username}

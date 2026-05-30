@@ -7,7 +7,7 @@ import { fetchLiveQuoteMarks, type LiveQuoteMark } from "@/lib/market/fetchLiveQ
 import { portfolioApi } from "@/lib/api";
 import { enrichPositionMetrics, type SnapshotPosition } from "@/lib/trading/portfolioSnapshot";
 import { computePortfolioTotals } from "@/lib/trading/portfolioTotals";
-import { executePlaceOrder } from "@/lib/trading/placeOrder";
+import { sellHoldingPosition } from "@/lib/trading/sellHoldingPosition";
 import {
   canPlaceMarketOrders,
   detectMarketCalendar,
@@ -17,10 +17,8 @@ import {
   isUSEquityWeekend,
   isUSMarketOpen,
 } from "@/lib/trading/marketHours";
-import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import { computeExitPnl, formatPctSigned, formatProfitSigned } from "@/lib/trading/exitPnl";
 import { SellPositionPanel, type SellPosition } from "@/components/trading/SellPositionPanel";
-import { ExitPositionPanel } from "./ExitPositionPanel";
 import styles from "./PortfolioHoldingsTable.module.css";
 
 const LIVE_INTERVAL_MS = 10_000;
@@ -88,8 +86,7 @@ export function PortfolioHoldingsTable({
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
   const [sellTarget, setSellTarget] = useState<SellPosition | null>(null);
-  const [exitTarget, setExitTarget] = useState<SnapshotPosition | null>(null);
-  const [exitLoading, setExitLoading] = useState(false);
+  const [sellLoadingSymbol, setSellLoadingSymbol] = useState<string | null>(null);
   const [exitMsg, setExitMsg] = useState<string | null>(null);
   const [marketLabel, setMarketLabel] = useState(getMarketStatusLabel());
 
@@ -186,49 +183,24 @@ export function PortfolioHoldingsTable({
     return () => clearInterval(id);
   }, [symbolKey, refreshLivePrices]);
 
-  const exitLivePosition = useMemo(() => {
-    if (!exitTarget) return null;
-    return positions.find((p) => p.symbol === exitTarget.symbol) ?? exitTarget;
-  }, [exitTarget, positions]);
-
-  const exitLivePrice = exitLivePosition
-    ? marks[exitLivePosition.symbol]?.price ?? exitLivePosition.currentPrice
-    : 0;
-
-  const handleExitFull = async () => {
-    if (!exitLivePosition) return;
-    const exitCtx = {
-      symbol: exitLivePosition.symbol,
-      assetClass: exitLivePosition.assetClass as "stock" | "crypto" | "option" | "forex",
-    };
-    if (!canPlaceMarketOrders(exitCtx)) return;
-    setExitLoading(true);
+  const sellFullPosition = async (pos: SnapshotPosition) => {
+    const live = positions.find((p) => p.symbol === pos.symbol) ?? pos;
+    const price = marks[live.symbol]?.price ?? live.currentPrice;
+    setSellLoadingSymbol(live.symbol);
     setExitMsg(null);
-    const pos = exitLivePosition;
-    const price = marks[pos.symbol]?.price ?? pos.currentPrice;
     const exitTime = new Date();
-    const pnl = computeExitPnl(pos.qty, pos.avgPrice, price, pos.costBasis);
+    const pnl = computeExitPnl(live.qty, live.avgPrice, price, live.costBasis);
 
-    const res = await executePlaceOrder({
-      symbol: pos.symbol,
-      name: pos.name,
-      assetClass: pos.assetClass as "stock" | "crypto" | "option" | "forex",
-      side: "sell",
-      qty: pos.qty,
-      orderType: "market",
-      currentPrice: price,
-    });
+    const res = await sellHoldingPosition(live, price);
 
-    setExitLoading(false);
+    setSellLoadingSymbol(null);
     if (res.success) {
-      await syncPortfolioFromCloud();
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("wallet-updated"));
       }
       setExitMsg(
-        `Sold ${pos.symbol} at ${formatExitTimestamp(exitTime)} · Proceeds $${fmt(pnl.proceeds)} · Realized ${formatProfitSigned(pnl.profit)} (${formatPctSigned(pnl.profitPct)})`
+        `Sold ${live.qty} ${live.symbol} at ${formatExitTimestamp(exitTime)} · Proceeds $${fmt(pnl.proceeds)} · Realized ${formatProfitSigned(pnl.profit)} (${formatPctSigned(pnl.profitPct)})`
       );
-      setExitTarget(null);
       onRefreshRequest();
     } else {
       setExitMsg(res.message);
@@ -274,21 +246,6 @@ export function PortfolioHoldingsTable({
         </div>
       )}
 
-      {exitLivePosition && (
-        <ExitPositionPanel
-          position={exitLivePosition}
-          livePrice={exitLivePrice}
-          lastUpdated={lastUpdated}
-          loading={priceLoading}
-          confirming={exitLoading}
-          onConfirm={() => void handleExitFull()}
-          onCancel={() => {
-            setExitTarget(null);
-            setExitMsg(null);
-          }}
-        />
-      )}
-
       <div style={{ overflowX: "auto" }}>
         <table className="data-table">
           <thead>
@@ -316,17 +273,11 @@ export function PortfolioHoldingsTable({
               const posTradingAllowed = canPlaceMarketOrders(posCtx);
               const up = pos.unrealizedPnl >= 0;
               const dayPct = pos.dayChangePct ?? marks[pos.symbol]?.changePct ?? 0;
-              const isExiting = exitTarget?.symbol === pos.symbol;
-              const liveExitPnl = computeExitPnl(
-                pos.qty,
-                pos.avgPrice,
-                marks[pos.symbol]?.price ?? pos.currentPrice,
-                pos.costBasis
-              );
+              const isSelling = sellLoadingSymbol === pos.symbol;
               return (
                 <tr
                   key={pos.symbol}
-                  className={`${priceLoading ? styles.rowPulse : ""} ${isExiting ? styles.rowExitActive : ""}`.trim() || undefined}
+                  className={`${priceLoading ? styles.rowPulse : ""} ${isSelling ? styles.rowExitActive : ""}`.trim() || undefined}
                 >
                   <td>
                     <span className={styles.sym}>{pos.symbol}</span>
@@ -375,26 +326,24 @@ export function PortfolioHoldingsTable({
                   </td>
                   <td>
                     <div className={styles.actions}>
-                      {isExiting && (
-                        <div className={`${styles.inlinePnl} ${liveExitPnl.profit >= 0 ? styles.up : styles.down}`}>
-                          Live: {formatProfitSigned(liveExitPnl.profit)}
-                        </div>
-                      )}
+                      <Link
+                        href={`/trade?symbol=${encodeURIComponent(pos.symbol)}&name=${encodeURIComponent(pos.name)}&class=${pos.assetClass}`}
+                        className="btn btn-primary btn-sm"
+                      >
+                        Buy more
+                      </Link>
                       <button
                         type="button"
                         className="btn btn-sell btn-sm"
-                        onClick={() => {
-                          setExitTarget(pos);
-                          setExitMsg(null);
-                        }}
-                        disabled={!posTradingAllowed}
+                        onClick={() => void sellFullPosition(pos)}
+                        disabled={isSelling}
                         title={
                           posTradingAllowed
-                            ? "Sell entire position at live price"
-                            : getTradingBlockReason(posCtx) ?? "Market closed"
+                            ? "Sell full position at live price"
+                            : getTradingBlockReason(posCtx) ?? "Market closed — button still visible"
                         }
                       >
-                        {isExiting ? "Selected" : "Exit"}
+                        {isSelling ? "Selling…" : "Sell"}
                       </button>
                       <button
                         type="button"

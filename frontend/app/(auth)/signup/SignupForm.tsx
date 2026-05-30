@@ -75,7 +75,7 @@ export function SignupForm() {
           <div style={{ padding: "40px 28px", textAlign: "center" }}>
             <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--bg-surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: "1.5rem", color: "var(--text-primary)" }}>✓</div>
             <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>Account created!</div>
-            <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>Redirecting to markets…</div>
+            <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>Next: terms & your profile setup…</div>
           </div>
         ) : (
           <>

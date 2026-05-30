@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSupabaseSession } from "@/lib/auth/useSupabaseSession";
 import { wealthApi } from "@/lib/api";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { useActiveBookStore } from "@/lib/store/activeBook";
@@ -9,6 +10,7 @@ import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import styles from "./BookSwitcher.module.css";
 
 export function BookSwitcher() {
+  const { isAuthenticated, ready: sessionReady } = useSupabaseSession();
   const activeBook = useActiveBookStore((s) => s.activeBook);
   const setActiveBook = useActiveBookStore((s) => s.setActiveBook);
   const [open, setOpen] = useState(false);
@@ -24,7 +26,7 @@ export function BookSwitcher() {
   >([]);
 
   useEffect(() => {
-    if (!hasSupabaseEnv()) return;
+    if (!hasSupabaseEnv() || !sessionReady || !isAuthenticated) return;
     wealthApi
       .getBooks()
       .then(({ books: list }) => {
@@ -43,7 +45,7 @@ export function BookSwitcher() {
         }
       })
       .catch(() => {});
-  }, [setActiveBook]);
+  }, [sessionReady, isAuthenticated, setActiveBook]);
 
   const selectBook = async (book: (typeof books)[0]) => {
     setActiveBook({

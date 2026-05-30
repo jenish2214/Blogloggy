@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
       terms_read_at: now,
       terms_accepted_at: now,
       privacy_policy_accepted_at: now,
-      onboarding_applied_at: now,
       terms_version: ONBOARDING_VERSION,
     },
   });
@@ -40,5 +39,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  return NextResponse.json({ success: true, next: "/" });
+  const { error: profileErr } = await supabase.from("user_profiles").upsert({
+    id: user.id,
+    full_name:
+      (user.user_metadata?.display_name as string) ||
+      user.email?.split("@")[0] ||
+      "Trader",
+    terms_accepted_at: now,
+    feature_access: {},
+  });
+
+  if (profileErr && !profileErr.message.includes("user_profiles")) {
+    return NextResponse.json({ error: profileErr.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true, next: "/welcome/profile" });
 }

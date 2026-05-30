@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { LogEntry } from "@/types/algoTrading";
-import styles from "@/app/algo-trading/algo-trading.module.css";
+import styles from "@/app/(platform)/algo-trading/algo-trading.module.css";
 
 export interface ExecutionLogProps {
   logs: LogEntry[];

@@ -30,17 +30,33 @@ export async function placeOrderForBook(
       };
     }
 
-    const { data: existing } = await supabase
+    const { data: bookRows } = await supabase
       .from("positions")
       .select("*")
       .eq("portfolio_id", portfolioId)
-      .eq("symbol", symbol)
-      .maybeSingle();
+      .eq("symbol", symbol);
 
-    const newQty = (existing?.qty ?? 0) + qty;
-    const newAvg = existing
-      ? (Number(existing.avg_price) * Number(existing.qty) + filledPrice * qty) / newQty
-      : filledPrice;
+    const { data: legacyRows } = await supabase
+      .from("positions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("symbol", symbol)
+      .is("portfolio_id", null);
+
+    const existing = bookRows?.[0];
+    let baseQty = Number(existing?.qty ?? 0);
+    let baseCost = existing ? Number(existing.avg_price) * baseQty : 0;
+
+    for (const leg of legacyRows ?? []) {
+      const lq = Number(leg.qty) || 0;
+      baseQty += lq;
+      baseCost += Number(leg.avg_price) * lq;
+      await supabase.from("positions").delete().eq("id", leg.id);
+    }
+
+    const newQty = baseQty + qty;
+    const newAvg =
+      newQty > 0 ? (baseCost + filledPrice * qty) / newQty : filledPrice;
 
     await supabase.from("positions").upsert(
       {

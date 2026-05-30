@@ -15,7 +15,8 @@ import {
 } from "@/lib/trading/portfolioSnapshot";
 import { subscribeOrderPlaced } from "@/lib/trading/orderEvents";
 import { useActiveBookStore } from "@/lib/store/activeBook";
-import styles from "@/app/profile/profile.module.css";
+import { ProfilePreferencesSection } from "@/components/account/ProfilePreferencesSection";
+import styles from "@/app/(platform)/profile/profile.module.css";
 
 type Tab = "statement" | "orders";
 type OrderFilter = "all" | "buy" | "sell";
@@ -111,6 +112,7 @@ export function AccountProfileSection() {
   const ordersPlacedLabel = snapshot?.orderCount ?? orders.length;
 
   const displayName =
+    (user?.user_metadata?.full_name as string | undefined)?.trim() ||
     (user?.user_metadata?.display_name as string | undefined)?.trim() ||
     user?.email?.split("@")[0] ||
     "Guest Trader";
@@ -160,6 +162,8 @@ export function AccountProfileSection() {
           </div>
         </div>
       </div>
+
+      {user && <ProfilePreferencesSection />}
 
       <div className={styles.statsGrid} style={{ marginBottom: 16 }}>
         {[

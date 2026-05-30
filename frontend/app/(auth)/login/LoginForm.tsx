@@ -29,7 +29,7 @@ export function LoginForm() {
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err) { setError(err.message); setLoading(false); return; }
     await syncPortfolioFromCloud();
-    router.push(redirectTo);
+    router.push(redirectTo === "/" ? "/" : redirectTo);
     router.refresh();
   };
 

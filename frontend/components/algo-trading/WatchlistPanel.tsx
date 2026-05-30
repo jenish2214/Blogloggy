@@ -5,7 +5,7 @@ import { useAlgoTradingStore } from "@/store/algoTradingStore";
 import { generateOHLCV } from "@/lib/priceDataGenerator";
 import type { AlgoSymbol } from "@/types/algoTrading";
 import { SYMBOL_GROUPS, getSymbolConfig } from "@/types/algoTrading";
-import styles from "@/app/algo-trading/algo-trading.module.css";
+import styles from "@/app/(platform)/algo-trading/algo-trading.module.css";
 
 const ALL_SYMBOLS = SYMBOL_GROUPS.flatMap((g) => g.symbols);
 

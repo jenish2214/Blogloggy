@@ -17,9 +17,11 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 10px 20px;
+  height: var(--app-topbar-h);
+  min-height: var(--app-topbar-h);
+  padding: 0 20px;
+  box-sizing: border-box;
   flex-wrap: wrap;
-  min-height: 52px;
 }
 
 .brand {

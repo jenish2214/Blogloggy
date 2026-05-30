@@ -5,6 +5,7 @@ import {
   resolvePortfolio,
 } from "@/lib/wealth/booksServer";
 import { placeOrderWithBookResolution } from "@/lib/wealth/placeOrderServer";
+import { consolidateRawPositions } from "@/lib/trading/consolidatePositions";
 
 const DEFAULT_WATCHLIST = [
   { symbol: "AAPL", name: "Apple Inc.", asset_class: "stock" },
@@ -51,7 +52,14 @@ function bookQueryFromUrl(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) {
+    return NextResponse.json({
+      portfolio: null,
+      positions: [],
+      orders: [],
+      guest: true,
+    });
+  }
 
   await ensurePersonalPortfolio(supabase, user.id);
   await seedDefaultWatchlist(supabase, user.id);
@@ -92,9 +100,11 @@ export async function GET(req: NextRequest) {
     orders = [...orders, ...(legacyOrd.data ?? [])];
   }
 
+  const consolidated = consolidateRawPositions(positions as Record<string, unknown>[]);
+
   return NextResponse.json({
     portfolio: book,
-    positions: positions.filter((p) => p.qty > 0.000001),
+    positions: consolidated.filter((p) => Number(p.qty) > 0.000001),
     orders,
     activeBook: {
       portfolioId: book.id,

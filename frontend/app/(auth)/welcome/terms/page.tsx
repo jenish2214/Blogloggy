@@ -44,7 +44,7 @@ export default function WelcomeTermsPage() {
         return;
       }
       await syncPortfolioFromCloud();
-      router.push("/");
+      router.push(json.next ?? "/welcome/profile");
       router.refresh();
     } catch {
       setError("Network error. Please try again.");
@@ -100,7 +100,7 @@ export default function WelcomeTermsPage() {
               disabled={!canContinue || loading}
               onClick={() => void handleAccept()}
             >
-              {loading ? "Applying…" : "Accept & go to dashboard →"}
+              {loading ? "Applying…" : "Accept & continue →"}
             </button>
           </div>
           <p className={styles.note}>Version {ONBOARDING_VERSION}</p>

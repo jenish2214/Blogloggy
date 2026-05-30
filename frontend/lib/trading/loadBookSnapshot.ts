@@ -1,3 +1,4 @@
+import { getClientUserId } from "@/lib/auth/clientSession";
 import { portfolioApi } from "@/lib/api";
 import { fetchLivePrices } from "@/lib/market/fetchLivePrices";
 import { computePnlFromOrders, INITIAL_CASH, type PnlSummary } from "@/lib/trading/pnlStatement";
@@ -63,6 +64,9 @@ export async function loadBookSnapshot(book?: {
   clientId?: string | null;
 }): Promise<PortfolioSnapshot | null> {
   try {
+    const userId = await getClientUserId();
+    if (!userId) return null;
+
     const portfolioData = await portfolioApi.get(book);
     const portfolio = portfolioData.portfolio as Record<string, unknown> | null;
     if (!portfolio) return null;

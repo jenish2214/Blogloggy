@@ -6,12 +6,12 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   CartesianGrid,
   Area,
   ComposedChart,
 } from "recharts";
 import { marketApi } from "@/lib/api";
+import { useChartDimensions } from "@/lib/useChartDimensions";
 import { useQuantLabStore } from "@/lib/store/quantLab";
 import styles from "./quant-lab.module.css";
 
@@ -29,6 +29,7 @@ export function QuantLabMiniChart({
   title = "Price chart",
 }: QuantLabMiniChartProps) {
   const { activeSymbol } = useQuantLabStore();
+  const chartDims = useChartDimensions(height);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [data, setData] = useState<Array<{ i: number; price: number; label: string }>>([]);
@@ -99,9 +100,9 @@ export function QuantLabMiniChart({
           </span>
         </span>
       </div>
-      <div className={styles.chartWrap} style={{ height }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data}>
+      <div ref={chartDims.ref} className={styles.chartWrap} style={{ height }}>
+        {chartDims.ready && (
+          <ComposedChart width={chartDims.width} height={chartDims.height} data={data}>
             <defs>
               <linearGradient id="qlChartFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={stroke} stopOpacity={0.2} />
@@ -122,7 +123,7 @@ export function QuantLabMiniChart({
             <Area type="monotone" dataKey="price" fill="url(#qlChartFill)" stroke="none" />
             <Line type="monotone" dataKey="price" stroke={stroke} dot={false} strokeWidth={2} />
           </ComposedChart>
-        </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

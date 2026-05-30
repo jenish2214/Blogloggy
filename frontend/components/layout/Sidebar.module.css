@@ -1,6 +1,11 @@
 .logoBlock {
-  padding: 22px 20px 18px;
+  display: flex;
+  align-items: center;
+  height: var(--app-topbar-h);
+  padding: 0 20px;
+  box-sizing: border-box;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .logoLink {
@@ -199,7 +204,8 @@
 /* Collapsed sidebar — icon rail with hover flyout labels */
 @media (max-width: 1024px) {
   .logoBlock {
-    padding: 18px 10px 14px;
+    height: var(--app-topbar-h);
+    padding: 0 10px;
   }
 
   .logoLink {

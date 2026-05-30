@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSupabaseSession } from "@/lib/auth/useSupabaseSession";
 import { wealthApi, type WealthBookSummary } from "@/lib/api";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { useActiveBookStore, type ActiveBook } from "@/lib/store/activeBook";
@@ -19,6 +20,7 @@ function bookToActive(b: WealthBookSummary): ActiveBook {
 }
 
 export function useDualProfiles() {
+  const { isAuthenticated, ready: sessionReady } = useSupabaseSession();
   const activeBook = useActiveBookStore((s) => s.activeBook);
   const setActiveBook = useActiveBookStore((s) => s.setActiveBook);
   const [personal, setPersonal] = useState<WealthBookSummary | null>(null);
@@ -28,8 +30,13 @@ export function useDualProfiles() {
   const mounted = useRef(true);
 
   const refresh = useCallback(async () => {
-    if (!hasSupabaseEnv()) {
-      if (mounted.current) setLoading(false);
+    if (!hasSupabaseEnv() || !isAuthenticated) {
+      if (mounted.current) {
+        setPersonal(null);
+        setClientBook(null);
+        setClientBooks([]);
+        setLoading(false);
+      }
       return;
     }
     try {
@@ -69,17 +76,23 @@ export function useDualProfiles() {
     } finally {
       if (mounted.current) setLoading(false);
     }
-  }, [setActiveBook]);
+  }, [isAuthenticated, setActiveBook]);
 
   useEffect(() => {
     mounted.current = true;
-    refresh();
+    if (!sessionReady) return;
+    void refresh();
+    if (!isAuthenticated) {
+      return () => {
+        mounted.current = false;
+      };
+    }
     const id = setInterval(refresh, POLL_MS);
     return () => {
       mounted.current = false;
       clearInterval(id);
     };
-  }, [refresh]);
+  }, [sessionReady, isAuthenticated, refresh]);
 
   const selectPersonal = useCallback(async () => {
     if (!personal) return;

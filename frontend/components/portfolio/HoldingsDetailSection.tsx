@@ -13,9 +13,7 @@ import {
   detectMarketCalendar,
   getTradingBlockReason,
 } from "@/lib/trading/marketHours";
-import { executePlaceOrder } from "@/lib/trading/placeOrder";
-import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
-import { ExitPositionPanel } from "./ExitPositionPanel";
+import { sellHoldingPosition } from "@/lib/trading/sellHoldingPosition";
 import styles from "./HoldingsDetailSection.module.css";
 
 const LIVE_INTERVAL_MS = 10_000;
@@ -23,6 +21,30 @@ const LIVE_INTERVAL_MS = 10_000;
 function fmt(n: number | null | undefined, dec = 2) {
   if (n == null || isNaN(n)) return "—";
   return n.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function normSymbol(s: string) {
+  return s.toUpperCase().replace(/\.(NS|BO)$/i, "").trim();
+}
+
+function resolveHoldingPosition(
+  symbol: string,
+  livePositions: SnapshotPosition[],
+  fallback: SnapshotPosition | null,
+  marks: Record<string, LiveQuoteMark>
+): SnapshotPosition | null {
+  const key = normSymbol(symbol);
+  const live =
+    livePositions.find((p) => normSymbol(p.symbol) === key) ??
+    fallback;
+  if (!live || live.qty <= 0.000001) return null;
+  const m = marks[live.symbol] ?? marks[symbol];
+  const currentPrice = m?.price ?? live.currentPrice;
+  return enrichPositionMetrics({
+    ...live,
+    currentPrice,
+    dayChangePct: m?.changePct ?? live.dayChangePct,
+  });
 }
 
 function fmtDate(iso: string) {
@@ -52,8 +74,7 @@ export function HoldingsDetailSection({
 }: HoldingsDetailSectionProps) {
   const [marks, setMarks] = useState<Record<string, LiveQuoteMark>>({});
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [exitSymbol, setExitSymbol] = useState<string | null>(null);
-  const [exitLoading, setExitLoading] = useState(false);
+  const [sellLoadingSymbol, setSellLoadingSymbol] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   const holdings = useMemo(() => buildHoldingDetails(positions, orders), [positions, orders]);
@@ -96,39 +117,19 @@ export function HoldingsDetailSection({
     return () => clearInterval(id);
   }, [pausePolling, refreshPrices]);
 
-  const exitPosition = exitSymbol
-    ? livePositions.find((p) => p.symbol === exitSymbol) ?? null
-    : null;
-  const exitPrice = exitPosition
-    ? marks[exitPosition.symbol]?.price ?? exitPosition.currentPrice
-    : 0;
+  const sellPositionInstant = async (pos: SnapshotPosition) => {
+    const price = marks[pos.symbol]?.price ?? pos.currentPrice;
+    setSellLoadingSymbol(pos.symbol);
+    setMsg(null);
 
-  const handleSell = async () => {
-    if (!exitPosition) return;
-    const exitCtx = {
-      symbol: exitPosition.symbol,
-      assetClass: exitPosition.assetClass as "stock" | "crypto" | "option" | "forex",
-    };
-    if (!canPlaceMarketOrders(exitCtx)) return;
-    setExitLoading(true);
-    const price = marks[exitPosition.symbol]?.price ?? exitPosition.currentPrice;
-    const pnl = computeExitPnl(exitPosition.qty, exitPosition.avgPrice, price, exitPosition.costBasis);
+    const pnl = computeExitPnl(pos.qty, pos.avgPrice, price, pos.costBasis);
+    const res = await sellHoldingPosition(pos, price);
 
-    const res = await executePlaceOrder({
-      symbol: exitPosition.symbol,
-      name: exitPosition.name,
-      assetClass: exitPosition.assetClass as "stock" | "crypto" | "option" | "forex",
-      side: "sell",
-      qty: exitPosition.qty,
-      orderType: "market",
-      currentPrice: price,
-    });
-
-    setExitLoading(false);
+    setSellLoadingSymbol(null);
     if (res.success) {
-      await syncPortfolioFromCloud();
-      setMsg(`Sold ${exitPosition.symbol} · ${formatProfitSigned(pnl.profit)} realized`);
-      setExitSymbol(null);
+      setMsg(
+        `Sold ${pos.qty} ${pos.symbol} @ $${fmt(price)} · ${formatProfitSigned(pnl.profit)} (${formatPctSigned(pnl.profitPct)})`
+      );
       onRefresh();
       if (typeof window !== "undefined") window.dispatchEvent(new Event("wallet-updated"));
     } else {
@@ -178,18 +179,6 @@ export function HoldingsDetailSection({
 
       {msg && <p className={styles.msg}>{msg}</p>}
 
-      {exitPosition && (
-        <ExitPositionPanel
-          position={exitPosition}
-          livePrice={exitPrice}
-          lastUpdated={frozen ? null : lastUpdated}
-          loading={false}
-          confirming={exitLoading}
-          onConfirm={() => void handleSell()}
-          onCancel={() => setExitSymbol(null)}
-        />
-      )}
-
       <div className={styles.cardList}>
         {holdings.map((h) => {
           const posCtx = {
@@ -198,7 +187,7 @@ export function HoldingsDetailSection({
           };
           const holdingTradingAllowed = canPlaceMarketOrders(posCtx);
           const blockReason = getTradingBlockReason(posCtx);
-          const pos = livePositions.find((p) => p.symbol === h.symbol);
+          const pos = resolveHoldingPosition(h.symbol, livePositions, h.position, marks);
           const hasPosition = !!pos && pos.qty > 0;
           const livePrice = pos
             ? marks[pos.symbol]?.price ?? pos.currentPrice
@@ -206,6 +195,10 @@ export function HoldingsDetailSection({
           const pnl = pos
             ? computeExitPnl(pos.qty, pos.avgPrice, livePrice, pos.costBasis)
             : null;
+          const sellDisabled = !hasPosition || !pos;
+          const sellTitle = sellDisabled
+            ? "No shares to sell"
+            : `Sell ${pos!.qty} ${h.symbol} now (paper trade)`;
 
           return (
             <article key={h.symbol} className={styles.holdingCard}>
@@ -225,6 +218,30 @@ export function HoldingsDetailSection({
                     </span>
                   </div>
                 )}
+              </div>
+
+              <div className={styles.actionBar}>
+                <Link
+                  href={`/trade?symbol=${encodeURIComponent(h.symbol)}&name=${encodeURIComponent(h.name)}&class=${h.assetClass}`}
+                  className="btn btn-primary btn-sm"
+                >
+                  Buy more
+                </Link>
+                <button
+                  type="button"
+                  className={`btn btn-sell btn-sm ${styles.sellBtn}`}
+                  disabled={sellDisabled || sellLoadingSymbol === h.symbol}
+                  title={sellTitle}
+                  onClick={() => pos && void sellPositionInstant(pos)}
+                >
+                  {sellLoadingSymbol === h.symbol ? "Selling…" : "Sell"}
+                </button>
+                <Link
+                  href={`/trade?symbol=${encodeURIComponent(h.symbol)}`}
+                  className="btn btn-ghost btn-sm"
+                >
+                  Trade
+                </Link>
               </div>
 
               {hasPosition && pos && (
@@ -256,9 +273,14 @@ export function HoldingsDetailSection({
                 </div>
               )}
 
-              {hasPosition && (
+              {hasPosition && h.buyFills.length > 1 && (
                 <p className={styles.duplicateWarn}>
-                  You already hold {h.symbol}. Another buy adds to this position (averages your cost).
+                  {h.buyFills.length} buys combined into one position · avg cost ${fmt(pos!.avgPrice)} · {pos!.qty} shares total
+                </p>
+              )}
+              {hasPosition && h.buyFills.length <= 1 && (
+                <p className={styles.duplicateWarn}>
+                  Buy again from Trade to add shares — they merge into this same {h.symbol} line (weighted average cost).
                 </p>
               )}
 
@@ -296,42 +318,6 @@ export function HoldingsDetailSection({
                 )}
               </div>
 
-              <div className={styles.actions}>
-                {holdingTradingAllowed ? (
-                  <>
-                    <Link
-                      href={`/trade?symbol=${encodeURIComponent(h.symbol)}&name=${encodeURIComponent(h.name)}&class=${h.assetClass}`}
-                      className="btn btn-primary btn-sm"
-                    >
-                      Buy more
-                    </Link>
-                    {hasPosition && (
-                      <button
-                        type="button"
-                        className="btn btn-sell btn-sm"
-                        onClick={() => {
-                          setExitSymbol(h.symbol);
-                          setMsg(null);
-                        }}
-                      >
-                        Sell all
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <button type="button" className="btn btn-primary btn-sm" disabled title={blockReason ?? undefined}>
-                      Buy (closed)
-                    </button>
-                    <button type="button" className="btn btn-sell btn-sm" disabled title={blockReason ?? undefined}>
-                      Sell (closed)
-                    </button>
-                  </>
-                )}
-                <Link href={`/trade?symbol=${encodeURIComponent(h.symbol)}`} className="btn btn-ghost btn-sm">
-                  Open in Trade
-                </Link>
-              </div>
             </article>
           );
         })}

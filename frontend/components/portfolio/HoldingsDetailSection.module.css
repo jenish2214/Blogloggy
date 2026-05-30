@@ -202,10 +202,46 @@
   border-top: 2px solid var(--border);
 }
 
+.actionBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.sellBtn {
+  min-width: 80px;
+  font-weight: 700;
+  box-shadow: 0 0 0 1px var(--down-border);
+}
+
+.sellBtn:not(:disabled) {
+  background: var(--down);
+  color: #fff;
+  border-color: var(--down);
+}
+
+.sellBtn:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
+}
+
+.buySellRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .empty {

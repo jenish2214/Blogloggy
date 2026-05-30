@@ -5,7 +5,7 @@ import { useAlgoTradingStore } from "@/store/algoTradingStore";
 import { usePortfolioStore } from "@/lib/store/portfolio";
 import { useLivePricesOptional } from "@/components/algo-trading/LivePriceProvider";
 import { getSymbolConfig } from "@/types/algoTrading";
-import styles from "@/app/algo-trading/algo-trading.module.css";
+import styles from "@/app/(platform)/algo-trading/algo-trading.module.css";
 
 const STARTING_NAV = 100_000;
 

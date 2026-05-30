@@ -1,3 +1,4 @@
+import { getClientUserId } from "@/lib/auth/clientSession";
 import { portfolioApi } from "@/lib/api";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import {
@@ -16,6 +17,8 @@ function activeBookParams() {
 
 /** Ensure Supabase has a portfolio row and return cloud snapshot into the local cache. */
 export async function syncPortfolioFromCloud(): Promise<boolean> {
+  const userId = await getClientUserId();
+  if (!userId) return false;
   try {
     const data = await portfolioApi.get(activeBookParams());
     applyCloudSnapshot(data);

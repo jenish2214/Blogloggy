@@ -1,3 +1,4 @@
+import { getClientUserId } from "@/lib/auth/clientSession";
 import { portfolioApi } from "@/lib/api";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { fetchLivePrices } from "@/lib/market/fetchLivePrices";
@@ -9,6 +10,7 @@ import {
   mergeOrderHistory,
 } from "@/lib/trading/mergeOrders";
 import type { OrderRecord } from "@/lib/trading/orders";
+import { consolidateRawPositions } from "@/lib/trading/consolidatePositions";
 
 export { INITIAL_CASH };
 
@@ -179,6 +181,9 @@ export async function loadPortfolioSnapshot(): Promise<PortfolioSnapshot> {
   const localOrders = mapLocalStoreOrders(local.orders);
 
   try {
+    const userId = await getClientUserId();
+    if (!userId) throw new Error("guest");
+
     const book = useActiveBookStore.getState().activeBook;
     const bookParams = book
       ? { portfolioId: book.portfolioId, clientId: book.clientId }
@@ -191,7 +196,9 @@ export async function loadPortfolioSnapshot(): Promise<PortfolioSnapshot> {
 
     const cash = Number(portfolio.cash) ?? INITIAL_CASH;
     const startingCapital = Number(portfolio.starting_capital) || INITIAL_CASH;
-    const positionsRaw = (portfolioData.positions ?? []) as Record<string, unknown>[];
+    const positionsRaw = consolidateRawPositions(
+      (portfolioData.positions ?? []) as Record<string, unknown>[]
+    );
     const serverOrders = mapRawServerOrders(
       (portfolioData.orders ?? []) as Record<string, unknown>[]
     );

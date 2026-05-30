@@ -99,9 +99,22 @@
 
 .actions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 88px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 200px;
+  align-items: center;
+}
+
+.actions .btn-sell {
+  min-width: 72px;
+  font-weight: 700;
+}
+
+.actions .btn-sell:not(:disabled) {
+  background: var(--down);
+  color: #fff;
+  border-color: var(--down);
 }
 
 .exitConfirm {

@@ -10,6 +10,24 @@ import {
 
 export const runtime = "nodejs";
 
+function emptyBooksPayload() {
+  const now = new Date().toISOString();
+  return {
+    books: [] as never[],
+    summary: {
+      firmAum: 0,
+      clientCount: 0,
+      personalAum: 0,
+      clientAum: 0,
+      totalCash: 0,
+      totalUnrealized: 0,
+      openPositions: 0,
+      lastUpdated: now,
+    },
+    guest: true as const,
+  };
+}
+
 async function fetchLivePrices(
   positions: Array<Record<string, unknown>>
 ): Promise<Record<string, number>> {
@@ -48,7 +66,7 @@ export async function GET(req: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json(emptyBooksPayload());
 
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") ?? undefined;
   const clientId = req.nextUrl.searchParams.get("clientId") ?? undefined;

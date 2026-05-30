@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { getClientUserId } from "@/lib/auth/clientSession";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { wealthApi } from "@/lib/api";
 import { handleAuthSessionChange } from "@/lib/auth/tradingSession";
@@ -67,7 +68,9 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
       const id = state.activeBook?.portfolioId;
       if (!id || id === lastPortfolioId) return;
       lastPortfolioId = id;
-      void syncPortfolioFromCloud();
+      void getClientUserId().then((uid) => {
+        if (uid) void syncPortfolioFromCloud();
+      });
     });
   }, []);
 

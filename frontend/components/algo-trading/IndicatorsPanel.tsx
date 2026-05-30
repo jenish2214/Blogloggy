@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { useAlgoTradingStore } from "@/store/algoTradingStore";
 import { computeIndicators } from "@/lib/algoIndicators";
-import styles from "@/app/algo-trading/algo-trading.module.css";
+import styles from "@/app/(platform)/algo-trading/algo-trading.module.css";
 
 function IndicatorBadge({ label, value, accent }: { label: string; value: string; accent?: "up" | "down" | "neutral" }) {
   return (

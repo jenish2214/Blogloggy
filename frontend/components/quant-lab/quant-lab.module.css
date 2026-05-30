@@ -170,6 +170,8 @@
 }
 
 .chartWrap {
+  width: 100%;
+  min-width: 0;
   height: 200px;
   margin-top: 12px;
 }

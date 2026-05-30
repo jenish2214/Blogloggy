@@ -5,7 +5,7 @@ import { usePortfolioStore } from "@/lib/store/portfolio";
 import { useAlgoTradingStore } from "@/store/algoTradingStore";
 import { useLivePricesOptional } from "@/components/algo-trading/LivePriceProvider";
 import { getSymbolConfig } from "@/types/algoTrading";
-import styles from "@/app/algo-trading/algo-trading.module.css";
+import styles from "@/app/(platform)/algo-trading/algo-trading.module.css";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });

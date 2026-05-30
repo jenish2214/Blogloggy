@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSupabaseSession } from "@/lib/auth/useSupabaseSession";
 import { wealthApi, type WealthBookSummary } from "@/lib/api";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
@@ -18,6 +19,7 @@ export interface FirmSummary {
 const POLL_MS = 5000;
 
 export function useWealthLiveFeed(enabled = true) {
+  const { isAuthenticated, ready: sessionReady } = useSupabaseSession();
   const [books, setBooks] = useState<WealthBookSummary[]>([]);
   const [summary, setSummary] = useState<FirmSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,8 +28,12 @@ export function useWealthLiveFeed(enabled = true) {
   const mounted = useRef(true);
 
   const refresh = useCallback(async () => {
-    if (!hasSupabaseEnv()) {
-      if (mounted.current) setLoading(false);
+    if (!hasSupabaseEnv() || !isAuthenticated) {
+      if (mounted.current) {
+        setBooks([]);
+        setSummary(null);
+        setLoading(false);
+      }
       return;
     }
     try {
@@ -43,18 +49,23 @@ export function useWealthLiveFeed(enabled = true) {
     } finally {
       if (mounted.current) setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     mounted.current = true;
-    if (!enabled) return;
-    refresh();
+    if (!enabled || !sessionReady) return;
+    void refresh();
+    if (!isAuthenticated) {
+      return () => {
+        mounted.current = false;
+      };
+    }
     const id = setInterval(refresh, POLL_MS);
     return () => {
       mounted.current = false;
       clearInterval(id);
     };
-  }, [enabled, refresh]);
+  }, [enabled, sessionReady, isAuthenticated, refresh]);
 
   return { books, summary, loading, error, tick, refresh };
 }

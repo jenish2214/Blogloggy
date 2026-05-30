@@ -14,7 +14,7 @@ import {
 import { computeEMA } from "@/lib/priceDataGenerator";
 import { useChartDimensions } from "@/lib/useChartDimensions";
 import type { CandleData, SignalEvent } from "@/types/algoTrading";
-import styles from "@/app/algo-trading/algo-trading.module.css";
+import styles from "@/app/(platform)/algo-trading/algo-trading.module.css";
 
 export interface LivePriceChartProps {
   symbol: string;

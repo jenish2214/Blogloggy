@@ -119,6 +119,11 @@ export function canPlaceMarketOrders(ctx: MarketHoursContext = {}, at: Date = ne
   return getMarketCalendarStatus(calendar, at) !== "weekend";
 }
 
+/** Paper sells from portfolio always execute (demo account — uses last/live mark). */
+export function canSellPaperPosition(_ctx: MarketHoursContext = {}): boolean {
+  return true;
+}
+
 export function getTradingBlockReason(ctx: MarketHoursContext = {}, at: Date = new Date()): string | null {
   if (canPlaceMarketOrders(ctx, at)) return null;
 

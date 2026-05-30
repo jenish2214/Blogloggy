@@ -11,7 +11,6 @@ import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import { canPlaceMarketOrders, getTradingBlockReason } from "@/lib/trading/marketHours";
 import { mapServerOrder } from "@/lib/trading/orders";
 import { notifyOrderPlaced } from "@/lib/trading/orderEvents";
-
 export interface PlaceOrderInput {
   symbol: string;
   name: string;
@@ -95,7 +94,9 @@ export async function executePlaceOrder(
     return { success: serverRes.success, message: serverRes.message };
   } catch {
     const res = usePortfolioStore.getState().placeOrder(params);
-    if (res.success) notifyOrderPlaced();
+    if (res.success) {
+      notifyOrderPlaced();
+    }
     return res;
   }
 }
