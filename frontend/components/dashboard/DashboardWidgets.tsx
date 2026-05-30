@@ -13,9 +13,10 @@ function WidgetSkeleton({ label }: { label: string }) {
   );
 }
 
-const LiveMarketWatch = dynamic(
-  () => import("@/components/trading/LiveMarketWatch").then((m) => m.LiveMarketWatch),
-  { loading: () => <WidgetSkeleton label="market watch" />, ssr: false }
+const DashboardUserWatchlist = dynamic(
+  () =>
+    import("@/components/dashboard/DashboardUserWatchlist").then((m) => m.DashboardUserWatchlist),
+  { loading: () => <WidgetSkeleton label="watchlist" />, ssr: false }
 );
 
 const MarketIndices = dynamic(
@@ -44,7 +45,7 @@ export function DashboardTicker() {
 }
 
 export function DashboardMarketWatch() {
-  return <LiveMarketWatch />;
+  return <DashboardUserWatchlist />;
 }
 
 export function DashboardMarketIndices() {

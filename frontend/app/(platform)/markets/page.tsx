@@ -5,6 +5,8 @@ import { IndiaStockDetailPanel } from "@/components/markets/IndiaStockDetailPane
 import { marketApi, type Quote, type CoinQuote, type MoverItem, type MarketRegion, type MarketRegionInfo } from "@/lib/api";
 import type { IndiaMarketQuote } from "@/types/india-market";
 import { CompareSymbolsModal } from "@/components/features/CompareSymbolsModal";
+import { PageLoading } from "@/components/shared/PageLoading";
+import { RefreshingBar } from "@/components/shared/RefreshingBar";
 
 type Tab = "stocks" | "crypto" | "movers";
 
@@ -166,8 +168,11 @@ export default function MarketsPage() {
     textAlign: "left",
   };
 
+  const isRefreshing = (loading || (isIndia && indiaLoading)) && (stocks.length > 0 || crypto.length > 0 || movers != null);
+
   return (
     <div className="page">
+      <RefreshingBar active={isRefreshing} />
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
@@ -265,9 +270,11 @@ export default function MarketsPage() {
       )}
 
       {loading || (isIndia && indiaLoading) ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {Array.from({ length: 12 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 40, borderRadius: 2 }} />)}
-        </div>
+        <PageLoading
+          label={isIndia && indiaLoading ? "Loading India market data…" : "Loading market data…"}
+          rows={8}
+          layout="inline"
+        />
       ) : tab === "stocks" ? (
         <div className="card" style={{ overflowX: "auto" }}>
           <table className="data-table">

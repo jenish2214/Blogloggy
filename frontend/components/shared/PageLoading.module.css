@@ -1,0 +1,77 @@
+.page {
+  min-height: min(56vh, 520px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 48px 20px;
+}
+
+.inline {
+  min-height: 200px;
+  padding: 32px 16px;
+}
+
+.compact {
+  min-height: 120px;
+  padding: 24px 12px;
+  gap: 16px;
+}
+
+.skeletonStack {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shimmerRow {
+  height: 44px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-2) 0%,
+    var(--bg-hover) 45%,
+    var(--bg-surface-2) 90%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.25s ease-in-out infinite;
+}
+
+.shimmerRowTall {
+  height: 88px;
+}
+
+.shimmerRowShort {
+  height: 28px;
+  max-width: 55%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmerRow {
+    animation: skeletonPulse 1.6s ease-in-out infinite;
+    background: var(--bg-hover);
+    background-size: auto;
+  }
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

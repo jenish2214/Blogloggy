@@ -15,6 +15,10 @@ export type DashboardPortfolioHeroProps = {
   books: DashboardBookSummary[];
   benchmark: DashboardBenchmark | null;
   loading?: boolean;
+  scope?: "all" | "book";
+  activePortfolioId?: string | null;
+  personalAum?: number;
+  clientAum?: number;
 };
 
 function formatTime(iso: string) {
@@ -34,6 +38,10 @@ export function DashboardPortfolioHero({
   books,
   benchmark,
   loading,
+  scope = "all",
+  activePortfolioId = null,
+  personalAum = 0,
+  clientAum = 0,
 }: DashboardPortfolioHeroProps) {
   const up = totals.totalPnl >= 0;
   const vsMarket =
@@ -49,10 +57,14 @@ export function DashboardPortfolioHero({
     >
       <div className={styles.portfolioHeroMain}>
         <div className={styles.portfolioHeroTop}>
-          <span className={styles.portfolioHeroLabel}>Total portfolio value</span>
-          <span className={styles.portfolioLiveBadge}>
+          <span className={styles.portfolioHeroLabel}>
+            {scope === "book" ? "Active book value" : "Your total portfolio"}
+          </span>
+          <span
+            className={`${styles.portfolioLiveBadge} ${loading ? styles.portfolioLiveBadgeBusy : ""}`}
+          >
             <span className={styles.portfolioLiveDot} aria-hidden />
-            {loading ? "Updating…" : "Live · API prices"}
+            {loading ? "Updating prices…" : "Live · API prices"}
           </span>
         </div>
         <p className={styles.portfolioHeroValue}>{fmtUsd(totals.totalPortfolioValue)}</p>
@@ -91,13 +103,25 @@ export function DashboardPortfolioHero({
       </div>
 
       <div className={styles.portfolioHeroSide}>
-        <p className={styles.portfolioBooksTitle}>Books ({totals.bookCount})</p>
+        <p className={styles.portfolioBooksTitle}>
+          {scope === "book" ? "Your books" : `Personal & client books (${books.length})`}
+        </p>
+        {scope === "all" && (personalAum > 0 || clientAum > 0) ? (
+          <p className={styles.portfolioHeroUpdated}>
+            Personal {fmtUsd(personalAum)}
+            {clientAum > 0 ? ` · Clients ${fmtUsd(clientAum)}` : ""}
+          </p>
+        ) : null}
         <ul className={styles.portfolioBooksList}>
-          {books.slice(0, 5).map((b) => {
+          {books.slice(0, 6).map((b) => {
             const pct = (b.totalValue / maxBook) * 100;
             const bookUp = b.totalPnl >= 0;
+            const isActive = b.portfolioId === activePortfolioId;
             return (
-              <li key={b.portfolioId} className={styles.portfolioBookRow}>
+              <li
+                key={b.portfolioId}
+                className={`${styles.portfolioBookRow} ${isActive ? styles.portfolioBookRowActive : ""}`}
+              >
                 <div className={styles.portfolioBookHead}>
                   <span className={styles.portfolioBookLabel}>
                     {b.accountLabel}

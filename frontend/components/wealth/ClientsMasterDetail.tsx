@@ -3,6 +3,7 @@
 import type { WealthBookSummary, WealthClient } from "@/lib/api";
 import type { useClientsCrud } from "@/lib/hooks/useClientsCrud";
 import { ClientCrudPanel } from "@/components/wealth/ClientCrudPanel";
+import { PageLoading } from "@/components/shared/PageLoading";
 import { fmtUsd } from "@/lib/trading/portfolioSnapshot";
 import styles from "./ClientsMasterDetail.module.css";
 
@@ -54,7 +55,7 @@ export function ClientsMasterDetail({
 
         <div className={styles.listScroll}>
           {crud.loading && crud.clients.length === 0 ? (
-            <p className={styles.listEmpty}>Loading clients…</p>
+            <PageLoading label="Loading clients…" rows={4} layout="compact" skeleton={false} />
           ) : crud.clients.length === 0 ? (
             <p className={styles.listEmpty}>
               No clients found. Create one with <strong>+ New client</strong>.

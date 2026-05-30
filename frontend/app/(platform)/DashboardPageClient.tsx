@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import { PageLoading } from "@/components/shared/PageLoading";
+import { RefreshingBar } from "@/components/shared/RefreshingBar";
 import {
   DashboardEarnings,
   DashboardMarketIndices,
@@ -14,7 +17,6 @@ import {
   buildGuestDashboard,
 } from "@/lib/dashboard/buildUserDashboard";
 import {
-  DASHBOARD_KPIS,
   DASHBOARD_QUICK_ACTIONS,
   DASHBOARD_WORKSPACES,
   type DashboardKpi,
@@ -23,50 +25,36 @@ import {
 import type {
   DashboardBenchmark,
   DashboardBookSummary,
+  DashboardScope,
   DashboardSummaryPayload,
   DashboardTotals,
 } from "@/lib/dashboard/types";
 import { dashboardApi } from "@/lib/api";
 import { getClientCache } from "@/lib/clientFetchCache";
 import { useDocumentVisible } from "@/lib/hooks/useDocumentVisible";
+import { useActiveBookStore } from "@/lib/store/activeBook";
 import styles from "@/app/(platform)/dashboard.module.css";
 
-const CACHE_KEY = "GET:/api/dashboard";
 const LIVE_POLL_MS = 20_000;
 
-function guestPayloadFallback(): DashboardSummaryPayload {
-  const g = buildGuestDashboard();
-  return {
-    guest: true,
-    portfolio: {
-      accountLabel: "Guest",
-      cash: 100_000,
-      totalValue: 100_000,
-      startingCapital: 100_000,
-      totalPnl: 0,
-      totalPnlPct: 0,
-      openPositions: 0,
-      orderCount: 0,
-      invested: 0,
-    },
-    firm: { aum: 0, clientBooks: 0, openPositions: 0 },
-    totals: {
-      totalPortfolioValue: 100_000,
-      totalStartingCapital: 100_000,
-      totalPnl: 0,
-      totalPnlPct: 0,
-      totalCash: 100_000,
-      totalInvested: 0,
-      unrealizedPnl: 0,
-      bookCount: 0,
-      openPositions: 0,
-      lastUpdated: new Date().toISOString(),
-    },
-    books: [],
-    benchmark: null,
-    activity: { watchlistSymbols: 0, walletTransactions: 0, clientBooks: 0 },
-  };
+function dashboardCacheKey(portfolioId?: string, clientId?: string | null) {
+  const params = new URLSearchParams();
+  if (portfolioId) params.set("portfolioId", portfolioId);
+  if (clientId) params.set("clientId", clientId);
+  const qs = params.toString();
+  return qs ? `GET:/api/dashboard?${qs}` : "GET:/api/dashboard";
 }
+
+const GUEST_KPIS: DashboardKpi[] = [
+  {
+    label: "Sign in",
+    value: "Required",
+    note: "Your dashboard shows only your personal and client books",
+    trend: "Paper trading",
+    change: "Free",
+    changeDirection: "neutral",
+  },
+];
 
 type DashboardViewState = {
   guest: boolean;
@@ -77,6 +65,10 @@ type DashboardViewState = {
   totals: DashboardTotals | null;
   books: DashboardBookSummary[];
   benchmark: DashboardBenchmark | null;
+  scope: DashboardScope;
+  activePortfolioId: string | null;
+  personalAum: number;
+  clientAum: number;
 };
 
 function stateFromPayload(data: DashboardSummaryPayload): DashboardViewState {
@@ -86,11 +78,15 @@ function stateFromPayload(data: DashboardSummaryPayload): DashboardViewState {
       guest: true,
       greeting: guestView.greeting,
       subtitle: guestView.subtitle,
-      kpis: DASHBOARD_KPIS,
+      kpis: GUEST_KPIS,
       workspaces: guestView.workspaces,
       totals: null,
       books: [],
       benchmark: null,
+      scope: "all",
+      activePortfolioId: null,
+      personalAum: 0,
+      clientAum: 0,
     };
   }
   const view = buildDashboardFromSummary(data);
@@ -98,17 +94,28 @@ function stateFromPayload(data: DashboardSummaryPayload): DashboardViewState {
     guest: false,
     greeting: view.greeting,
     subtitle: view.subtitle,
-    kpis: view.kpis ?? DASHBOARD_KPIS,
+    kpis: view.kpis ?? [],
     workspaces: view.workspaces,
     totals: view.totals ?? data.totals,
     books: view.books ?? data.books,
     benchmark: view.benchmark ?? data.benchmark,
+    scope: data.scope ?? "all",
+    activePortfolioId: data.activePortfolioId ?? null,
+    personalAum: data.personalAum ?? 0,
+    clientAum: data.clientAum ?? 0,
   };
 }
 
 export function DashboardPageClient() {
   const visible = useDocumentVisible();
-  const cachedOnMount = getClientCache<DashboardSummaryPayload>(CACHE_KEY);
+  const activeBook = useActiveBookStore((s) => s.activeBook);
+
+  const cacheKey = useMemo(
+    () => dashboardCacheKey(activeBook?.portfolioId, activeBook?.clientId),
+    [activeBook?.portfolioId, activeBook?.clientId]
+  );
+
+  const cachedOnMount = getClientCache<DashboardSummaryPayload>(cacheKey);
   const cachedState = cachedOnMount ? stateFromPayload(cachedOnMount) : null;
 
   const [loading, setLoading] = useState(!cachedState);
@@ -116,9 +123,9 @@ export function DashboardPageClient() {
   const [guest, setGuest] = useState(cachedState?.guest ?? true);
   const [greeting, setGreeting] = useState(cachedState?.greeting ?? "Dashboard");
   const [subtitle, setSubtitle] = useState(
-    cachedState?.subtitle ?? "Paper trading overview · live market data"
+    cachedState?.subtitle ?? "Sign in to see your personal and client book data"
   );
-  const [kpis, setKpis] = useState<DashboardKpi[]>(cachedState?.kpis ?? DASHBOARD_KPIS);
+  const [kpis, setKpis] = useState<DashboardKpi[]>(cachedState?.kpis ?? GUEST_KPIS);
   const [workspaces, setWorkspaces] = useState<DashboardWorkspace[]>(
     cachedState?.workspaces ?? DASHBOARD_WORKSPACES
   );
@@ -127,7 +134,18 @@ export function DashboardPageClient() {
   const [benchmark, setBenchmark] = useState<DashboardBenchmark | null>(
     cachedState?.benchmark ?? null
   );
+  const [scope, setScope] = useState<DashboardScope>(cachedState?.scope ?? "all");
+  const [activePortfolioId, setActivePortfolioId] = useState<string | null>(
+    cachedState?.activePortfolioId ?? null
+  );
+  const [personalAum, setPersonalAum] = useState(cachedState?.personalAum ?? 0);
+  const [clientAum, setClientAum] = useState(cachedState?.clientAum ?? 0);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [quickActions] = useState(DASHBOARD_QUICK_ACTIONS);
+
+  useEffect(() => {
+    void useActiveBookStore.persist.rehydrate();
+  }, []);
 
   const applyState = useCallback((next: DashboardViewState) => {
     setGuest(next.guest);
@@ -138,27 +156,38 @@ export function DashboardPageClient() {
     setTotals(next.totals);
     setBooks(next.books);
     setBenchmark(next.benchmark);
+    setScope(next.scope);
+    setActivePortfolioId(next.activePortfolioId);
+    setPersonalAum(next.personalAum);
+    setClientAum(next.clientAum);
   }, []);
 
   const loadDashboard = useCallback(
     async (force = false) => {
       if (force) setRefreshing(true);
+      setLoadError(null);
       try {
-        const data = await dashboardApi.get(force);
+        const data = await dashboardApi.get({
+          portfolioId: activeBook?.portfolioId,
+          clientId: activeBook?.clientId,
+          force,
+        });
         applyState(stateFromPayload(data));
-      } catch {
-        applyState(stateFromPayload(guestPayloadFallback()));
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Could not load dashboard";
+        setLoadError(msg);
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [applyState]
+    [activeBook?.portfolioId, activeBook?.clientId, applyState]
   );
 
   useEffect(() => {
+    setLoading(true);
     void loadDashboard(false);
-  }, [loadDashboard]);
+  }, [activeBook?.portfolioId, activeBook?.clientId, loadDashboard]);
 
   useEffect(() => {
     const onRefresh = () => void loadDashboard(true);
@@ -177,28 +206,29 @@ export function DashboardPageClient() {
   }, [guest, visible, loadDashboard]);
 
   if (loading) {
-    return (
-      <div className={styles.root} role="status" aria-live="polite" aria-busy="true">
-        <div className={styles.skeleton} style={{ minHeight: 140 }}>
-          <span className={styles.skeletonBar} />
-          <span className={styles.skeletonBar} style={{ width: "55%" }} />
-        </div>
-        <div className={styles.kpiRow}>
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className={styles.skeleton} style={{ minHeight: 100 }}>
-              <span className={styles.skeletonBar} />
-              <span className={styles.skeletonBar} style={{ width: "40%" }} />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <PageLoading label="Loading your dashboard…" rows={6} />;
   }
 
   return (
     <>
+      <RefreshingBar active={refreshing} />
       {guest ? null : <DashboardTicker />}
+      {loadError && !guest ? (
+        <p className={styles.disclaimer} role="alert" style={{ color: "var(--down)", marginBottom: 12 }}>
+          {loadError}{" "}
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => void loadDashboard(true)}>
+            Retry
+          </button>
+        </p>
+      ) : null}
+      {guest ? (
+        <p className={styles.disclaimer} style={{ marginBottom: 16 }}>
+          <Link href="/login">Sign in</Link> or <Link href="/signup">create an account</Link> to see your
+          portfolio, client books, and watchlist — never another user&apos;s data.
+        </p>
+      ) : null}
       <DashboardView
+        guest={guest}
         greeting={greeting}
         subtitle={subtitle}
         kpis={kpis}
@@ -208,6 +238,10 @@ export function DashboardPageClient() {
         portfolioBooks={books}
         benchmark={benchmark}
         portfolioRefreshing={refreshing}
+        scope={scope}
+        activePortfolioId={activePortfolioId}
+        personalAum={personalAum}
+        clientAum={clientAum}
         marketWatch={<DashboardMarketWatch />}
         marketIndices={<DashboardMarketIndices />}
         earnings={<DashboardEarnings />}

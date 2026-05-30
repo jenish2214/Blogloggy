@@ -9,6 +9,7 @@ import { ClientsMasterDetail } from "@/components/wealth/ClientsMasterDetail";
 import { WalletPanel } from "@/components/wealth/WalletPanel";
 import { useClientsCrud } from "@/lib/hooks/useClientsCrud";
 import { useActiveBookStore } from "@/lib/store/activeBook";
+import { PageLoading } from "@/components/shared/PageLoading";
 import styles from "./desk.module.css";
 
 export interface BrokerProfile {
@@ -285,7 +286,7 @@ export default function DeskPage() {
     <Suspense
       fallback={
         <div className={styles.page}>
-          <p className={styles.sub}>Loading desk…</p>
+          <PageLoading label="Loading desk…" rows={4} layout="inline" />
         </div>
       }
     >

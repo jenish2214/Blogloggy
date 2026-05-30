@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { tradingApi } from "@/lib/api";
 import { WORLD_MARKETS, type MarketRegion, inferCountryFromSymbol } from "@/lib/markets/world-markets";
+import { PageLoading } from "@/components/shared/PageLoading";
 import { PriceChart } from "@/components/trading/PriceChart";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
@@ -368,9 +369,7 @@ export default function ResearchPage() {
       )}
 
       {loading && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginBottom: 24 }}>
-          {Array.from({ length: 10 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 90 }} />)}
-        </div>
+        <PageLoading label="Running backtest…" rows={6} layout="inline" />
       )}
 
       {result && (

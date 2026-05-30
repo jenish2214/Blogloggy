@@ -485,11 +485,19 @@ export const ordersApi = {
 };
 
 export const dashboardApi = {
-  get: (force = false) =>
-    apiFetch<import("@/lib/dashboard/types").DashboardSummaryPayload>("/api/dashboard", undefined, {
+  get: (
+    opts?: { portfolioId?: string; clientId?: string | null; force?: boolean }
+  ) => {
+    const params = new URLSearchParams();
+    if (opts?.portfolioId) params.set("portfolioId", opts.portfolioId);
+    if (opts?.clientId) params.set("clientId", opts.clientId);
+    const qs = params.toString();
+    const path = qs ? `/api/dashboard?${qs}` : "/api/dashboard";
+    return apiFetch<import("@/lib/dashboard/types").DashboardSummaryPayload>(path, undefined, {
       cacheTtlMs: DASHBOARD_CACHE_MS,
-      force,
-    }),
+      force: opts?.force,
+    });
+  },
 };
 
 export const userApi = {

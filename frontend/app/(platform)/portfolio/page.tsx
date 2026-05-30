@@ -19,6 +19,8 @@ import { subscribeOrderPlaced } from "@/lib/trading/orderEvents";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { exitAllPositions } from "@/lib/trading/exitAllPositions";
 import { canPlaceMarketOrders, isUSEquityWeekend } from "@/lib/trading/marketHours";
+import { PageLoading } from "@/components/shared/PageLoading";
+import { RefreshingBar } from "@/components/shared/RefreshingBar";
 import { MarketStatusBanner } from "@/components/portfolio/MarketStatusBanner";
 import { HoldingsDetailSection } from "@/components/portfolio/HoldingsDetailSection";
 import { EarningsCalendar } from "@/components/features/EarningsCalendar";
@@ -157,17 +159,14 @@ export default function PortfolioPage() {
   if (loading && !snapshot) {
     return (
       <div className="page">
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 20 }}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="skeleton" style={{ height: 36, borderRadius: 4 }} />
-          ))}
-        </div>
+        <PageLoading label="Loading portfolio…" rows={6} layout="inline" />
       </div>
     );
   }
 
   return (
     <div className="page">
+      <RefreshingBar active={loading && !!snapshot} />
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: "var(--text-2xl)", fontWeight: 800, margin: 0, letterSpacing: "-0.03em" }}>

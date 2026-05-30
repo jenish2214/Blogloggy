@@ -142,12 +142,33 @@
   border-radius: 999px;
 }
 
+.portfolioLiveBadgeBusy {
+  color: var(--text-secondary);
+  background: var(--bg-surface-2);
+}
+
+.portfolioLiveBadgeBusy .portfolioLiveDot {
+  animation: portfolioUpdating 0.65s ease-in-out infinite;
+}
+
 .portfolioLiveDot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--dash-accent);
   animation: portfolioPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes portfolioUpdating {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
 }
 
 @keyframes portfolioPulse {
@@ -247,6 +268,15 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.portfolioBookRowActive {
+  padding: 6px 8px;
+  margin: -6px -8px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
 }
 
 .portfolioBookHead {

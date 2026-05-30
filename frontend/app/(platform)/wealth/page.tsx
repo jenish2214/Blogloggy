@@ -10,6 +10,8 @@ import { useClientsCrud } from "@/lib/hooks/useClientsCrud";
 import { useWealthLiveFeed } from "@/lib/hooks/useWealthLiveFeed";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
+import { PageLoading } from "@/components/shared/PageLoading";
+import { RefreshingBar } from "@/components/shared/RefreshingBar";
 import { fmtUsd } from "@/lib/trading/portfolioSnapshot";
 import styles from "./wealth.module.css";
 
@@ -96,6 +98,7 @@ export default function WealthDeskPage() {
 
   return (
     <div className={styles.page}>
+      <RefreshingBar active={loading && books.length > 0} />
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>Wealth Desk</h1>
@@ -240,7 +243,7 @@ export default function WealthDeskPage() {
           </div>
 
           {loading && books.length === 0 ? (
-            <div className={styles.empty}>Loading your books from Supabase…</div>
+            <PageLoading label="Loading your books…" rows={5} layout="inline" />
           ) : filtered.length === 0 ? (
             <div className={styles.empty}>
               No books yet. Add clients in the <strong>Client registry</strong> tab or trade on

@@ -6,6 +6,7 @@ import { useActiveBookStore } from "@/lib/store/activeBook";
 import { getDailyLossLimit, setDailyLossLimit } from "@/lib/features/riskLimits";
 import { loadPortfolioSnapshot } from "@/lib/trading/portfolioSnapshot";
 import { getBasicFinancials } from "@/lib/finnhub";
+import { PageLoading } from "@/components/shared/PageLoading";
 import styles from "@/components/features/features.module.css";
 
 export default function RiskPage() {
@@ -108,7 +109,7 @@ export default function RiskPage() {
   if (loading) {
     return (
       <div className="page">
-        <div className="skeleton" style={{ height: 200 }} />
+        <PageLoading label="Loading risk metrics…" rows={4} layout="inline" />
       </div>
     );
   }

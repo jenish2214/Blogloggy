@@ -177,14 +177,19 @@ export function computeBookMetrics(
   };
 }
 
-/** Positions belonging to one portfolio book only. */
+/** Positions belonging to one portfolio book only — never mix client books. */
 export function filterPositionsForBook(
   portfolio: PortfolioRow,
   allPositions: Array<Record<string, unknown>>
 ) {
   return allPositions.filter((p) => {
-    if (p.portfolio_id === portfolio.id) return true;
-    if (!portfolio.client_id && !p.portfolio_id) return true;
+    const pid = p.portfolio_id as string | null | undefined;
+    if (portfolio.client_id) {
+      return pid === portfolio.id;
+    }
+    if (pid === portfolio.id) return true;
+    // Legacy rows without portfolio_id belong to personal book only
+    if (pid == null) return true;
     return false;
   });
 }

@@ -23,6 +23,11 @@ export type DashboardViewProps = {
   portfolioBooks?: DashboardBookSummary[];
   benchmark?: DashboardBenchmark | null;
   portfolioRefreshing?: boolean;
+  scope?: "all" | "book";
+  activePortfolioId?: string | null;
+  personalAum?: number;
+  clientAum?: number;
+  guest?: boolean;
   earnings: ReactNode;
   suggestions: ReactNode;
   marketWatch: ReactNode;
@@ -57,6 +62,11 @@ export function DashboardView({
   portfolioBooks = [],
   benchmark = null,
   portfolioRefreshing,
+  scope = "all",
+  activePortfolioId = null,
+  personalAum = 0,
+  clientAum = 0,
+  guest = false,
   earnings,
   suggestions,
   marketWatch,
@@ -99,6 +109,10 @@ export function DashboardView({
           books={portfolioBooks}
           benchmark={benchmark}
           loading={portfolioRefreshing}
+          scope={scope}
+          activePortfolioId={activePortfolioId}
+          personalAum={personalAum}
+          clientAum={clientAum}
         />
       ) : null}
 
@@ -152,9 +166,9 @@ export function DashboardView({
         >
           <div className={styles.panelHead}>
             <h2 id="activity-heading" className={styles.panelTitle}>
-              Market activity
+              {guest ? "Market overview" : "Your watchlist"}
             </h2>
-            <span className={styles.panelBadge}>Live</span>
+            {!guest ? <span className={styles.panelBadge}>Your symbols</span> : null}
           </div>
           <div className={styles.widgetFade}>{marketWatch}</div>
         </section>
@@ -218,26 +232,28 @@ export function DashboardView({
         </div>
       </section>
 
-      <div className={styles.bottomGrid}>
-        <section
-          className={`${styles.panel} ${styles.fadeIn}`}
-          style={{ "--i": 9 } as CSSProperties}
-          aria-labelledby="idx-heading"
-        >
-          <h2 id="idx-heading" className={styles.panelTitle}>
-            Indices &amp; commodities
-          </h2>
-          <div className={styles.widgetFade}>{marketIndices}</div>
-        </section>
-        <section
-          className={`${styles.panel} ${styles.fadeIn}`}
-          style={{ "--i": 10 } as CSSProperties}
-          aria-label="Earnings"
-        >
-          <h2 className={styles.panelTitle}>Earnings calendar</h2>
-          <div className={styles.widgetFade}>{earnings}</div>
-        </section>
-      </div>
+      {!guest ? (
+        <div className={styles.bottomGrid}>
+          <section
+            className={`${styles.panel} ${styles.fadeIn}`}
+            style={{ "--i": 9 } as CSSProperties}
+            aria-labelledby="idx-heading"
+          >
+            <h2 id="idx-heading" className={styles.panelTitle}>
+              Indices &amp; commodities
+            </h2>
+            <div className={styles.widgetFade}>{marketIndices}</div>
+          </section>
+          <section
+            className={`${styles.panel} ${styles.fadeIn}`}
+            style={{ "--i": 10 } as CSSProperties}
+            aria-label="Earnings"
+          >
+            <h2 className={styles.panelTitle}>Earnings calendar</h2>
+            <div className={styles.widgetFade}>{earnings}</div>
+          </section>
+        </div>
+      ) : null}
 
       <section
         className={`${styles.panel} ${styles.fadeIn}`}

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { PageLoading } from "@/components/shared/PageLoading";
 import styles from "./DataState.module.css";
 
 interface DataStateProps {
@@ -25,7 +26,7 @@ export function DataState({
   if (loading) {
     return (
       <div className={styles.wrap} aria-busy="true">
-        {loadingSkeleton ?? <div className={styles.skeleton} />}
+        {loadingSkeleton ?? <PageLoading layout="inline" label="Loading…" rows={3} />}
       </div>
     );
   }

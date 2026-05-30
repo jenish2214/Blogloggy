@@ -73,7 +73,8 @@ export function buildDashboardFromSummary(data: DashboardSummaryPayload) {
     data.user?.email?.split("@")[0] ||
     "there";
 
-  const { portfolio: p, activity: a, totals: t, benchmark } = data;
+  const { portfolio: p, activity: a, totals: t, benchmark, scope, personalAum = 0, clientAum = 0 } =
+    data;
   const pnlDir: DashboardKpi["changeDirection"] =
     t.totalPnlPct > 0.05 ? "up" : t.totalPnlPct < -0.05 ? "down" : "neutral";
 
@@ -82,12 +83,20 @@ export function buildDashboardFromSummary(data: DashboardSummaryPayload) {
   const vsMarketDir: DashboardKpi["changeDirection"] =
     vsMarket == null ? "neutral" : vsMarket > 0.1 ? "up" : vsMarket < -0.1 ? "down" : "neutral";
 
+  const scopeLabel =
+    scope === "book"
+      ? p.accountLabel
+      : `Personal ${fmtUsd(personalAum)} · Clients ${fmtUsd(clientAum)}`;
+
   const kpis: DashboardKpi[] = [
     {
-      label: "Total portfolio",
+      label: scope === "book" ? "Active book" : "Your portfolio",
       value: fmtUsd(t.totalPortfolioValue),
-      note: `${t.bookCount} book${t.bookCount === 1 ? "" : "s"} · live API prices`,
-      trend: "All accounts",
+      note:
+        scope === "book"
+          ? `${p.accountLabel} · live API prices`
+          : `${t.bookCount} book${t.bookCount === 1 ? "" : "s"} · your accounts only`,
+      trend: scopeLabel,
       change: fmtPct(t.totalPnlPct),
       changeDirection: pnlDir,
     },
@@ -131,7 +140,11 @@ export function buildDashboardFromSummary(data: DashboardSummaryPayload) {
   ).sort((a, b) => (b.progress ?? 0) - (a.progress ?? 0));
 
   const subtitle = [
-    `Total ${fmtUsd(t.totalPortfolioValue)}`,
+    scope === "book"
+      ? `${p.accountLabel}: ${fmtUsd(t.totalPortfolioValue)}`
+      : `Your books · ${fmtUsd(t.totalPortfolioValue)}`,
+    scope !== "book" && clientAum > 0 ? `Clients ${fmtUsd(clientAum)}` : null,
+    scope !== "book" && personalAum > 0 ? `Personal ${fmtUsd(personalAum)}` : null,
     t.totalPnl !== 0 ? `${fmtUsd(t.totalPnl, { signed: true })} all-time P&L` : null,
     benchmark ? `${benchmark.name} ${fmtPct(benchmark.changePct)} today` : null,
   ]
@@ -147,6 +160,9 @@ export function buildDashboardFromSummary(data: DashboardSummaryPayload) {
     totals: t,
     books: data.books,
     benchmark,
+    scope: scope ?? "all",
+    activePortfolioId: data.activePortfolioId ?? null,
+    activeAccountLabel: data.activeAccountLabel ?? null,
   };
 }
 

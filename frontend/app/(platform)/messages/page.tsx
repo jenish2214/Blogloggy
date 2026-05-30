@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { messagesApi, type Message } from "@/lib/api";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
+import { PageLoading } from "@/components/shared/PageLoading";
 
 const TYPE_ICONS: Record<string, string> = { trade: "⚡", alert: "🔔", system: "🖥", info: "ℹ" };
 const TYPE_COLORS: Record<string, string> = { trade: "var(--accent-2)", alert: "var(--warn)", system: "var(--text-secondary)", info: "var(--text-secondary)" };
@@ -73,9 +74,7 @@ export default function MessagesPage() {
       </div>
 
       {loading ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 72, borderRadius: 2 }} />)}
-        </div>
+        <PageLoading label="Loading messages…" rows={5} layout="inline" />
       ) : filtered.length === 0 ? (
         <div style={{ padding: 48, textAlign: "center", color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontSize: "0.82rem" }}>
           <div style={{ fontSize: "2rem", marginBottom: 8 }}>📭</div>

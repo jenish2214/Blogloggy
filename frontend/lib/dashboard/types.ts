@@ -2,8 +2,10 @@
 
 export type DashboardBookSummary = {
   portfolioId: string;
+  clientId: string | null;
   accountLabel: string;
   accountType: "personal" | "client";
+  clientName?: string | null;
   totalValue: number;
   startingCapital: number;
   totalPnl: number;
@@ -11,6 +13,7 @@ export type DashboardBookSummary = {
   cash: number;
   invested: number;
   openPositions: number;
+  orderCount?: number;
 };
 
 export type DashboardTotals = {
@@ -34,8 +37,16 @@ export type DashboardBenchmark = {
   changePct: number;
 };
 
+export type DashboardScope = "all" | "book";
+
 export type DashboardSummaryPayload = {
   guest: boolean;
+  /** All books vs single active book */
+  scope?: DashboardScope;
+  activePortfolioId?: string | null;
+  activeAccountLabel?: string | null;
+  personalAum?: number;
+  clientAum?: number;
   user?: {
     id: string;
     email: string;
