@@ -236,9 +236,6 @@ export function PnLDashboard() {
         </div>
       </div>
 
-      <p className={styles.disclaimer}>
-        <strong>Charts</strong> use yfinance (Python). Algo desk runs <strong>7 days/week</strong> (no Sat/Sun block). Portfolio sync mirrors paper fills to your book.
-      </p>
     </div>
   );
 }

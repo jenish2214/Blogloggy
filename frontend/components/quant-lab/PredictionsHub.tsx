@@ -14,7 +14,7 @@ import {
 import { marketApi } from "@/lib/api";
 import { quantApi, type PredictSuiteResult } from "@/lib/quantApi";
 import { useQuantLabStore } from "@/lib/store/quantLab";
-import { ExplainerPanel, QuantLabError } from "./QuantLabShared";
+import { QuantLabError } from "./QuantLabShared";
 import { sentimentTag } from "./quantLabLabels";
 import styles from "./quant-lab.module.css";
 
@@ -225,13 +225,8 @@ export function PredictionsHub({ engineOk }: { engineOk: boolean }) {
             ))}
           </div>
 
-          <p className={styles.disclaimerInline}>{suite.disclaimer}</p>
         </>
       )}
-
-      <ExplainerPanel mode={quantLabMode}>
-        <p>Forecasts blend rule-based signals with ML models trained on historical prices. Not investment advice.</p>
-      </ExplainerPanel>
     </section>
   );
 }

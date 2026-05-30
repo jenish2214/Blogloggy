@@ -127,7 +127,6 @@ function OrderBookInner({ symbol, midPrice, compact = false }: OrderBookProps) {
           </tbody>
         </table>
       </div>
-      <p className={styles.disclaimer}>Simulated Level 2 depth. Not financial advice.</p>
     </div>
   );
 }

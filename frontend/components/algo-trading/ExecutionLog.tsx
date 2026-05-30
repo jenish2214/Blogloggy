@@ -49,7 +49,6 @@ export function ExecutionLog({ logs, maxHeight = "260px", bare = false }: Execut
     <div className={styles.terminalWrap}>
       <div className={styles.terminalHeader}>Execution Log</div>
       {body}
-      <p className={styles.disclaimer}>Simulated data. Not financial advice.</p>
     </div>
   );
 }

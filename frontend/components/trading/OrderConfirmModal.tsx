@@ -61,8 +61,6 @@ export function OrderConfirmModal({ open, details, submitting, onConfirm, onCanc
           )}
         </dl>
 
-        <p className={styles.note}>Paper trade — no real money. This cannot be undone.</p>
-
         <div className={styles.actions}>
           <button type="button" className={styles.cancel} onClick={onCancel} disabled={submitting}>
             Cancel

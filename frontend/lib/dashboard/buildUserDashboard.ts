@@ -83,28 +83,20 @@ export function buildDashboardFromSummary(data: DashboardSummaryPayload) {
   const vsMarketDir: DashboardKpi["changeDirection"] =
     vsMarket == null ? "neutral" : vsMarket > 0.1 ? "up" : vsMarket < -0.1 ? "down" : "neutral";
 
-  const scopeLabel =
-    scope === "book"
-      ? p.accountLabel
-      : `Personal ${fmtUsd(personalAum)} · Clients ${fmtUsd(clientAum)}`;
-
   const kpis: DashboardKpi[] = [
     {
       label: scope === "book" ? "Active book" : "Your portfolio",
       value: fmtUsd(t.totalPortfolioValue),
-      note:
-        scope === "book"
-          ? `${p.accountLabel} · live API prices`
-          : `${t.bookCount} book${t.bookCount === 1 ? "" : "s"} · your accounts only`,
-      trend: scopeLabel,
+      note: "",
+      trend: "",
       change: fmtPct(t.totalPnlPct),
       changeDirection: pnlDir,
     },
     {
       label: "Total P&L",
       value: fmtUsd(t.totalPnl, { signed: true }),
-      note: `Started ${fmtUsd(t.totalStartingCapital)}`,
-      trend: "vs cost basis",
+      note: "",
+      trend: "",
       change: fmtPct(t.totalPnlPct),
       changeDirection: pnlDir,
     },
@@ -114,18 +106,16 @@ export function buildDashboardFromSummary(data: DashboardSummaryPayload) {
         benchmark && vsMarket != null
           ? `${vsMarket >= 0 ? "+" : ""}${vsMarket.toFixed(2)}%`
           : fmtUsd(t.unrealizedPnl, { signed: true }),
-      note: benchmark
-        ? `Market ${fmtPct(benchmark.changePct)} today · you ${fmtPct(t.totalPnlPct)}`
-        : `${t.openPositions} open positions`,
-      trend: benchmark ? "Alpha" : "Holdings",
+      note: "",
+      trend: "",
       change: benchmark ? fmtPct(benchmark.changePct) : fmtUsd(t.totalInvested),
       changeDirection: vsMarketDir,
     },
     {
       label: "Cash & invested",
       value: fmtUsd(t.totalCash),
-      note: `${fmtUsd(t.totalInvested)} in markets`,
-      trend: p.accountLabel,
+      note: "",
+      trend: "",
       change: `${p.orderCount} orders`,
       changeDirection: "neutral",
     },

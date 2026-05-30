@@ -167,9 +167,6 @@ export function AlgoTradePanel({ embedded = false }: { embedded?: boolean }) {
           <div className={styles.tradeMsg}>{displayMsg}</div>
         )}
 
-        <p className={styles.disclaimerInline}>
-          Trades sync to your paper portfolio. Buy to auto-start live session.
-        </p>
     </div>
   );
 

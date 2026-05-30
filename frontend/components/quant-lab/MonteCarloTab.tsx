@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { quantApi } from "@/lib/quantApi";
 import { useQuantLabStore } from "@/lib/store/quantLab";
 import type { ModelBenchmark } from "@/lib/quantApi";
-import { ExplainerPanel, LiveBadge, QuantLabError } from "./QuantLabShared";
+import { LiveBadge, QuantLabError } from "./QuantLabShared";
 import { greekLabel } from "./quantLabLabels";
 import styles from "./quant-lab.module.css";
 
@@ -118,12 +118,6 @@ export function MonteCarloTab({
       ) : (
         <p className={styles.emptyState}>Run simulation to compare MC vs closed-form Black–Scholes.</p>
       )}
-      <ExplainerPanel mode={quantLabMode}>
-        <p>
-          Antithetic Monte Carlo reduces variance by pairing random paths. Agreement with Black–Scholes validates the
-          engine — not future market accuracy.
-        </p>
-      </ExplainerPanel>
     </section>
   );
 }

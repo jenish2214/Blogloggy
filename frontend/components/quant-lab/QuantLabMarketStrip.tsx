@@ -38,7 +38,6 @@ export function QuantLabMarketStrip() {
 
   return (
     <div className={styles.marketStrip}>
-      <span className={styles.marketStripLabel}>Live · Stocks & Gold</span>
       <div className={styles.marketStripScroll}>
         {quotes.map((q) => {
           const up = (q.changePct ?? 0) >= 0;

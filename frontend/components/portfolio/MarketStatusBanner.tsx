@@ -34,17 +34,7 @@ export function MarketStatusBanner() {
       <span className={styles.dot} aria-hidden />
       <div className={styles.text}>
         <strong>{label}</strong>
-        {!tradingAllowed && (
-          <span className={styles.sub}>
-            US equities: weekend freeze · Crypto trades 24/7 · India follows NSE calendar
-          </span>
-        )}
-        {tradingAllowed && isLive && (
-          <span className={styles.sub}>Live prices · orders accepted</span>
-        )}
-        {tradingAllowed && !isLive && status !== "weekend" && (
-          <span className={styles.sub}>After hours · orders accepted at last price</span>
-        )}
+        {!tradingAllowed && <span className={styles.sub}>Weekend — US equities paused</span>}
       </div>
       <span className={styles.badge}>
         {status === "weekend" ? "FROZEN" : isLive ? "LIVE" : "CLOSED"}

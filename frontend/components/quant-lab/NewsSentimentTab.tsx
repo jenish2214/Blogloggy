@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getEarnings, getNewsSentiment } from "@/lib/finnhub";
 import { useQuantLabStore } from "@/lib/store/quantLab";
 import type { EarningsRow, NewsSentiment } from "@/types/finnhub";
-import { ExplainerPanel, MetricSkeleton, QuantLabError } from "./QuantLabShared";
+import { MetricSkeleton, QuantLabError } from "./QuantLabShared";
 import { sentimentTag } from "./quantLabLabels";
 import styles from "./quant-lab.module.css";
 
@@ -73,18 +73,10 @@ export function NewsSentimentTab() {
         <div className={styles.metricCard}>
           <div className={styles.metricLabel}>Buzz Score</div>
           <div className={styles.metricValue}>{buzz != null ? buzz.toFixed(2) : "—"}</div>
-          <p className={styles.cardHint}>News volume this week vs normal</p>
         </div>
       </div>
 
-      <ExplainerPanel mode={quantLabMode}>
-        <p>
-          High buzz can mean something big is happening — check the news. Sentiment scores come from NLP on recent
-          headlines, not trading advice.
-        </p>
-      </ExplainerPanel>
-
-      <h2 className={styles.sectionHeader}>Earnings Calendar</h2>
+      <h2 className={styles.sectionHeader}>Earnings</h2>
       {earnings && earnings.length > 0 ? (
         <div className={styles.tableWrap}>
           <table className={styles.predTable}>
@@ -120,9 +112,6 @@ export function NewsSentimentTab() {
         <p className={styles.emptyState}>No earnings data for {activeSymbol}.</p>
       )}
 
-      <ExplainerPanel mode={quantLabMode}>
-        <p>EPS surprise = company earned more or less than analysts expected. Positive surprise often moves the stock short-term.</p>
-      </ExplainerPanel>
     </div>
   );
 }

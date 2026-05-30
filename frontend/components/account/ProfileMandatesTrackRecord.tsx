@@ -70,9 +70,6 @@ export function ProfileMandatesTrackRecord() {
       <section className={styles.section} aria-label="Mandates overview">
         <div className={styles.head}>
           <h2 className={styles.title}>Books you manage</h2>
-          <p className={styles.sub}>
-            Add clients on the desk to track each mandate&apos;s performance here.
-          </p>
         </div>
         <p className={styles.muted}>
           No books yet.{" "}
@@ -85,11 +82,7 @@ export function ProfileMandatesTrackRecord() {
   return (
     <section className={styles.section} aria-label="Mandates overview">
       <div className={styles.head}>
-        <h2 className={styles.title}>Books &amp; assets you manage</h2>
-        <p className={styles.sub}>
-          Overview of every personal and client book — AUM, return, open positions, and trade count per
-          mandate. Click a row to switch your active book for trading and wallet.
-        </p>
+        <h2 className={styles.title}>Books you manage</h2>
       </div>
 
       <div className={styles.summaryGrid}>

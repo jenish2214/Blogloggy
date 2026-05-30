@@ -13,7 +13,7 @@ import {
 import { marketApi } from "@/lib/api";
 import { quantApi } from "@/lib/quantApi";
 import { useQuantLabStore } from "@/lib/store/quantLab";
-import { ExplainerPanel, QuantLabError } from "./QuantLabShared";
+import { QuantLabError } from "./QuantLabShared";
 import styles from "./quant-lab.module.css";
 
 export function BacktestTab({ engineOk }: { engineOk: boolean }) {
@@ -107,12 +107,6 @@ export function BacktestTab({ engineOk }: { engineOk: boolean }) {
           </div>
         </>
       )}
-      <ExplainerPanel mode={quantLabMode}>
-        <p>
-          Backtests replay a simple rule on historical prices. Sharpe and Sortino measure risk-adjusted return; max
-          drawdown is the worst peak-to-trough loss.
-        </p>
-      </ExplainerPanel>
     </div>
   );
 }

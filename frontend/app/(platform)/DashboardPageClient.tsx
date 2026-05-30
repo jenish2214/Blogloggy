@@ -42,10 +42,10 @@ function dashboardCacheKey(portfolioId?: string, clientId?: string | null) {
 const GUEST_KPIS: DashboardKpi[] = [
   {
     label: "Sign in",
-    value: "Required",
-    note: "Your dashboard shows only your personal and client books",
-    trend: "Paper trading",
-    change: "Free",
+    value: "—",
+    note: "",
+    trend: "",
+    change: "",
     changeDirection: "neutral",
   },
 ];

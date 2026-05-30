@@ -30,20 +30,13 @@ function ForexOptionsContent() {
 
   return (
     <div className="page">
-      <div style={{ marginBottom: 20 }}>
-        <div className="label-caps">Markets · Derivatives</div>
-        <h1 style={{ fontSize: "var(--text-2xl)", fontWeight: 800, margin: "6px 0 0", letterSpacing: "-0.03em" }}>
-          Forex & Options
-        </h1>
-        <p style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)", margin: "8px 0 0" }}>
-          Expand a section to trade and view chains — data syncs with your active client book.
-        </p>
-      </div>
+      <h1 style={{ fontSize: "var(--text-2xl)", fontWeight: 800, margin: "0 0 20px", letterSpacing: "-0.03em" }}>
+        Forex & Options
+      </h1>
 
       <CollapsibleSection
         id="forex"
         title="Forex"
-        subtitle="Major pairs · client book holdings"
         defaultOpen
         open={openForex}
         onOpenChange={setOpenForex}
@@ -54,7 +47,6 @@ function ForexOptionsContent() {
       <CollapsibleSection
         id="options"
         title="Options"
-        subtitle="Chain · Black-Scholes · US equities"
         open={openOptions}
         onOpenChange={setOpenOptions}
       >

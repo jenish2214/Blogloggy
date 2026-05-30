@@ -110,10 +110,6 @@ export function QuantLabDashboard() {
         )}
       </div>
 
-      <p className={styles.disclaimer}>
-        Model agreement measures consistency between Black–Scholes and Monte Carlo — not future market accuracy. Paper
-        trading only.
-      </p>
     </div>
   );
 }

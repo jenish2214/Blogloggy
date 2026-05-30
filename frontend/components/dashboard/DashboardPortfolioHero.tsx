@@ -21,32 +21,14 @@ export type DashboardPortfolioHeroProps = {
   clientAum?: number;
 };
 
-function formatTime(iso: string) {
-  try {
-    return new Date(iso).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  } catch {
-    return "";
-  }
-}
-
 export function DashboardPortfolioHero({
   totals,
   books,
-  benchmark,
   loading,
   scope = "all",
   activePortfolioId = null,
-  personalAum = 0,
-  clientAum = 0,
 }: DashboardPortfolioHeroProps) {
   const up = totals.totalPnl >= 0;
-  const vsMarket =
-    benchmark != null ? totals.totalPnlPct - benchmark.changePct : null;
-
   const maxBook = Math.max(...books.map((b) => b.totalValue), 1);
 
   return (
@@ -70,48 +52,17 @@ export function DashboardPortfolioHero({
         <p className={styles.portfolioHeroValue}>{fmtUsd(totals.totalPortfolioValue)}</p>
         <div className={styles.portfolioHeroMeta}>
           <span className={up ? styles.pnlUp : styles.pnlDown}>
-            {fmtUsd(totals.totalPnl, { signed: true })} ({fmtPct(totals.totalPnlPct)}) all-time
+            {fmtUsd(totals.totalPnl, { signed: true })} ({fmtPct(totals.totalPnlPct)})
           </span>
           <span className={styles.portfolioHeroSep}>·</span>
           <span>
-            {fmtUsd(totals.unrealizedPnl, { signed: true })} unrealized · {totals.openPositions} positions
+            {fmtUsd(totals.unrealizedPnl, { signed: true })} unrealized · {totals.openPositions} pos
           </span>
         </div>
-        {benchmark ? (
-          <p className={styles.portfolioHeroCompare}>
-            <strong>{benchmark.name}</strong> {fmtPct(benchmark.changePct)} today
-            {vsMarket != null ? (
-              <>
-                {" "}
-                · You are{" "}
-                <span className={vsMarket >= 0 ? styles.pnlUp : styles.pnlDown}>
-                  {vsMarket >= 0 ? "+" : ""}
-                  {vsMarket.toFixed(2)}%
-                </span>{" "}
-                vs market (on total return %)
-              </>
-            ) : null}
-          </p>
-        ) : null}
-        <p className={styles.portfolioHeroUpdated}>
-          Last mark: {formatTime(totals.lastUpdated)}
-          {" · "}
-          <Link href="/portfolio" className={styles.portfolioHeroLink}>
-            View holdings
-          </Link>
-        </p>
       </div>
 
       <div className={styles.portfolioHeroSide}>
-        <p className={styles.portfolioBooksTitle}>
-          {scope === "book" ? "Your books" : `Personal & client books (${books.length})`}
-        </p>
-        {scope === "all" && (personalAum > 0 || clientAum > 0) ? (
-          <p className={styles.portfolioHeroUpdated}>
-            Personal {fmtUsd(personalAum)}
-            {clientAum > 0 ? ` · Clients ${fmtUsd(clientAum)}` : ""}
-          </p>
-        ) : null}
+        <p className={styles.portfolioBooksTitle}>Books</p>
         <ul className={styles.portfolioBooksList}>
           {books.slice(0, 6).map((b) => {
             const pct = (b.totalValue / maxBook) * 100;

@@ -63,11 +63,7 @@ export function LiveBookPnLStrip({
           {isLive && <span className={styles.dot} aria-hidden />}
           {isLive ? "LIVE P&L" : "P&L SUMMARY"}
         </span>
-        <span className={styles.meta}>
-          {bookLabel ?? "Active book"}
-          {updatedLabel ? ` · prices ${updatedLabel}` : ""}
-          {isLive ? " · live quotes" : ""}
-        </span>
+        {updatedLabel ? <span className={styles.meta}>{updatedLabel}</span> : null}
       </div>
 
       <div className={styles.grid}>
@@ -76,8 +72,6 @@ export function LiveBookPnLStrip({
           <div className={`${styles.value} ${tone(metrics.totalPnl)}`}>{fmtSigned(metrics.totalPnl)}</div>
           <div className={styles.sub}>
             <span className={tone(metrics.totalPnlPct)}>{fmtPct(metrics.totalPnlPct)}</span>
-            {" vs "}
-            {fmtUsd(metrics.startingCapital)} start
           </div>
         </div>
 
@@ -86,7 +80,6 @@ export function LiveBookPnLStrip({
           <div className={`${styles.value} ${tone(metrics.unrealizedPnl)}`}>
             {fmtSigned(metrics.unrealizedPnl)}
           </div>
-          <div className={styles.sub}>Open positions · {isLive ? "live price" : "marked"}</div>
         </div>
 
         <div className={styles.card}>
@@ -94,7 +87,6 @@ export function LiveBookPnLStrip({
           <div className={`${styles.value} ${tone(metrics.realizedPnl)}`}>
             {fmtSigned(metrics.realizedPnl)}
           </div>
-          <div className={styles.sub}>From your sell orders</div>
         </div>
 
         <div className={styles.card}>

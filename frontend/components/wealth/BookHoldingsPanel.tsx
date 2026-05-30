@@ -57,7 +57,6 @@ export function BookHoldingsPanel({
         <div>
           <span className={styles.badge}>{bookType} book</span>
           <h3 className={styles.title}>{bookName}</h3>
-          <p className={styles.sub}>Holdings for this sleeve only · synced from Supabase</p>
         </div>
         <div className={styles.summary}>
           <div>

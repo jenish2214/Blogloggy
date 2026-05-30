@@ -46,17 +46,7 @@ export function TradeSymbolMarketBanner({
       <span className={styles.dot} aria-hidden />
       <div className={styles.text}>
         <strong>{label}</strong>
-        {!tradingAllowed && (
-          <span className={styles.sub}>
-            New orders for this symbol are blocked until the market reopens (crypto trades 24/7).
-          </span>
-        )}
-        {tradingAllowed && isLive && (
-          <span className={styles.sub}>Market open · live prices · orders accepted</span>
-        )}
-        {tradingAllowed && !isLive && status !== "weekend" && (
-          <span className={styles.sub}>After hours · paper orders use last available price</span>
-        )}
+        {!tradingAllowed && <span className={styles.sub}>Orders paused</span>}
       </div>
       <span className={styles.badge}>
         {status === "weekend" ? "FROZEN" : isLive ? "LIVE" : "CLOSED"}

@@ -74,7 +74,6 @@ export function SectorAllocationPanel({ positions, totalValue }: Props) {
       <div className={styles.panelHead}>
         <div>
           <h2 className={styles.title}>Sector allocation</h2>
-          <p className={styles.sub}>Your book vs approximate S&amp;P weights</p>
         </div>
       </div>
       {loading ? (

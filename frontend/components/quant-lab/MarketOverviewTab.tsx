@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getBasicFinancials, isValidQuote } from "@/lib/finnhub";
 import { useQuantLabStore } from "@/lib/store/quantLab";
 import type { BasicFinancials } from "@/types/finnhub";
-import { ExplainerPanel, MetricSkeleton, QuantLabError } from "./QuantLabShared";
+import { MetricSkeleton, QuantLabError } from "./QuantLabShared";
 import { fmtPrice, fmtSignedPct, fmtSignedPrice, formatMarketCap } from "./quantLabLabels";
 import styles from "./quant-lab.module.css";
 
@@ -162,22 +162,6 @@ export function MarketOverviewTab() {
         <QuantLabError message="Fundamentals unavailable for this symbol." onRetry={() => void loadFinancials()} />
       )}
 
-      <ExplainerPanel mode={quantLabMode}>
-        <ul className={styles.explainerList}>
-          <li>
-            <strong>Beta</strong> — how volatile this stock is vs the market. Beta &gt; 1 means more risky.
-          </li>
-          <li>
-            <strong>P/E ratio</strong> — how much investors pay per dollar of earnings. Lower can mean cheaper, but context matters.
-          </li>
-          <li>
-            <strong>52-week range</strong> — highest and lowest traded prices over the past year.
-          </li>
-          <li>
-            <strong>Market cap</strong> — total value of all outstanding shares (price × shares).
-          </li>
-        </ul>
-      </ExplainerPanel>
     </div>
   );
 }

@@ -88,7 +88,6 @@ export function DualProfileBar({ variant = "full" }: DualProfileBarProps) {
             <span className={styles.brandMark}>QD</span>
             <div>
               <span className={styles.brandTitle}>QuantDesk</span>
-              <span className={styles.brandSub}>Wealth Management Desk</span>
             </div>
           </div>
           <span className={styles.metricEmpty}>Loading desk…</span>
@@ -104,7 +103,6 @@ export function DualProfileBar({ variant = "full" }: DualProfileBarProps) {
           <span className={styles.brandMark}>QD</span>
           <div>
             <span className={styles.brandTitle}>QuantDesk</span>
-            <span className={styles.brandSub}>Wealth Management Desk</span>
           </div>
         </div>
 

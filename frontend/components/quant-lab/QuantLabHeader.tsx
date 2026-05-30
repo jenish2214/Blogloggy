@@ -49,7 +49,6 @@ export function QuantLabHeader({ benchmark }: QuantLabHeaderProps) {
     <header className={styles.header}>
       <div className={styles.headerTop}>
         <div>
-          <p className={styles.eyebrow}>QuantDesk · Quant Engine v2</p>
           <h1 className={styles.title}>Quant Lab</h1>
         </div>
         <div className={styles.headerControls}>

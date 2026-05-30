@@ -221,9 +221,6 @@ function LivePriceChartInner({ symbol, interval = "1d", candles, strategySignals
           <span><i className={styles.legendSell} /> SELL</span>
         </div>
       </div>
-      <p className={styles.disclaimer}>
-        Historical OHLCV via yfinance (Python). Algo desk trades paper 7 days/week. Not financial advice.
-      </p>
     </div>
   );
 }

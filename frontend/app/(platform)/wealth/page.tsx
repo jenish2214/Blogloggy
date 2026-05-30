@@ -20,17 +20,6 @@ function fmtPct(n: number) {
   return `${sign}${n.toFixed(2)}%`;
 }
 
-function fmtClock(iso: string | undefined) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-}
-
 function pnlClass(n: number) {
   return n >= 0 ? styles.pnlUp : styles.pnlDown;
 }
@@ -38,7 +27,7 @@ function pnlClass(n: number) {
 export default function WealthDeskPage() {
   const router = useRouter();
   const [deskTab, setDeskTab] = useState<"books" | "clients">("clients");
-  const { books, summary, loading, error, tick, refresh } = useWealthLiveFeed(true);
+  const { books, summary, loading, error, refresh } = useWealthLiveFeed(true);
   const setActiveBook = useActiveBookStore((s) => s.setActiveBook);
   const clearActiveBook = useActiveBookStore((s) => s.clearActiveBook);
   const activeBook = useActiveBookStore((s) => s.activeBook);
@@ -94,29 +83,14 @@ export default function WealthDeskPage() {
   };
 
   const displayError = error ?? crud.error;
-  const liveLabel = tick > 0 ? "Live · 5s refresh" : "Connecting…";
-
   return (
     <div className={styles.page}>
       <RefreshingBar active={loading && books.length > 0} />
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>Wealth Desk</h1>
-          <p className={styles.sub}>
-            Your firm books in Supabase — cash, holdings, and returns refresh with live
-            market prices. Only your signed-in account is shown.
-          </p>
-          {summary?.lastUpdated && (
-            <p className={styles.dataStamp}>
-              Last updated {fmtClock(summary.lastUpdated)} · Yahoo Finance quotes
-            </p>
-          )}
         </div>
         <div className={styles.actions}>
-          <span className={styles.live} title="Polling /api/wealth/books">
-            <span className={styles.liveDot} />
-            {liveLabel}
-          </span>
           <button
             type="button"
             className="btn btn-ghost btn-sm"

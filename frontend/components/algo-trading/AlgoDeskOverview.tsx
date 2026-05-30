@@ -89,10 +89,6 @@ export function AlgoDeskOverview() {
         <div className={styles.symbolBlock}>
           <span className={styles.symbolTag}>{symbol}</span>
           <h2 className={styles.symbolName}>{cfg.name}</h2>
-          <p className={styles.symbolMeta}>
-            {cfg.portfolioSymbol} · {cfg.assetClass}
-            {historyYahooSymbol ? ` · Yahoo ${historyYahooSymbol}` : ""}
-          </p>
         </div>
         <div className={styles.statusPills}>
           <span className={`${styles.pill} ${styles[`pill_${engineStatus}`]}`}>
@@ -101,10 +97,8 @@ export function AlgoDeskOverview() {
           {activeStrategy && (
             <span className={styles.pillNeutral}>{STRATEGY_LABELS[activeStrategy]}</span>
           )}
-          {usesYfinanceData && <span className={styles.pillNeutral}>yfinance</span>}
-          {syncToPortfolio && <span className={styles.pillAccent}>Portfolio sync</span>}
           {riskGuard.enabled && (
-            <span className={styles.pillWarn}>Risk guard · max {fmtUsd(riskGuard.maxLoss)}</span>
+            <span className={styles.pillWarn}>Max loss {fmtUsd(riskGuard.maxLoss)}</span>
           )}
         </div>
       </div>

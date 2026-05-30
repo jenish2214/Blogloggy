@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { quantApi, type BSResult } from "@/lib/quantApi";
 import { useQuantLabStore } from "@/lib/store/quantLab";
-import { ExplainerPanel, LiveBadge, QuantLabError } from "./QuantLabShared";
+import { LiveBadge, QuantLabError } from "./QuantLabShared";
 import { greekLabel } from "./quantLabLabels";
 import styles from "./quant-lab.module.css";
 
@@ -123,9 +123,6 @@ export function OptionsPricerTab({ engineOk }: { engineOk: boolean }) {
           )}
         </div>
       )}
-      <ExplainerPanel mode={quantLabMode}>
-        <p>Black–Scholes prices European options. Greeks show sensitivity to spot, time, and volatility.</p>
-      </ExplainerPanel>
     </div>
   );
 }

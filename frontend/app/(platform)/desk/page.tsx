@@ -136,11 +136,7 @@ function DeskPageContent() {
     <div className={styles.page}>
       <header className={`${styles.header} page-enter-child`}>
         <div>
-          <p className={styles.eyebrow}>Desk</p>
           <h1 className={styles.title}>Broker &amp; Client Desk</h1>
-          <p className={styles.sub}>
-            Broker identity, client registry, per-client wallet (+/−), and your account profile — Supabase.
-          </p>
         </div>
         <Link href="/wealth" className="btn btn-ghost btn-sm">
           Books &amp; AUM →

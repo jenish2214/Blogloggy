@@ -55,8 +55,7 @@ function GuestBannerBody({ dismiss }: { dismiss: () => void }) {
   return (
     <div className={styles.banner} role="status">
       <p className={styles.text}>
-        <strong>Guest mode</strong> — your $100k portfolio, trades, and history are saved only in this browser. Sign in
-        to save to the cloud.
+        <strong>Guest mode</strong> — sign in to sync your portfolio.
       </p>
       <div className={styles.actions}>
         <Link href="/login" className={styles.signIn}>
