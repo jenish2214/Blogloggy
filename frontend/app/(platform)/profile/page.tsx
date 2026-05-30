@@ -7,27 +7,26 @@ import styles from "./profile.module.css";
 const SHORTCUTS = [
   { href: "/trade", label: "Trade" },
   { href: "/portfolio", label: "Portfolio" },
-  { href: "/desk?section=wallet", label: "Client wallet" },
-  { href: "/algo-trading", label: "Algo desk" },
+  { href: "/desk?section=wallet", label: "Wallet" },
   { href: "/desk?section=clients", label: "Clients" },
+  { href: "/algo-trading", label: "Algo desk" },
   { href: "/wealth", label: "Wealth" },
 ] as const;
 
 export default function ProfilePage() {
   return (
-    <div className="page">
-      <header className={styles.header}>
+    <div className={`page ${styles.pageWrap}`}>
+      <header className={`${styles.header} page-enter-child`}>
         <div>
-          <h1 className={styles.displayName} style={{ fontSize: "var(--text-2xl)", marginBottom: 6 }}>
-            Profile
-          </h1>
+          <p className={styles.eyebrow}>Account</p>
+          <h1 className={styles.displayName}>Profile</h1>
           <p className={styles.sectionSub}>
-            Portfolio summary, trade history, and account details.
+            Your portfolio, trading history, and preferences — scoped to your active book only.
           </p>
         </div>
-        <nav className={styles.metaRow} aria-label="Quick links">
+        <nav className={`${styles.shortcuts} stagger-in`} aria-label="Quick links">
           {SHORTCUTS.map(({ href, label }) => (
-            <Link key={href} href={href} className="btn btn-ghost btn-sm">
+            <Link key={href} href={href} className={`${styles.shortcut} press-scale`}>
               {label}
             </Link>
           ))}

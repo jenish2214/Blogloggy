@@ -15,6 +15,7 @@ import {
 import { subscribeOrderPlaced } from "@/lib/trading/orderEvents";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { ProfilePreferencesSection } from "@/components/account/ProfilePreferencesSection";
+import { PageLoading } from "@/components/shared/PageLoading";
 import styles from "@/app/(platform)/profile/profile.module.css";
 
 type Tab = "statement" | "orders";
@@ -96,7 +97,7 @@ export function AccountProfileSection() {
   }, [loadProfile, activeBook?.portfolioId, activeBook?.clientId]);
 
   if (loading && !snapshot) {
-    return <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading profile…</p>;
+    return <PageLoading label="Loading your profile…" rows={4} layout="inline" />;
   }
 
   const pnl = snapshot?.pnl;
@@ -123,14 +124,14 @@ export function AccountProfileSection() {
 
   return (
     <div>
-      <div className={styles.profileCard} style={{ marginBottom: 16 }}>
+      <div className={`${styles.profileCard} page-enter-child`}>
         <div className={styles.avatar}>{initials}</div>
         <div className={styles.profileMeta}>
           <h2 className={styles.displayName}>{displayName}</h2>
           <p className={styles.email}>{email}</p>
           {activeBook && (
-            <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", margin: "4px 0 0" }}>
-              Active book: <strong>{activeBook.label}</strong>
+            <p className={styles.activeBook}>
+              Active book · <strong>{activeBook.label}</strong>
             </p>
           )}
           {memberSince && (
@@ -138,32 +139,32 @@ export function AccountProfileSection() {
               Member since <strong>{fmtDateShort(memberSince)}</strong>
             </span>
           )}
-          <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+          <div className={styles.actionRow}>
             {user && (
-              <button type="button" onClick={() => void handleSignOut()} className="btn btn-ghost btn-sm">
+              <button type="button" onClick={() => void handleSignOut()} className="btn btn-ghost btn-sm press-scale">
                 Sign out
               </button>
             )}
             {!user && (
-              <Link href="/login" className="btn btn-primary btn-sm">
+              <Link href="/login" className="btn btn-primary btn-sm press-scale">
                 Sign in
               </Link>
             )}
-            <button type="button" onClick={() => void loadProfile()} className="btn btn-ghost btn-sm">
+            <button type="button" onClick={() => void loadProfile()} className="btn btn-ghost btn-sm press-scale">
               Refresh
             </button>
           </div>
         </div>
       </div>
 
-      <div className={styles.statsGrid} style={{ marginBottom: 16 }}>
+      <div className={`${styles.statsGrid} stagger-in`}>
         {[
           { label: "Portfolio Value", value: fmtUsd(totalValue) },
           { label: "Total P&L", value: fmtPnl(totalPnl), color: totalPnl >= 0 ? "var(--up)" : "var(--down)" },
           { label: "Cash", value: fmtUsd(cash) },
           { label: "Orders", value: String(ordersPlacedLabel) },
         ].map(({ label, value, color }) => (
-          <div key={label} className="stat-card">
+          <div key={label} className={styles.statCard}>
             <div className={styles.statLabel}>{label}</div>
             <div className={styles.statValue} style={{ color: color ?? "var(--text-primary)" }}>
               {value}
@@ -183,17 +184,17 @@ export function AccountProfileSection() {
         </div>
       </div>
 
-      <div className={styles.tabs} style={{ marginBottom: 12 }}>
+      <div className={styles.tabs}>
         <button
           type="button"
-          className={`btn btn-sm ${tab === "statement" ? "btn-primary" : "btn-ghost"}`}
+          className={`${styles.tabBtn} ${tab === "statement" ? styles.tabBtnActive : ""} press-scale`}
           onClick={() => setTab("statement")}
         >
           P&L Statement
         </button>
         <button
           type="button"
-          className={`btn btn-sm ${tab === "orders" ? "btn-primary" : "btn-ghost"}`}
+          className={`${styles.tabBtn} ${tab === "orders" ? styles.tabBtnActive : ""} press-scale`}
           onClick={() => setTab("orders")}
         >
           Trades ({ordersPlacedLabel})
@@ -218,12 +219,12 @@ export function AccountProfileSection() {
         />
       ) : (
         <>
-          <div className={styles.tabs} style={{ marginBottom: 12 }}>
+          <div className={styles.tabs}>
             {(["all", "buy", "sell"] as const).map((f) => (
               <button
                 key={f}
                 type="button"
-                className={`btn btn-sm ${filter === f ? "btn-primary" : "btn-ghost"}`}
+                className={`${styles.tabBtn} ${filter === f ? styles.tabBtnActive : ""} press-scale`}
                 onClick={() => setFilter(f)}
               >
                 {f === "all" ? `All (${orders.length})` : f === "buy" ? `Buys` : `Sells`}

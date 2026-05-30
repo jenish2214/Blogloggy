@@ -6,6 +6,7 @@ import { walletApi, type WalletSummaryResponse, type WalletTransaction } from "@
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import { MAX_DEPOSIT_PER_TX, MAX_WITHDRAWAL_24H, formatWalletLimit } from "@/lib/wealth/walletLimits";
+import { LoadingIndicator } from "@/components/shared/LoadingIndicator";
 import styles from "./WalletPanel.module.css";
 
 function fmtUsd(n: number) {
@@ -125,7 +126,11 @@ export function WalletPanel({ compact = false, rail = false, nested = false }: W
   if (!activeBook) {
     return (
       <div className={nested ? styles.panelNested : styles.panel}>
-        <p className={styles.muted}>Select a client in the desk bar to add (+) or remove (−) money.</p>
+        <div className={styles.emptyState}>
+          <p className={styles.muted}>
+            Select a client book in the desk bar above to manage deposits (+) and withdrawals (−).
+          </p>
+        </div>
       </div>
     );
   }
@@ -136,48 +141,59 @@ export function WalletPanel({ compact = false, rail = false, nested = false }: W
       : "Personal";
 
   return (
-    <div className={nested ? styles.panelNested : styles.panel}>
-      <div className={rail ? styles.headRail : styles.head}>
+    <div className={`${nested ? styles.panelNested : styles.panel} page-enter-child`}>
+      <div className={rail ? styles.headRailWrap : styles.hero}>
         {!rail && (
-          <div>
-            <span className={styles.label}>
-              {activeBook.accountType === "client" ? "Client wallet" : "Proprietary wallet"}
-            </span>
-            <h3 className={styles.title}>
-              {activeBook.label}
-              <span className={styles.clientTag}>{clientTag}</span>
-            </h3>
+          <div className={styles.head}>
+            <div>
+              <span className={styles.label}>
+                {activeBook.accountType === "client" ? "Client wallet" : "Personal wallet"}
+              </span>
+              <h3 className={styles.title}>
+                {activeBook.label}
+                <span className={styles.clientTag}>{clientTag}</span>
+              </h3>
+            </div>
+            <div className={styles.balance}>
+              <span className={styles.balanceL}>Cash balance</span>
+              <span className={styles.balanceV}>
+                {loading ? "…" : fmtUsd(data?.book.cash ?? 0)}
+              </span>
+            </div>
           </div>
         )}
         {rail && (
-          <p className={styles.railBook}>
-            {activeBook.label}
-            <span className={styles.clientTag}>{clientTag}</span>
-          </p>
+          <>
+            <p className={styles.railBook}>
+              {activeBook.label}
+              <span className={styles.clientTag}>{clientTag}</span>
+            </p>
+            <div className={styles.balance}>
+              <span className={styles.balanceL}>Cash</span>
+              <span className={styles.balanceV}>
+                {loading ? "…" : fmtUsd(data?.book.cash ?? 0)}
+              </span>
+            </div>
+          </>
         )}
-        <div className={styles.balance}>
-          <span className={styles.balanceL}>Cash balance</span>
-          <span className={styles.balanceV}>
-            {loading ? "…" : fmtUsd(data?.book.cash ?? 0)}
-          </span>
-        </div>
       </div>
 
+      <div className={styles.body}>
       {!loading && data && !rail && (
-        <div className={styles.summary}>
-          <div className={`${styles.sumCard} ${styles.sumPlus}`}>
+        <div className={`${styles.summary} stagger-in`}>
+          <div className={`${styles.sumCard} ${styles.sumPlus} hover-lift`}>
             <span className={styles.sumSign}>+</span>
             <span className={styles.sumLabel}>Money in (deposits)</span>
             <span className={styles.sumVal}>{fmtUsd(data.stats.totalDeposits)}</span>
             <span className={styles.sumMeta}>{data.stats.depositCount} deposit{data.stats.depositCount !== 1 ? "s" : ""}</span>
           </div>
-          <div className={`${styles.sumCard} ${styles.sumMinus}`}>
+          <div className={`${styles.sumCard} ${styles.sumMinus} hover-lift`}>
             <span className={styles.sumSign}>−</span>
             <span className={styles.sumLabel}>Money out (withdrawals)</span>
             <span className={styles.sumVal}>{fmtUsd(data.stats.totalWithdrawals)}</span>
             <span className={styles.sumMeta}>{data.stats.withdrawalCount} withdrawal{data.stats.withdrawalCount !== 1 ? "s" : ""}</span>
           </div>
-          <div className={styles.sumCard}>
+          <div className={`${styles.sumCard} hover-lift`}>
             <span className={styles.sumSignNeutral}>±</span>
             <span className={styles.sumLabel}>Net client flow</span>
             <span className={`${styles.sumVal} ${netFlow >= 0 ? styles.netUp : styles.netDown}`}>
@@ -277,10 +293,13 @@ export function WalletPanel({ compact = false, rail = false, nested = false }: W
       </div>
 
       {loading ? (
-        <p className={styles.muted}>Loading…</p>
+        <div style={{ padding: "24px 0", display: "flex", justifyContent: "center" }}>
+          <LoadingIndicator label="Loading ledger…" size="sm" />
+        </div>
       ) : txs.length === 0 ? (
         <p className={styles.muted}>No + deposits or − withdrawals for this client yet.</p>
       ) : (
+        <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -319,7 +338,9 @@ export function WalletPanel({ compact = false, rail = false, nested = false }: W
             })}
           </tbody>
         </table>
+        </div>
       )}
+      </div>
     </div>
   );
 }

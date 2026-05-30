@@ -1,4 +1,5 @@
 /* Fonts loaded via next/font in app/layout.tsx (Plus Jakarta Sans + JetBrains Mono) */
+@import "./motion.css";
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* DESIGN TOKENS — Professional light theme                                    */

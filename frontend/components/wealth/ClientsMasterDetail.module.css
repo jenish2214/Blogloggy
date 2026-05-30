@@ -1,46 +1,57 @@
 .shell {
   display: grid;
-  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
   gap: 0;
-  min-height: 420px;
+  min-height: 480px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s ease;
+}
+
+.shell:hover {
+  box-shadow: var(--shadow);
 }
 
 .listPane {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border);
-  background: var(--bg-surface-2);
+  background: linear-gradient(180deg, var(--bg-surface-2) 0%, var(--bg-surface) 100%);
   min-width: 0;
 }
 
 .listHead {
-  padding: 12px 14px;
+  padding: 16px;
   border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .listTitle {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--text-muted);
   margin: 0;
 }
 
 .listSearch {
   width: 100%;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.listSearch:focus {
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .listActions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -48,13 +59,15 @@
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  scroll-behavior: smooth;
 }
 
 .listEmpty {
-  padding: 24px 14px;
-  font-size: 0.82rem;
+  padding: 28px 16px;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.55;
+  text-align: center;
 }
 
 .clientBtn {
@@ -63,30 +76,60 @@
   align-items: flex-start;
   gap: 4px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border: none;
   border-bottom: 1px solid var(--border-subtle);
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: background var(--t-fast);
+  position: relative;
+  transition:
+    background 0.2s ease,
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    padding-left 0.2s ease;
+}
+
+.clientBtn::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 0;
+  background: var(--accent);
+  border-radius: 0 4px 4px 0;
+  transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .clientBtn:hover {
   background: var(--bg-surface);
+  transform: translateX(4px);
+}
+
+.clientBtn:hover::before {
+  width: 4px;
 }
 
 .clientBtnActive {
   background: var(--bg-surface);
-  border-left: 3px solid var(--accent);
-  padding-left: 11px;
+  padding-left: 18px;
+}
+
+.clientBtnActive::before {
+  width: 4px;
 }
 
 .clientName {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
+  transition: color 0.15s ease;
+}
+
+.clientBtn:hover .clientName,
+.clientBtnActive .clientName {
+  color: var(--accent);
 }
 
 .clientMeta {
@@ -113,14 +156,28 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px;
+  padding: 48px 28px;
   text-align: center;
   color: var(--text-secondary);
-  gap: 8px;
+  gap: 12px;
+  animation: pageEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.detailEmptyIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--bg-surface-2);
+  border: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
 }
 
 .detailEmptyTitle {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -129,16 +186,18 @@
 .detailEmptyDesc {
   font-size: 0.85rem;
   margin: 0;
-  max-width: 280px;
-  line-height: 1.5;
+  max-width: 300px;
+  line-height: 1.55;
 }
 
 .pnlUp {
   color: var(--up);
+  font-weight: 600;
 }
 
 .pnlDown {
   color: var(--down);
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
@@ -150,6 +209,16 @@
   .listPane {
     border-right: none;
     border-bottom: 1px solid var(--border);
-    max-height: 280px;
+    max-height: 300px;
+  }
+
+  .clientBtn:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clientBtn:hover {
+    transform: none;
   }
 }

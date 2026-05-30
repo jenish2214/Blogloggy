@@ -137,8 +137,9 @@ function DeskPageContent() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
+      <header className={`${styles.header} page-enter-child`}>
         <div>
+          <p className={styles.eyebrow}>Desk</p>
           <h1 className={styles.title}>Broker &amp; Client Desk</h1>
           <p className={styles.sub}>
             Broker identity, client registry, per-client wallet (+/−), and your account profile — Supabase.
@@ -152,28 +153,28 @@ function DeskPageContent() {
       <div className={styles.sectionTabs}>
         <button
           type="button"
-          className={`${styles.sectionTab} ${section === "broker" ? styles.sectionActive : ""}`}
+          className={`${styles.sectionTab} press-scale ${section === "broker" ? styles.sectionActive : ""}`}
           onClick={() => goSection("broker")}
         >
           Broker profile
         </button>
         <button
           type="button"
-          className={`${styles.sectionTab} ${section === "clients" ? styles.sectionActive : ""}`}
+          className={`${styles.sectionTab} press-scale ${section === "clients" ? styles.sectionActive : ""}`}
           onClick={() => goSection("clients")}
         >
           Client management ({crud.allCount})
         </button>
         <button
           type="button"
-          className={`${styles.sectionTab} ${section === "wallet" ? styles.sectionActive : ""}`}
+          className={`${styles.sectionTab} press-scale ${section === "wallet" ? styles.sectionActive : ""}`}
           onClick={() => goSection("wallet")}
         >
           Client wallet
         </button>
         <button
           type="button"
-          className={`${styles.sectionTab} ${section === "profile" ? styles.sectionActive : ""}`}
+          className={`${styles.sectionTab} press-scale ${section === "profile" ? styles.sectionActive : ""}`}
           onClick={() => goSection("profile")}
         >
           Account profile
@@ -181,7 +182,7 @@ function DeskPageContent() {
       </div>
 
       {section === "broker" && (
-        <section className={styles.panel}>
+        <section key="broker" className={`${styles.panel} panel-fade`}>
           <h2 className={styles.panelTitle}>Your broker / advisor details</h2>
           <form id="broker-form" onSubmit={saveBrokerProfile} className={styles.formGrid}>
             <div className={styles.field}>
@@ -227,7 +228,7 @@ function DeskPageContent() {
       )}
 
       {section === "clients" && (
-        <section className={styles.panel}>
+        <section key="clients" className={`${styles.panel} panel-fade`}>
           <h2 className={styles.panelTitle}>Client management</h2>
           <p className={styles.walletHint} style={{ marginBottom: 16 }}>
             Click a client on the left to view details. Use the desk bar above to switch their book,
@@ -246,7 +247,7 @@ function DeskPageContent() {
       )}
 
       {section === "wallet" && (
-        <section className={styles.panel}>
+        <section key="wallet" className={`${styles.panel} panel-fade`}>
           <div className={styles.panelHeadRow}>
             <h2 className={styles.panelTitle}>Client wallet · deposits &amp; withdrawals</h2>
             {activeBook && <span className={styles.bookTag}>{activeBook.label}</span>}
@@ -264,7 +265,7 @@ function DeskPageContent() {
       )}
 
       {section === "profile" && (
-        <section className={styles.panel}>
+        <section key="profile" className={`${styles.panel} panel-fade`}>
           <h2 className={styles.panelTitle}>Account profile</h2>
           <p className={styles.walletHint} style={{ marginBottom: 16 }}>
             Sign-in identity and preferences. Client cash is managed under{" "}

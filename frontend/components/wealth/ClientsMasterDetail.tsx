@@ -31,7 +31,7 @@ export function ClientsMasterDetail({
   };
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} page-enter-child`}>
       <aside className={styles.listPane} aria-label="Client list">
         <div className={styles.listHead}>
           <p className={styles.listTitle}>Clients ({crud.allCount})</p>
@@ -91,6 +91,7 @@ export function ClientsMasterDetail({
 
       <div className={styles.detailPane}>
         {crud.mode ? (
+          <div className="detail-slide" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
           <ClientCrudPanel
             layout="inline"
             mode={crud.mode}
@@ -108,8 +109,12 @@ export function ClientsMasterDetail({
             onDelete={onDelete}
             onEdit={() => crud.selectedId && crud.openUpdate(crud.selectedId)}
           />
+          </div>
         ) : (
-          <div className={styles.detailEmpty}>
+          <div className={`${styles.detailEmpty} detail-slide`}>
+            <div className={styles.detailEmptyIcon} aria-hidden>
+              👤
+            </div>
             <h3 className={styles.detailEmptyTitle}>Client details</h3>
             <p className={styles.detailEmptyDesc}>
               Select a client on the left to view profile, book metrics, and edit or delete the

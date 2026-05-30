@@ -6,6 +6,7 @@ import { BookSwitcherGate } from "@/components/wealth/BookSwitcherGate";
 import { GuestModeBanner } from "@/components/system/GuestModeBanner";
 import { CloudSyncProvider } from "@/components/providers/CloudSyncProvider";
 import { DataCacheProvider } from "@/components/providers/DataCacheProvider";
+import { PageEntrance } from "@/components/shared/PageEntrance";
 import styles from "./PlatformWorkspace.module.css";
 
 export function PlatformWorkspace({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,9 @@ export function PlatformWorkspace({ children }: { children: React.ReactNode }) {
       <div className={styles.inner}>
         <GuestModeBanner />
         <DataCacheProvider>
-          <CloudSyncProvider>{children}</CloudSyncProvider>
+          <CloudSyncProvider>
+            <PageEntrance>{children}</PageEntrance>
+          </CloudSyncProvider>
         </DataCacheProvider>
       </div>
     </div>
