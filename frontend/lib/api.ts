@@ -570,6 +570,39 @@ export const walletApi = {
       method: "POST",
       body: JSON.stringify({ action: "withdraw", ...body }),
     }),
+  requestWithdrawOtp: (body: {
+    amount: number;
+    portfolioId?: string;
+    clientId?: string | null;
+  }) =>
+    apiFetch<{
+      success: boolean;
+      message: string;
+      challengeId: string;
+      expiresAt: string;
+      maskedEmail: string;
+      demoCode?: string;
+    }>("/api/wallet/withdraw/request-otp", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  confirmWithdraw: (body: {
+    amount?: number;
+    note?: string;
+    portfolioId?: string;
+    clientId?: string | null;
+    challengeId: string;
+    otp: string;
+  }) =>
+    apiFetch<{
+      success: boolean;
+      message: string;
+      cash?: number;
+      amount?: number;
+    }>("/api/wallet/withdraw/confirm", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 };
 
 export interface WatchlistItem {

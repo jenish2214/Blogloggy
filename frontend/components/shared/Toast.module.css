@@ -1,0 +1,132 @@
+.viewport {
+  position: fixed;
+  top: calc(var(--app-topbar-h, 56px) + 12px);
+  right: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(400px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.toastExit {
+  animation: toastOut 0.25s ease forwards;
+}
+
+.success {
+  border-left: 4px solid var(--up);
+}
+
+.error {
+  border-left: 4px solid var(--down);
+}
+
+.info {
+  border-left: 4px solid var(--accent);
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.success .icon {
+  background: var(--up-soft);
+  color: var(--up);
+}
+
+.error .icon {
+  background: var(--down-soft);
+  color: var(--down);
+}
+
+.info .icon {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: var(--text-primary);
+}
+
+.message {
+  font-size: 0.8rem;
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.close {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.close:hover {
+  color: var(--text-primary);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@media (max-width: 768px) {
+  .viewport {
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toastExit {
+    animation: none;
+  }
+}

@@ -4,6 +4,7 @@ import { Suspense, type ReactNode } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SidebarProvider, useSidebar } from "@/components/layout/SidebarContext";
 import { PlatformWorkspace } from "@/components/layout/PlatformWorkspace";
+import { ToastProvider } from "@/components/shared/ToastProvider";
 
 function ShellInner({ children }: { children: ReactNode }) {
   const { collapsed, mobileOpen, closeMobile } = useSidebar();
@@ -30,8 +31,10 @@ function ShellInner({ children }: { children: ReactNode }) {
 
 export function PlatformShell({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider>
-      <ShellInner>{children}</ShellInner>
-    </SidebarProvider>
+    <ToastProvider>
+      <SidebarProvider>
+        <ShellInner>{children}</ShellInner>
+      </SidebarProvider>
+    </ToastProvider>
   );
 }
