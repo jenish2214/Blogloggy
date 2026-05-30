@@ -29,7 +29,6 @@ export function DashboardPortfolioHero({
   activePortfolioId = null,
 }: DashboardPortfolioHeroProps) {
   const up = totals.totalPnl >= 0;
-  const maxBook = Math.max(...books.map((b) => b.totalValue), 1);
 
   return (
     <section
@@ -65,7 +64,6 @@ export function DashboardPortfolioHero({
         <p className={styles.portfolioBooksTitle}>Books</p>
         <ul className={styles.portfolioBooksList}>
           {books.slice(0, 6).map((b) => {
-            const pct = (b.totalValue / maxBook) * 100;
             const bookUp = b.totalPnl >= 0;
             const isActive = b.portfolioId === activePortfolioId;
             return (
@@ -74,20 +72,11 @@ export function DashboardPortfolioHero({
                 className={`${styles.portfolioBookRow} ${isActive ? styles.portfolioBookRowActive : ""}`}
               >
                 <div className={styles.portfolioBookHead}>
-                  <span className={styles.portfolioBookLabel}>
-                    {b.accountLabel}
-                    <span className={styles.portfolioBookType}>{b.accountType}</span>
-                  </span>
+                  <span className={styles.portfolioBookLabel}>{b.accountLabel}</span>
                   <span className={styles.portfolioBookValue}>{fmtUsd(b.totalValue)}</span>
                 </div>
-                <div className={styles.portfolioBookBarTrack}>
-                  <div
-                    className={styles.portfolioBookBarFill}
-                    style={{ width: `${Math.max(4, pct)}%` }}
-                  />
-                </div>
-                <span className={bookUp ? styles.pnlUp : styles.pnlDown}>
-                  {fmtPct(b.totalPnlPct)} · {b.openPositions} pos
+                <span className={`${styles.portfolioBookPnl} ${bookUp ? styles.pnlUp : styles.pnlDown}`}>
+                  {fmtPct(b.totalPnlPct)}
                 </span>
               </li>
             );

@@ -1,13 +1,13 @@
 /* Analytics dashboard — reference layout + smooth CSS motion */
 
 .root {
-  --dash-accent: #22c55e;
-  --dash-accent-soft: #dcfce7;
-  --dash-accent-text: #15803d;
-  --dash-down: #ef4444;
-  --dash-down-soft: #fee2e2;
-  --dash-down-text: #b91c1c;
-  --dash-radius: 16px;
+  --dash-accent: var(--text-primary);
+  --dash-accent-soft: var(--bg-surface-2);
+  --dash-accent-text: var(--text-primary);
+  --dash-down: var(--down);
+  --dash-down-soft: var(--down-soft);
+  --dash-down-text: var(--down);
+  --dash-radius: var(--radius-lg, 8px);
   --dash-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   max-width: 1280px;
@@ -100,13 +100,13 @@
 /* Total portfolio hero — live API marks */
 .portfolioHero {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
-  gap: 20px;
-  padding: 22px 24px;
-  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--dash-accent-soft) 120%);
+  grid-template-columns: minmax(0, 1.4fr) minmax(240px, 1fr);
+  gap: 24px;
+  padding: 20px 22px;
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--dash-radius);
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-sm);
 }
 
 .portfolioHeroMain {
@@ -155,7 +155,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--dash-accent);
+  background: var(--text-primary);
   animation: portfolioPulse 1.8s ease-in-out infinite;
 }
 
@@ -221,8 +221,11 @@
 }
 
 .portfolioHeroLink {
-  color: var(--dash-accent-text);
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.75rem;
   font-weight: 600;
+  color: var(--text-secondary);
   text-decoration: none;
 }
 
@@ -231,28 +234,28 @@
 }
 
 .pnlUp {
-  color: var(--dash-accent-text);
-  font-weight: 600;
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
 .pnlDown {
-  color: var(--dash-down-text);
-  font-weight: 600;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .portfolioHeroSide {
-  border-left: 1px solid var(--border-subtle);
-  padding-left: 20px;
+  border-left: 1px solid var(--border);
+  padding-left: 22px;
   min-width: 0;
 }
 
 .portfolioBooksTitle {
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 0.65rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--text-muted);
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
 
 .portfolioBooksList {
@@ -261,70 +264,72 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
 }
 
 .portfolioBookRow {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 2px 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.portfolioBookRowActive {
-  padding: 6px 8px;
-  margin: -6px -8px;
-  border-radius: 8px;
-  background: var(--accent-soft);
-  outline: 2px solid var(--accent);
-  outline-offset: 0;
+.portfolioBookRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.portfolioBookRow:first-child {
+  padding-top: 0;
+}
+
+.portfolioBookRowActive .portfolioBookLabel {
+  font-weight: 700;
 }
 
 .portfolioBookHead {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
+  display: contents;
 }
 
 .portfolioBookLabel {
-  font-size: 0.8rem;
-  font-weight: 600;
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.82rem;
+  font-weight: 500;
   color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 6px;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .portfolioBookType {
-  font-size: 0.58rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  background: var(--bg-surface-2);
-  padding: 2px 6px;
-  border-radius: 4px;
+  display: none;
 }
 
 .portfolioBookValue {
+  grid-column: 2;
+  grid-row: 1;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  flex-shrink: 0;
+  color: var(--text-primary);
+  text-align: right;
 }
 
-.portfolioBookBarTrack {
-  height: 4px;
-  background: var(--bg-surface-2);
-  border-radius: 2px;
-  overflow: hidden;
+.portfolioBookPnl {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
 }
 
+.portfolioBookBarTrack,
 .portfolioBookBarFill {
-  height: 100%;
-  background: var(--dash-accent);
-  border-radius: 2px;
-  transition: width 0.4s var(--dash-ease);
+  display: none;
 }
 
 @media (max-width: 900px) {
