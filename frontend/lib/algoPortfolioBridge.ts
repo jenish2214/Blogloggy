@@ -29,6 +29,7 @@ export async function executePaperOrder(params: {
     qty: params.qty,
     orderType: "market",
     currentPrice: params.price,
+    algoDesk: true,
   });
 
   if (res.success && params.side === "buy") {

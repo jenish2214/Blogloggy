@@ -20,6 +20,8 @@ export interface PlaceOrderInput {
   orderType: OrderType;
   currentPrice: number;
   limitPrice?: number;
+  /** Algo desk bypasses Saturday/Sunday order blocks (uses last/live marks). */
+  algoDesk?: boolean;
 }
 
 function buildOrderRecord(
@@ -47,7 +49,13 @@ function buildOrderRecord(
 export async function executePlaceOrder(
   params: PlaceOrderInput
 ): Promise<{ success: boolean; message: string }> {
-  if (!canPlaceMarketOrders({ symbol: params.symbol, assetClass: params.assetClass })) {
+  if (
+    !canPlaceMarketOrders(
+      { symbol: params.symbol, assetClass: params.assetClass },
+      new Date(),
+      { algoDesk: params.algoDesk }
+    )
+  ) {
     return {
       success: false,
       message:

@@ -97,6 +97,219 @@
   outline: none;
 }
 
+/* Total portfolio hero — live API marks */
+.portfolioHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr);
+  gap: 20px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--dash-accent-soft) 120%);
+  border: 1px solid var(--border);
+  border-radius: var(--dash-radius);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+}
+
+.portfolioHeroMain {
+  min-width: 0;
+}
+
+.portfolioHeroTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.portfolioHeroLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.portfolioLiveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--dash-accent-text);
+  background: var(--dash-accent-soft);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.portfolioLiveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dash-accent);
+  animation: portfolioPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes portfolioPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
+}
+
+.portfolioHeroValue {
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin: 0 0 10px;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.portfolioHeroMeta {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.portfolioHeroSep {
+  color: var(--text-muted);
+}
+
+.portfolioHeroCompare {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+  line-height: 1.45;
+}
+
+.portfolioHeroUpdated {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 0;
+  font-family: var(--font-mono);
+}
+
+.portfolioHeroLink {
+  color: var(--dash-accent-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.portfolioHeroLink:hover {
+  text-decoration: underline;
+}
+
+.pnlUp {
+  color: var(--dash-accent-text);
+  font-weight: 600;
+}
+
+.pnlDown {
+  color: var(--dash-down-text);
+  font-weight: 600;
+}
+
+.portfolioHeroSide {
+  border-left: 1px solid var(--border-subtle);
+  padding-left: 20px;
+  min-width: 0;
+}
+
+.portfolioBooksTitle {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.portfolioBooksList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.portfolioBookRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.portfolioBookHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.portfolioBookLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.portfolioBookType {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.portfolioBookValue {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.portfolioBookBarTrack {
+  height: 4px;
+  background: var(--bg-surface-2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.portfolioBookBarFill {
+  height: 100%;
+  background: var(--dash-accent);
+  border-radius: 2px;
+  transition: width 0.4s var(--dash-ease);
+}
+
+@media (max-width: 900px) {
+  .portfolioHero {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolioHeroSide {
+    border-left: none;
+    padding-left: 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
 /* KPI cards */
 .kpiRow {
   display: grid;

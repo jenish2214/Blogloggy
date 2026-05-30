@@ -112,8 +112,18 @@ export function getMarketStatusLabel(ctx: MarketHoursContext = {}, at: Date = ne
   return "Market closed — after hours";
 }
 
+/** Algo desk: paper strategies run every calendar day (no Sat/Sun block). */
+export function canAlgoDeskTrade(_ctx: MarketHoursContext = {}, _at: Date = new Date()): boolean {
+  return true;
+}
+
 /** Paper orders accepted when the symbol's market session allows trading. */
-export function canPlaceMarketOrders(ctx: MarketHoursContext = {}, at: Date = new Date()): boolean {
+export function canPlaceMarketOrders(
+  ctx: MarketHoursContext = {},
+  at: Date = new Date(),
+  opts?: { algoDesk?: boolean }
+): boolean {
+  if (opts?.algoDesk) return canAlgoDeskTrade(ctx, at);
   const calendar = detectMarketCalendar(ctx);
   if (calendar === "CRYPTO") return true;
   return getMarketCalendarStatus(calendar, at) !== "weekend";

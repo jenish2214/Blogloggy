@@ -19,10 +19,21 @@ const venvPip =
     ? join(venvDir, "Scripts", "pip.exe")
     : join(venvDir, "bin", "pip");
 
+function pipInstall() {
+  console.log("[quant] Installing Python dependencies…");
+  if (existsSync(venvPip)) {
+    spawnSync(venvPip, ["install", "-r", "requirements.txt"], { stdio: "inherit", cwd: root });
+  } else {
+    spawnSync(python, ["-m", "pip", "install", "-r", "requirements.txt"], { stdio: "inherit", cwd: root });
+  }
+}
+
 if (!existsSync(venvDir)) {
-  console.log("[quant] First run — setting up venv…");
+  console.log("[quant] First run — creating venv…");
   spawnSync(python, ["-m", "venv", ".venv"], { stdio: "inherit", cwd: root });
-  spawnSync(venvPip, ["install", "-r", "requirements.txt"], { stdio: "inherit", cwd: root });
+  pipInstall();
+} else if (!existsSync(uvicorn)) {
+  pipInstall();
 }
 
 const child = spawn(
@@ -33,6 +44,7 @@ const child = spawn(
 
 child.on("error", (err) => {
   console.error("[quant] Failed to start:", err.message);
+  console.error("[quant] Ensure Python 3 is installed, then run npm run dev again.");
   process.exit(1);
 });
 

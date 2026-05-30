@@ -10,11 +10,11 @@ import { RealizedPnlTable } from "@/components/portfolio/RealizedPnlTable";
 import { LiveBookPnLStrip } from "@/components/portfolio/LiveBookPnLStrip";
 import { OrderHistoryTable } from "@/components/trading/OrderHistoryTable";
 import { PnlStatementPanel } from "@/components/trading/PnlStatementPanel";
+import { INITIAL_CASH, type PortfolioSnapshot } from "@/lib/trading/portfolioSnapshot";
 import {
-  loadPortfolioSnapshot,
-  INITIAL_CASH,
-  type PortfolioSnapshot,
-} from "@/lib/trading/portfolioSnapshot";
+  getPortfolioSnapshotCache,
+  loadPortfolioSnapshotCached,
+} from "@/lib/trading/portfolioSnapshotCache";
 import { subscribeOrderPlaced } from "@/lib/trading/orderEvents";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { exitAllPositions } from "@/lib/trading/exitAllPositions";
@@ -73,8 +73,10 @@ function AllocationBar({ label, pct, up }: { label: string; pct: number; up?: bo
 export default function PortfolioPage() {
   const activeBook = useActiveBookStore((s) => s.activeBook);
   const localStore = usePortfolioStore();
-  const [snapshot, setSnapshot] = useState<PortfolioSnapshot | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [snapshot, setSnapshot] = useState<PortfolioSnapshot | null>(() =>
+    getPortfolioSnapshotCache()
+  );
+  const [loading, setLoading] = useState(() => !getPortfolioSnapshotCache());
   const [resetConfirm, setResetConfirm] = useState(false);
   const [exitConfirm, setExitConfirm] = useState(false);
   const [exiting, setExiting] = useState(false);
@@ -86,9 +88,17 @@ export default function PortfolioPage() {
   const [holdingsView, setHoldingsView] = useState<"cards" | "heatmap">("cards");
   const isWeekend = isUSEquityWeekend();
 
-  const refreshSnapshot = useCallback(async () => {
+  const refreshSnapshot = useCallback(async (force = false) => {
+    if (!force) {
+      const hit = getPortfolioSnapshotCache();
+      if (hit) {
+        setSnapshot(hit);
+        setLoading(false);
+        return;
+      }
+    }
     setLoading(true);
-    const data = await loadPortfolioSnapshot();
+    const data = await loadPortfolioSnapshotCached(force);
     setSnapshot(data);
     setLoading(false);
   }, []);
@@ -96,7 +106,7 @@ export default function PortfolioPage() {
   useEffect(() => {
     void refreshSnapshot();
     return subscribeOrderPlaced(() => {
-      void refreshSnapshot();
+      void refreshSnapshot(true);
     });
   }, [refreshSnapshot, activeBook?.portfolioId]);
 
@@ -110,7 +120,7 @@ export default function PortfolioPage() {
     if (res.success && typeof window !== "undefined") {
       window.dispatchEvent(new Event("wallet-updated"));
     }
-    await refreshSnapshot();
+    await refreshSnapshot(true);
   };
 
   const displayPositions = liveTotals?.positions ?? snapshot?.positions ?? [];

@@ -142,6 +142,7 @@ export const DASHBOARD_WORKSPACES: DashboardWorkspace[] = [
   },
 ];
 
+/** @deprecated Use /api/dashboard + buildDashboardFromSummary */
 export function dashboardGreeting(): string {
   return "Dashboard";
 }

@@ -2,16 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
+import { userApi } from "@/lib/api";
+import { getClientCache } from "@/lib/clientFetchCache";
 import {
   defaultFeatureAccess,
   getFeatureAccessFromUser,
   type FeatureAccessMap,
 } from "@/lib/user/featureAccess";
 
+const PROFILE_CACHE_KEY = "GET:/api/user/profile";
+
 export function useFeatureAccess() {
-  const [access, setAccess] = useState<FeatureAccessMap>(defaultFeatureAccess());
-  const [loading, setLoading] = useState(true);
-  const [signedIn, setSignedIn] = useState(false);
+  const cached = getClientCache<{ feature_access?: FeatureAccessMap }>(PROFILE_CACHE_KEY);
+  const [access, setAccess] = useState<FeatureAccessMap>(
+    () => cached?.feature_access ?? defaultFeatureAccess()
+  );
+  const [loading, setLoading] = useState(!cached);
+  const [signedIn, setSignedIn] = useState(!!cached);
 
   useEffect(() => {
     if (!hasSupabaseEnv()) {
@@ -33,8 +40,7 @@ export function useFeatureAccess() {
         return;
       }
       try {
-        const res = await fetch("/api/user/profile", { credentials: "same-origin" });
-        const j = await res.json();
+        const j = await userApi.getProfile();
         if (j.feature_access) {
           setAccess(j.feature_access);
         } else {

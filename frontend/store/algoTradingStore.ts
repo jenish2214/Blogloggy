@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { evaluateStrategy, computeMetrics } from "@/lib/strategyEngine";
+import type { AlgoChartInterval, AlgoChartPeriod } from "@/lib/algo/fetchAlgoHistory";
 import { generateOHLCV, simulateLiveTick } from "@/lib/priceDataGenerator";
 import type {
   AlgoSymbol,
@@ -19,7 +20,8 @@ import type {
 import { DEFAULT_STRATEGY_PARAMS, SYMBOL_CONFIGS, getSymbolConfig } from "@/types/algoTrading";
 import { executePaperOrder, qtyFromNotional } from "@/lib/algoPortfolioBridge";
 
-const MAX_CANDLES = 120;
+/** Max bars on chart (1y daily ≈ 252; 2y ≈ 504). */
+const MAX_CANDLES = 520;
 const MAX_SIGNALS = 80;
 const MAX_LOGS = 200;
 
@@ -68,8 +70,24 @@ interface AlgoTradingState {
   latencyMs: number;
   syncToPortfolio: boolean;
   lastTradeMessage: string;
+  chartPeriod: AlgoChartPeriod;
+  chartInterval: AlgoChartInterval;
+  historyLoading: boolean;
+  historyError: string | null;
+  historyProvider: string | null;
+  historyYahooSymbol: string | null;
+  usesYfinanceData: boolean;
 
   setSymbol: (symbol: AlgoSymbol) => void;
+  setChartRange: (period: AlgoChartPeriod, interval: AlgoChartInterval) => void;
+  applyHistory: (
+    candles: CandleData[],
+    currentPrice: number,
+    meta: { provider: string; yahooSymbol: string; period: AlgoChartPeriod; interval: AlgoChartInterval }
+  ) => void;
+  setHistoryLoading: (loading: boolean) => void;
+  setHistoryError: (message: string | null) => void;
+  appendLiveTick: (price: number) => void;
   switchStrategy: (strategy: StrategyType) => void;
   updateParam: (strategy: StrategyType, key: string, value: number) => void;
   setPositionSize: (size: number) => void;
@@ -118,16 +136,85 @@ export const useAlgoTradingStore = create<AlgoTradingState>()(
         latencyMs: 12,
         syncToPortfolio: true,
         lastTradeMessage: "",
+        chartPeriod: "1y" as AlgoChartPeriod,
+        chartInterval: "1d" as AlgoChartInterval,
+        historyLoading: false,
+        historyError: null,
+        historyProvider: null,
+        historyYahooSymbol: null,
+        usesYfinanceData: false,
 
         setSyncToPortfolio(enabled) {
           set((s) => { s.syncToPortfolio = enabled; });
         },
 
+        setChartRange(period, interval) {
+          set((s) => {
+            s.chartPeriod = period;
+            s.chartInterval = interval;
+          });
+        },
+
+        setHistoryLoading(loading) {
+          set((s) => { s.historyLoading = loading; });
+        },
+
+        setHistoryError(message) {
+          set((s) => { s.historyError = message; });
+        },
+
+        applyHistory(candles, currentPrice, meta) {
+          set((s) => {
+            const trimmed = candles.slice(-MAX_CANDLES);
+            s.priceHistory = trimmed;
+            s.currentPrice = currentPrice;
+            s.tickIndex = 0;
+            s.signals = [];
+            s.historyProvider = meta.provider;
+            s.historyYahooSymbol = meta.yahooSymbol;
+            s.chartPeriod = meta.period;
+            s.chartInterval = meta.interval;
+            s.usesYfinanceData = true;
+            s.historyError = null;
+            s.engineLogs = pushLog(
+              s.engineLogs,
+              makeLog(
+                "INFO",
+                `Chart loaded — ${meta.yahooSymbol} · ${trimmed.length} bars (${meta.period} / ${meta.interval}) via ${meta.provider}`
+              )
+            );
+          });
+        },
+
+        appendLiveTick(price) {
+          if (!Number.isFinite(price) || price <= 0) return;
+          const state = get();
+          const last = state.priceHistory[state.priceHistory.length - 1];
+          if (!last) return;
+          const now = Date.now();
+          const newCandle: CandleData = {
+            open: last.close,
+            high: Math.max(last.high, price),
+            low: Math.min(last.low, price),
+            close: price,
+            volume: Math.max(1, Math.round(last.volume * 0.05)),
+            timestamp: now,
+            timeLabel: new Date(now).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: false,
+            }),
+          };
+          set((s) => {
+            s.priceHistory = [...s.priceHistory, newCandle].slice(-MAX_CANDLES);
+            s.currentPrice = price;
+          });
+        },
+
         setSymbol(symbol) {
           set((s) => {
             s.symbol = symbol;
-            s.priceHistory = initPriceHistory(symbol);
-            s.currentPrice = s.priceHistory[s.priceHistory.length - 1]?.close ?? SYMBOL_CONFIGS[symbol].basePrice;
             s.tickIndex = 0;
             s.signals = [];
             s.openPosition = null;
@@ -138,6 +225,9 @@ export const useAlgoTradingStore = create<AlgoTradingState>()(
             s.sharpeRatio = 0;
             s.maxDrawdown = 0;
             s.totalTrades = 0;
+            s.usesYfinanceData = false;
+            s.historyProvider = null;
+            s.historyYahooSymbol = null;
             s.engineLogs = pushLog(s.engineLogs, makeLog("INFO", `Symbol switched to ${SYMBOL_CONFIGS[symbol].label}`));
           });
         },
@@ -291,7 +381,26 @@ export const useAlgoTradingStore = create<AlgoTradingState>()(
           const last = state.priceHistory[state.priceHistory.length - 1];
           if (!last) return;
 
-          const newCandle = simulateLiveTick(last, state.symbol, state.tickIndex);
+          const newCandle = state.usesYfinanceData
+            ? (() => {
+                const drift = (Math.random() - 0.5) * last.close * 0.0008;
+                const price = Math.max(0.0001, last.close + drift);
+                return {
+                  open: last.close,
+                  high: Math.max(last.high, price),
+                  low: Math.min(last.low, price),
+                  close: price,
+                  volume: Math.max(1, Math.round(last.volume * 0.02)),
+                  timestamp: Date.now(),
+                  timeLabel: new Date().toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: false,
+                  }),
+                } satisfies CandleData;
+              })()
+            : simulateLiveTick(last, state.symbol, state.tickIndex);
           const candles = [...state.priceHistory, newCandle].slice(-MAX_CANDLES);
           const signal = evaluateStrategy(state.activeStrategy, candles, state.strategyParams);
 

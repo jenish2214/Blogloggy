@@ -240,9 +240,47 @@ export async function loadPortfolioSnapshot(): Promise<PortfolioSnapshot> {
   }
 }
 
-export function fmtUsd(n: number, signed = false) {
-  const sign = signed ? (n >= 0 ? "+" : "−") : n < 0 ? "−" : "";
-  return `${sign}$${Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function trimCompactDecimals(s: string): string {
+  return s.replace(/\.0+([KMB])$/, "$1");
+}
+
+/** $1.5K · $3M · $30M — full dollars below $1,000 */
+function formatCompactUsd(abs: number): string {
+  if (abs >= 1_000_000_000) {
+    const v = abs / 1_000_000_000;
+    const digits = v >= 100 ? 0 : v >= 10 ? 1 : 2;
+    return trimCompactDecimals(`$${v.toFixed(digits)}B`);
+  }
+  if (abs >= 1_000_000) {
+    const v = abs / 1_000_000;
+    const digits = v >= 100 ? 0 : v >= 10 ? 1 : 2;
+    return trimCompactDecimals(`$${v.toFixed(digits)}M`);
+  }
+  if (abs >= 1_000) {
+    const v = abs / 1_000;
+    const digits = v >= 100 ? 0 : v >= 10 ? 1 : 2;
+    return trimCompactDecimals(`$${v.toFixed(digits)}K`);
+  }
+  return `$${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+export type FmtUsdOptions = {
+  /** Prefix +/− for P&L */
+  signed?: boolean;
+  /** Force full amount e.g. $30,000,000.00 */
+  full?: boolean;
+  /** Force compact e.g. $30M */
+  compact?: boolean;
+};
+
+export function fmtUsd(n: number, signedOrOpts: boolean | FmtUsdOptions = false) {
+  const opts: FmtUsdOptions =
+    typeof signedOrOpts === "boolean" ? { signed: signedOrOpts } : signedOrOpts;
+  const sign = opts.signed ? (n >= 0 ? "+" : "−") : n < 0 ? "−" : "";
+  const abs = Math.abs(n);
+  const useCompact = opts.compact ?? (!opts.full && abs >= 1_000);
+  const body = useCompact ? formatCompactUsd(abs) : `$${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${sign}${body}`;
 }
 
 export function fmtPct(n: number) {

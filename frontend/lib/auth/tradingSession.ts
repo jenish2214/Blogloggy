@@ -1,5 +1,6 @@
 "use client";
 
+import { invalidateAllAppData } from "@/lib/dataInvalidation";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { usePortfolioStore } from "@/lib/store/portfolio";
 
@@ -17,6 +18,7 @@ export function resetLocalTradingSession() {
 export function handleAuthSessionChange(userId: string | null) {
   if (userId === cachedUserId) return;
   cachedUserId = userId;
+  invalidateAllAppData();
   resetLocalTradingSession();
   if (!userId) {
     useActiveBookStore.getState().clearActiveBook();

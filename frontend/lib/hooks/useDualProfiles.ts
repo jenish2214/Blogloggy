@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSupabaseSession } from "@/lib/auth/useSupabaseSession";
 import { wealthApi, type WealthBookSummary } from "@/lib/api";
+import { getClientCache } from "@/lib/clientFetchCache";
+import { useDocumentVisible } from "@/lib/hooks/useDocumentVisible";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { useActiveBookStore, type ActiveBook } from "@/lib/store/activeBook";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 
-const POLL_MS = 8000;
+const BOOKS_CACHE_KEY = "GET:/api/wealth/books";
+const POLL_MS = 30_000;
 
 function bookToActive(b: WealthBookSummary): ActiveBook {
   return {
@@ -21,28 +24,23 @@ function bookToActive(b: WealthBookSummary): ActiveBook {
 
 export function useDualProfiles() {
   const { isAuthenticated, ready: sessionReady } = useSupabaseSession();
+  const visible = useDocumentVisible();
   const activeBook = useActiveBookStore((s) => s.activeBook);
   const setActiveBook = useActiveBookStore((s) => s.setActiveBook);
-  const [personal, setPersonal] = useState<WealthBookSummary | null>(null);
+  const cached = getClientCache<{ books: WealthBookSummary[] }>(BOOKS_CACHE_KEY);
+
+  const [personal, setPersonal] = useState<WealthBookSummary | null>(
+    () => cached?.books.find((b) => b.accountType === "personal") ?? null
+  );
   const [clientBook, setClientBook] = useState<WealthBookSummary | null>(null);
-  const [clientBooks, setClientBooks] = useState<WealthBookSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [clientBooks, setClientBooks] = useState<WealthBookSummary[]>(
+    () => cached?.books.filter((b) => b.accountType === "client") ?? []
+  );
+  const [loading, setLoading] = useState(!cached);
   const mounted = useRef(true);
 
-  const refresh = useCallback(async () => {
-    if (!hasSupabaseEnv() || !isAuthenticated) {
-      if (mounted.current) {
-        setPersonal(null);
-        setClientBook(null);
-        setClientBooks([]);
-        setLoading(false);
-      }
-      return;
-    }
-    try {
-      const { books } = await wealthApi.getBooks();
-      if (!mounted.current) return;
-
+  const applyBooks = useCallback(
+    (books: WealthBookSummary[]) => {
       const personalB = books.find((b) => b.accountType === "personal") ?? null;
       const clients = books.filter((b) => b.accountType === "client");
       setPersonal(personalB);
@@ -71,28 +69,50 @@ export function useDualProfiles() {
       if (!current && personalB) {
         setActiveBook(bookToActive(personalB));
       }
-    } catch {
-      /* offline */
-    } finally {
-      if (mounted.current) setLoading(false);
-    }
-  }, [isAuthenticated, setActiveBook]);
+    },
+    [setActiveBook]
+  );
+
+  const refresh = useCallback(
+    async (force = false) => {
+      if (!hasSupabaseEnv() || !isAuthenticated) {
+        if (mounted.current) {
+          setPersonal(null);
+          setClientBook(null);
+          setClientBooks([]);
+          setLoading(false);
+        }
+        return;
+      }
+      try {
+        const { books } = await wealthApi.getBooks(force);
+        if (!mounted.current) return;
+        applyBooks(books);
+      } catch {
+        /* offline */
+      } finally {
+        if (mounted.current) setLoading(false);
+      }
+    },
+    [isAuthenticated, applyBooks]
+  );
 
   useEffect(() => {
     mounted.current = true;
     if (!sessionReady) return;
-    void refresh();
-    if (!isAuthenticated) {
+    if (cached?.books.length) applyBooks(cached.books);
+    void refresh(false);
+    if (!isAuthenticated || !visible) {
       return () => {
         mounted.current = false;
       };
     }
-    const id = setInterval(refresh, POLL_MS);
+    const id = setInterval(() => void refresh(false), POLL_MS);
     return () => {
       mounted.current = false;
       clearInterval(id);
     };
-  }, [sessionReady, isAuthenticated, refresh]);
+  }, [sessionReady, isAuthenticated, visible, refresh, applyBooks]);
 
   const selectPersonal = useCallback(async () => {
     if (!personal) return;
@@ -103,17 +123,16 @@ export function useDualProfiles() {
 
   const selectClient = useCallback(
     async (book?: WealthBookSummary) => {
-      const target = book ?? clientBook ?? clientBooks[0];
+      const target = book ?? clientBook;
       if (!target) return;
-      const active = bookToActive(target);
-      setActiveBook(active);
-      setClientBook(target);
+      setActiveBook(bookToActive(target));
       await syncPortfolioFromCloud();
     },
-    [clientBook, clientBooks, setActiveBook]
+    [clientBook, setActiveBook]
   );
 
-  const isPersonalActive = activeBook?.accountType === "personal";
+  const isPersonalActive =
+    activeBook?.accountType === "personal" || (!activeBook && !!personal);
   const isClientActive = activeBook?.accountType === "client";
 
   return {
@@ -122,10 +141,10 @@ export function useDualProfiles() {
     clientBooks,
     activeBook,
     loading,
-    isPersonalActive,
-    isClientActive,
+    refresh,
     selectPersonal,
     selectClient,
-    refresh,
+    isPersonalActive,
+    isClientActive,
   };
 }

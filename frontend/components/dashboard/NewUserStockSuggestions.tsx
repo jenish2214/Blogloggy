@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
+import { suggestionsApi } from "@/lib/api";
 import { hasSupabaseEnv } from "@/lib/supabase/client";
 import { createClient } from "@/lib/supabase/client";
 import { useActiveBookStore } from "@/lib/store/activeBook";
@@ -48,7 +49,7 @@ export function NewUserStockSuggestions() {
     }
   }, []);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     if (!hasSupabaseEnv()) {
       setGuest(true);
       setData(null);
@@ -69,32 +70,38 @@ export function NewUserStockSuggestions() {
       return;
     }
 
+    if (!force && data) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const q = new URLSearchParams();
-      if (activeBook?.portfolioId) q.set("portfolioId", activeBook.portfolioId);
-      if (activeBook?.clientId) q.set("clientId", activeBook.clientId);
-      const res = await fetch(`/api/suggestions/stocks?${q}`, { credentials: "same-origin" });
-      if (res.status === 401) {
+      const json = await suggestionsApi.getStocks(
+        {
+          portfolioId: activeBook?.portfolioId,
+          clientId: activeBook?.clientId,
+        },
+        force
+      );
+      setData(json as SuggestionsResponse);
+    } catch (e) {
+      if ((e as { status?: number }).status === 401) {
         setGuest(true);
         setData(null);
-        return;
+      } else {
+        setData(null);
       }
-      const json = (await res.json()) as SuggestionsResponse;
-      setData(json);
-    } catch {
-      setData(null);
     } finally {
       setLoading(false);
     }
-  }, [activeBook?.portfolioId, activeBook?.clientId]);
+  }, [activeBook?.portfolioId, activeBook?.clientId, data]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   useEffect(() => {
-    const onWallet = () => void load();
+    const onWallet = () => void load(true);
     window.addEventListener("wallet-updated", onWallet);
     return () => window.removeEventListener("wallet-updated", onWallet);
   }, [load]);

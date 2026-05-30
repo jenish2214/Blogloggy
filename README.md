@@ -30,12 +30,11 @@ A full-stack paper trading platform inspired by Jane Street — professional dar
 **Production:** [https://algo-street.vercel.app](https://algo-street.vercel.app)
 
 ```bash
-# One-time setup (Node deps + Python venv + .env files)
-npm run setup
-
-# Start Express API (:4000), Python quant (:8000), and Next.js (:3000)
+# One command — installs missing deps, then starts API (:4000), quant (:8000), Next.js (:3000)
 npm run dev
 ```
+
+Optional full setup: `npm run setup` (same env/bootstrap, runs explicitly).
 
 Then open http://localhost:3000 — **Quant Lab** at `/quant-lab` works automatically (uses `QUANT_SERVICE_URL=http://localhost:8000` from `frontend/.env.local`).
 

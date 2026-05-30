@@ -3,15 +3,10 @@
 import type { WealthBookSummary, WealthClient } from "@/lib/api";
 import type { useClientsCrud } from "@/lib/hooks/useClientsCrud";
 import { ClientCrudPanel } from "@/components/wealth/ClientCrudPanel";
+import { fmtUsd } from "@/lib/trading/portfolioSnapshot";
 import styles from "./ClientsMasterDetail.module.css";
 
 type Crud = ReturnType<typeof useClientsCrud>;
-
-function fmtUsd(n: number, compact = false) {
-  if (compact && Math.abs(n) >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (compact && Math.abs(n) >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-}
 
 function pnlClass(n: number) {
   return n >= 0 ? styles.pnlUp : styles.pnlDown;
@@ -81,7 +76,7 @@ export function ClientsMasterDetail({
                   <span className={styles.clientMeta}>{c.client_code}</span>
                   {m ? (
                     <span className={`${styles.clientSub} ${pnlClass(m.totalPnl)}`}>
-                      {fmtUsd(m.totalValue, true)} · {c.status}
+                      {fmtUsd(m.totalValue)} · {c.status}
                     </span>
                   ) : (
                     <span className={styles.clientSub}>{c.tier} · {c.status}</span>

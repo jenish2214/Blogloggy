@@ -1,10 +1,16 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
+import { DashboardPortfolioHero } from "@/components/dashboard/DashboardPortfolioHero";
 import type {
   DashboardAction,
   DashboardKpi,
   DashboardWorkspace,
 } from "@/lib/dashboard/dashboardData";
+import type {
+  DashboardBenchmark,
+  DashboardBookSummary,
+  DashboardTotals,
+} from "@/lib/dashboard/types";
 import styles from "@/app/(platform)/dashboard.module.css";
 
 export type DashboardViewProps = {
@@ -13,6 +19,10 @@ export type DashboardViewProps = {
   kpis: DashboardKpi[];
   quickActions: DashboardAction[];
   workspaces: DashboardWorkspace[];
+  portfolioTotals?: DashboardTotals | null;
+  portfolioBooks?: DashboardBookSummary[];
+  benchmark?: DashboardBenchmark | null;
+  portfolioRefreshing?: boolean;
   earnings: ReactNode;
   suggestions: ReactNode;
   marketWatch: ReactNode;
@@ -43,6 +53,10 @@ export function DashboardView({
   kpis,
   quickActions,
   workspaces,
+  portfolioTotals,
+  portfolioBooks = [],
+  benchmark = null,
+  portfolioRefreshing,
   earnings,
   suggestions,
   marketWatch,
@@ -78,6 +92,15 @@ export function DashboardView({
           </label>
         </div>
       </header>
+
+      {portfolioTotals ? (
+        <DashboardPortfolioHero
+          totals={portfolioTotals}
+          books={portfolioBooks}
+          benchmark={benchmark}
+          loading={portfolioRefreshing}
+        />
+      ) : null}
 
       <section className={styles.kpiRow} aria-label="Key metrics">
         {kpis.map((k, i) => (

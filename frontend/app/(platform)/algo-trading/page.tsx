@@ -11,6 +11,8 @@ import { StrategyControlPanel } from "@/components/algo-trading/StrategyControlP
 import { WatchlistPanel } from "@/components/algo-trading/WatchlistPanel";
 import { IndicatorsPanel } from "@/components/algo-trading/IndicatorsPanel";
 import { ChartStrategyBar } from "@/components/algo-trading/ChartStrategyBar";
+import { ChartRangeBar } from "@/components/algo-trading/ChartRangeBar";
+import { useAlgoHistory } from "@/lib/hooks/useAlgoHistory";
 import { AlgoRightTabs } from "@/components/algo-trading/AlgoRightTabs";
 import { AlgoHeaderStats } from "@/components/algo-trading/AlgoHeaderStats";
 import { LiveAlgoPnLStrip } from "@/components/algo-trading/LiveAlgoPnLStrip";
@@ -75,15 +77,25 @@ function AlgoTradingContent({
   tickPrice: () => void;
   cfg: ReturnType<typeof getSymbolConfig>;
 }) {
-  const { activeStrategy } = useAlgoTradingStore();
+  const { activeStrategy, chartInterval, historyLoading, historyError } = useAlgoTradingStore();
   const livePos = usePortfolioStore((s) => s.positions[cfg.portfolioSymbol]);
   const liveFeed = useLivePricesOptional();
+  const appendLiveTick = useAlgoTradingStore((s) => s.appendLiveTick);
+  const usesYfinanceData = useAlgoTradingStore((s) => s.usesYfinanceData);
+
+  useAlgoHistory(symbol);
 
   useEffect(() => {
     if (engineStatus !== "running") return;
     const id = setInterval(() => tickPrice(), 800);
     return () => clearInterval(id);
   }, [engineStatus, tickPrice]);
+
+  useEffect(() => {
+    if (engineStatus !== "running" || !usesYfinanceData) return;
+    const mark = liveFeed?.livePrices[cfg.portfolioSymbol];
+    if (mark != null && mark > 0) appendLiveTick(mark);
+  }, [engineStatus, usesYfinanceData, liveFeed?.livePrices, cfg.portfolioSymbol, appendLiveTick]);
 
   const liveMkt = liveFeed?.livePrices[cfg.portfolioSymbol] ?? livePos?.currentPrice;
   const displayPrice = liveMkt ?? currentPrice;
@@ -110,7 +122,8 @@ function AlgoTradingContent({
             <p className={styles.eyebrow}>QuantDesk · Algo Desk</p>
             <h1 className={styles.headerTitle}>Algorithmic Trading</h1>
             <p className={styles.headerSub}>
-              {cfg.name} · {activeStrategy ? STRATEGY_LABELS[activeStrategy] : "Select strategy"}
+              {cfg.name} · yfinance · runs 7 days/week (paper) ·{" "}
+              {activeStrategy ? STRATEGY_LABELS[activeStrategy] : "Select strategy"}
             </p>
           </div>
         </div>
@@ -137,12 +150,19 @@ function AlgoTradingContent({
       <LiveAlgoPnLStrip />
 
       <div className={styles.chartWide}>
+        <ChartRangeBar />
         <ChartStrategyBar />
+        {historyError ? (
+          <p className={styles.historyError} role="alert">
+            {historyError}
+          </p>
+        ) : null}
         <LivePriceChart
           symbol={symbol}
-          interval="1m"
+          interval={chartInterval}
           candles={priceHistory}
           strategySignals={signals}
+          loading={historyLoading}
         />
       </div>
 

@@ -122,15 +122,15 @@ export interface SymbolConfig {
 
 export const SYMBOL_CONFIGS: Record<AlgoSymbol, SymbolConfig> = {
   CRUDE_OIL: {
-    symbol: "CRUDE_OIL", label: "Crude Oil", name: "Crude Oil (Sim)", portfolioSymbol: "CRUDE_OIL",
+    symbol: "CRUDE_OIL", label: "Crude Oil", name: "Crude Oil (CL=F)", portfolioSymbol: "CRUDE_OIL",
     assetClass: "stock", basePrice: 6800, volatility: 0.012, seed: 0xdeadbeef, category: "commodity",
   },
   GOLD: {
-    symbol: "GOLD", label: "Gold", name: "Gold (Sim)", portfolioSymbol: "GOLD",
+    symbol: "GOLD", label: "Gold", name: "Gold (GC=F)", portfolioSymbol: "GOLD",
     assetClass: "stock", basePrice: 62000, volatility: 0.008, seed: 0xcafebabe, category: "commodity",
   },
   NATURAL_GAS: {
-    symbol: "NATURAL_GAS", label: "Nat Gas", name: "Natural Gas (Sim)", portfolioSymbol: "NATURAL_GAS",
+    symbol: "NATURAL_GAS", label: "Nat Gas", name: "Natural Gas (NG=F)", portfolioSymbol: "NATURAL_GAS",
     assetClass: "stock", basePrice: 280, volatility: 0.018, seed: 0x8badf00d, category: "commodity",
   },
   AAPL: {

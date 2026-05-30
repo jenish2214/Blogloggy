@@ -173,4 +173,26 @@ export const quantApi = {
       method: "POST",
       body: JSON.stringify({ series }),
     }),
+
+  marketHistory: (symbol: string, period = "1y", interval = "1d") => {
+    const qs = new URLSearchParams({ symbol, period, interval });
+    return quantFetch<{
+      status: string;
+      symbol: string;
+      period: string;
+      interval: string;
+      provider: string;
+      candleCount: number;
+      currentPrice: number;
+      candles: Array<{
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        volume: number;
+        timestamp: number;
+        timeLabel?: string;
+      }>;
+    }>(`/market/history?${qs.toString()}`);
+  },
 };

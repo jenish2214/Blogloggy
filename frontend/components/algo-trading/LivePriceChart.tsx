@@ -21,6 +21,7 @@ export interface LivePriceChartProps {
   interval?: string;
   candles: CandleData[];
   strategySignals: SignalEvent[];
+  loading?: boolean;
 }
 
 interface ChartPoint extends CandleData {
@@ -88,7 +89,7 @@ function SignalDot(props: { cx?: number; cy?: number; payload?: { signal?: strin
   );
 }
 
-function LivePriceChartInner({ symbol, candles, strategySignals }: LivePriceChartProps) {
+function LivePriceChartInner({ symbol, interval = "1d", candles, strategySignals, loading }: LivePriceChartProps) {
   const chartData = useMemo((): ChartPoint[] => {
     const ema20 = computeEMA(candles, 20);
     const ema50 = computeEMA(candles, 50);
@@ -127,7 +128,9 @@ function LivePriceChartInner({ symbol, candles, strategySignals }: LivePriceChar
     <div className={`card ${styles.panel} ${styles.panelActive}`}>
       <div className={styles.panelHeader}>
         <span className={styles.panelTitle}>{symbol}</span>
-        <span className={styles.panelMeta}>1m · Simulated feed</span>
+        <span className={styles.panelMeta}>
+          {loading ? "Loading…" : `${interval} · yfinance · ${candles.length} bars`}
+        </span>
       </div>
       <div className={styles.chartWrap}>
         <div ref={priceChart.ref} className={styles.chartPriceArea}>
@@ -218,7 +221,9 @@ function LivePriceChartInner({ symbol, candles, strategySignals }: LivePriceChar
           <span><i className={styles.legendSell} /> SELL</span>
         </div>
       </div>
-      <p className={styles.disclaimer}>Simulated data. Not financial advice.</p>
+      <p className={styles.disclaimer}>
+        Historical OHLCV via yfinance (Python). Algo desk trades paper 7 days/week. Not financial advice.
+      </p>
     </div>
   );
 }

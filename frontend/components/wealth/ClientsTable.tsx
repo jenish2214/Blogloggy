@@ -1,6 +1,7 @@
 "use client";
 
 import type { WealthBookSummary, WealthClient } from "@/lib/api";
+import { fmtUsd } from "@/lib/trading/portfolioSnapshot";
 import styles from "./ClientsTable.module.css";
 
 interface ClientsTableProps {
@@ -11,12 +12,6 @@ interface ClientsTableProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-}
-
-function fmtUsd(n: number, compact = false) {
-  if (compact && Math.abs(n) >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (compact && Math.abs(n) >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 function pnlClass(n: number) {
@@ -92,10 +87,10 @@ export function ClientsTable({
                 </td>
                 <td className={styles.mono}>{fmtUsd(Number(c.initial_capital))}</td>
                 <td className={styles.mono}>
-                  {m ? fmtUsd(m.totalValue, true) : "—"}
+                  {m ? fmtUsd(m.totalValue) : "—"}
                 </td>
                 <td className={`${styles.mono} ${m ? pnlClass(m.totalPnl) : ""}`}>
-                  {m ? fmtUsd(m.totalPnl, true) : "—"}
+                  {m ? fmtUsd(m.totalPnl, { signed: true }) : "—"}
                 </td>
                 <td className={styles.mono}>{m ? m.openPositions : "—"}</td>
                 <td>

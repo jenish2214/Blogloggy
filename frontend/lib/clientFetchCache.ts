@@ -17,6 +17,25 @@ export function setClientCache(key: string, data: unknown, ttlMs: number) {
   cache.set(key, { data, expiresAt: Date.now() + ttlMs });
 }
 
+export function invalidateClientCache(key: string) {
+  cache.delete(key);
+  inflight.delete(key);
+}
+
+export function invalidateClientCacheByPrefix(prefix: string) {
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) cache.delete(key);
+  }
+  for (const key of inflight.keys()) {
+    if (key.startsWith(prefix)) inflight.delete(key);
+  }
+}
+
+export function clearClientCache() {
+  cache.clear();
+  inflight.clear();
+}
+
 /** Return expired cache for stale-while-revalidate fallbacks. */
 export function getClientCacheStale<T>(key: string): T | null {
   const hit = cache.get(key);

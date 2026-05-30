@@ -101,9 +101,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 10px;
-  margin-bottom: 2px;
-  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 8px 2px;
+  border-radius: 0;
   text-decoration: none;
   color: var(--text-secondary);
   font-weight: 500;
@@ -111,17 +111,12 @@
   position: relative;
   transition:
     background 0.15s ease,
-    color 0.15s ease,
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+    color 0.15s ease;
 }
 
-/* Expanded: icon + label hover */
 .navLink:hover {
-  background: var(--bg-surface);
+  background: var(--bg-surface-2);
   color: var(--text-primary);
-  transform: translateX(3px);
-  box-shadow: var(--shadow-sm);
 }
 
 .navLink:focus-visible {
@@ -129,16 +124,20 @@
   outline-offset: 2px;
 }
 
+/* Active: solid black block, white label + icon */
 .navLinkActive {
-  background: var(--accent-soft);
-  color: var(--text-primary);
+  background: var(--accent);
+  color: #fff;
   font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .navLinkActive:hover {
-  background: var(--accent-soft);
-  transform: translateX(2px);
+  background: var(--accent-2);
+  color: #fff;
+}
+
+.navLinkActive .navIcon {
+  color: #fff;
 }
 
 .navIcon {
@@ -307,8 +306,9 @@
   justify-content: center;
   align-items: center;
   padding: 11px;
+  margin: 0 8px 4px;
   gap: 0;
-  width: 100%;
+  width: auto;
   box-sizing: border-box;
 }
 
@@ -320,25 +320,28 @@
   content: none !important;
 }
 
-.collapsed .navLink:hover,
 .collapsed .navLinkActive {
-  transform: none;
+  background: var(--accent);
+  color: #fff;
+}
+
+.collapsed .navLinkActive .navIcon {
+  color: #fff;
 }
 
 @media (hover: hover) {
   .collapsed .navLink:hover {
-    transform: scale(1.06);
+    background: var(--bg-surface-2);
+    color: var(--text-primary);
+  }
+
+  .collapsed .navLinkActive,
+  .collapsed .navLinkActive:hover {
     background: var(--accent);
     color: #fff;
   }
 
-  .collapsed .navLink:hover .navIcon,
   .collapsed .navLinkActive .navIcon {
-    color: inherit;
-  }
-
-  .collapsed .navLinkActive {
-    background: var(--accent);
     color: #fff;
   }
 }
@@ -391,10 +394,5 @@
   .profileLink,
   .collapseBtn {
     transition: none;
-  }
-
-  .navLink:hover,
-  .profileLink:hover {
-    transform: none;
   }
 }

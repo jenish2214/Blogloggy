@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "npm run dev --prefix ..",
+    "dev:next": "next dev -p 3000",
     "dev:clean": "rm -rf .next && next dev -p 3000",
+    "dev:quant": "npm run dev:quant --prefix ..",
+    "setup": "npm run setup --prefix ..",
+    "setup:quant": "npm run setup:quant --prefix ..",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

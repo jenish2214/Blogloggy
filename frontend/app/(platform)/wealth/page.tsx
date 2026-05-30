@@ -10,13 +10,8 @@ import { useClientsCrud } from "@/lib/hooks/useClientsCrud";
 import { useWealthLiveFeed } from "@/lib/hooks/useWealthLiveFeed";
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
+import { fmtUsd } from "@/lib/trading/portfolioSnapshot";
 import styles from "./wealth.module.css";
-
-function fmtUsd(n: number, compact = false) {
-  if (compact && Math.abs(n) >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (compact && Math.abs(n) >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 function fmtPct(n: number) {
   const sign = n > 0 ? "+" : "";
@@ -177,12 +172,12 @@ export default function WealthDeskPage() {
       <section className={styles.summaryGrid}>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Firm AUM</div>
-          <div className={styles.statValue}>{summary ? fmtUsd(summary.firmAum, true) : "—"}</div>
+          <div className={styles.statValue}>{summary ? fmtUsd(summary.firmAum, { compact: true }) : "—"}</div>
           <div className={styles.statSub}>Personal + all client books (live)</div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Aggregate cash</div>
-          <div className={styles.statValue}>{summary ? fmtUsd(summary.totalCash, true) : "—"}</div>
+          <div className={styles.statValue}>{summary ? fmtUsd(summary.totalCash) : "—"}</div>
           <div className={styles.statSub}>Wallet across all books</div>
         </div>
         <div className={styles.statCard}>
@@ -192,7 +187,7 @@ export default function WealthDeskPage() {
               summary ? pnlClass(summary.totalUnrealized) : ""
             }`}
           >
-            {summary ? fmtUsd(summary.totalUnrealized, true) : "—"}
+            {summary ? fmtUsd(summary.totalUnrealized, { signed: true }) : "—"}
           </div>
           <div className={styles.statSub}>
             {summary ? `${summary.openPositions} open position(s)` : "Open holdings"}
@@ -200,12 +195,12 @@ export default function WealthDeskPage() {
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Personal AUM</div>
-          <div className={styles.statValue}>{summary ? fmtUsd(summary.personalAum, true) : "—"}</div>
+          <div className={styles.statValue}>{summary ? fmtUsd(summary.personalAum) : "—"}</div>
           <div className={styles.statSub}>Your sleeve</div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Client AUM</div>
-          <div className={styles.statValue}>{summary ? fmtUsd(summary.clientAum, true) : "—"}</div>
+          <div className={styles.statValue}>{summary ? fmtUsd(summary.clientAum) : "—"}</div>
           <div className={styles.statSub}>
             {summary ? `${summary.clientCount} managed book(s)` : "Managed books"}
           </div>
@@ -281,19 +276,19 @@ export default function WealthDeskPage() {
                         )}
                       </td>
                       <td className={styles.mono}>{b.clientCode ?? "—"}</td>
-                      <td className={styles.mono}>{fmtUsd(b.metrics.startingCapital, true)}</td>
-                      <td className={styles.mono}>{fmtUsd(b.metrics.cash, true)}</td>
-                      <td className={styles.mono}>{fmtUsd(b.metrics.invested, true)}</td>
-                      <td className={styles.mono}>{fmtUsd(b.metrics.costBasis, true)}</td>
-                      <td className={styles.mono}>{fmtUsd(b.metrics.totalValue, true)}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.startingCapital)}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.cash)}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.invested)}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.costBasis)}</td>
+                      <td className={styles.mono}>{fmtUsd(b.metrics.totalValue)}</td>
                       <td className={`${styles.mono} ${pnlClass(b.metrics.totalPnl)}`}>
-                        {fmtUsd(b.metrics.totalPnl, true)}
+                        {fmtUsd(b.metrics.totalPnl, { signed: true })}
                       </td>
                       <td className={`${styles.mono} ${pnlClass(b.metrics.totalPnlPct)}`}>
                         {fmtPct(b.metrics.totalPnlPct)}
                       </td>
                       <td className={`${styles.mono} ${pnlClass(b.metrics.unrealizedPnl)}`}>
-                        {fmtUsd(b.metrics.unrealizedPnl, true)}
+                        {fmtUsd(b.metrics.unrealizedPnl, { signed: true })}
                       </td>
                       <td className={styles.mono}>{b.metrics.openPositions}</td>
                       <td className={styles.mono}>{b.metrics.orderCount}</td>

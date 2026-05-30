@@ -2,7 +2,7 @@
   "name": "research-digest-platform",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -n api,quant,web -c blue,magenta,green \"npm run dev --prefix backend\" \"node scripts/dev-quant.mjs\" \"npx wait-on -m GET http://localhost:4000/api/health http://127.0.0.1:8000/health -t 120000 && npm run dev:clean --prefix frontend\"",
+    "dev": "node scripts/dev.mjs",
     "dev:clean": "npm run dev:clean --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",

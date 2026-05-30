@@ -23,6 +23,7 @@ from quant_engine import (
 )
 from quant_engine.monte_carlo import benchmark_bs_vs_mc
 from quant_engine.ml_predict import ml_predict_suite
+from quant_engine.yfinance_data import fetch_ohlcv
 
 app = FastAPI(
     title="QuantDesk Quant Engine",
@@ -208,13 +209,29 @@ def var_endpoint(req: PortfolioVarRequest):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
+@app.get("/market/history")
+def market_history(
+    symbol: str,
+    period: str = "1y",
+    interval: str = "1d",
+):
+    """Daily (or intraday) OHLCV from yfinance — used by Algo Desk charts."""
+    try:
+        result = fetch_ohlcv(symbol, period=period, interval=interval)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"yfinance error: {e}") from e
+    return {"status": "ok", **result}
+
+
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {
         "status": "ok",
         "service": "QuantDesk Python Quant Engine",
         "version": "2.0.0",
-        "libraries": ["numpy", "scipy", "scikit-learn"],
+        "libraries": ["numpy", "scipy", "scikit-learn", "yfinance"],
     }
 
 
@@ -232,6 +249,7 @@ def root():
             "/correlation",
             "/portfolio-var",
             "/predict-suite",
+            "/market/history",
             "/health",
         ],
     }

@@ -9,6 +9,17 @@ const MARKET_CACHE_MS = 20_000;
 const MARKET_SLOW_CACHE_MS = 60_000;
 const INDIA_CACHE_MS = 90_000;
 
+/** User-specific data — reuse across page navigations */
+const PORTFOLIO_CACHE_MS = 30_000;
+const WEALTH_CACHE_MS = 30_000;
+const DASHBOARD_CACHE_MS = 15_000;
+const PROFILE_CACHE_MS = 5 * 60_000;
+const WALLET_CACHE_MS = 30_000;
+const SUGGESTIONS_CACHE_MS = 60_000;
+const ORDERS_CACHE_MS = 30_000;
+const WATCHLIST_CACHE_MS = 120_000;
+const CLIENT_DETAIL_CACHE_MS = 60_000;
+
 function apiBase() {
   if (typeof window !== "undefined") return "";
   return process.env.NEXT_PUBLIC_SITE_URL ?? "";
@@ -357,13 +368,16 @@ function bookQuery(book?: { portfolioId?: string; clientId?: string | null }) {
 }
 
 export const portfolioApi = {
-  get: (book?: { portfolioId?: string; clientId?: string | null }) =>
+  get: (book?: { portfolioId?: string; clientId?: string | null }, force = false) =>
     apiFetch<{
       portfolio: Record<string, unknown>;
       positions: Record<string, unknown>[];
       orders: Record<string, unknown>[];
       activeBook?: ActiveBookPayload;
-    }>(`/api/portfolio${bookQuery(book)}`),
+    }>(`/api/portfolio${bookQuery(book)}`, undefined, {
+      cacheTtlMs: PORTFOLIO_CACHE_MS,
+      force,
+    }),
   placeOrder: (body: Record<string, unknown>) =>
     apiFetch<{ success: boolean; message: string; order?: Record<string, unknown> }>(
       "/api/portfolio",
@@ -377,7 +391,7 @@ export const portfolioApi = {
 };
 
 export const wealthApi = {
-  getBooks: () =>
+  getBooks: (force = false) =>
     apiFetch<{
       books: WealthBookSummary[];
       summary: {
@@ -390,11 +404,22 @@ export const wealthApi = {
         openPositions: number;
         lastUpdated: string;
       };
-    }>("/api/wealth/books"),
-  getBook: (book: { portfolioId?: string; clientId?: string | null }) =>
-    apiFetch<{ book: Record<string, unknown> }>(`/api/wealth/books${bookQuery(book)}`),
-  getClients: () => apiFetch<{ clients: WealthClient[] }>("/api/wealth/clients"),
-  getClient: (id: string) => apiFetch<ClientDetailResponse>(`/api/wealth/clients/${id}`),
+    }>("/api/wealth/books", undefined, { cacheTtlMs: WEALTH_CACHE_MS, force }),
+  getBook: (book: { portfolioId?: string; clientId?: string | null }, force = false) =>
+    apiFetch<{ book: Record<string, unknown> }>(`/api/wealth/books${bookQuery(book)}`, undefined, {
+      cacheTtlMs: WEALTH_CACHE_MS,
+      force,
+    }),
+  getClients: (force = false) =>
+    apiFetch<{ clients: WealthClient[] }>("/api/wealth/clients", undefined, {
+      cacheTtlMs: WEALTH_CACHE_MS,
+      force,
+    }),
+  getClient: (id: string, force = false) =>
+    apiFetch<ClientDetailResponse>(`/api/wealth/clients/${id}`, undefined, {
+      cacheTtlMs: CLIENT_DETAIL_CACHE_MS,
+      force,
+    }),
   createClient: (body: ClientFormPayload) =>
     apiFetch<{ client: WealthClient; portfolio: Record<string, unknown> }>("/api/wealth/clients", {
       method: "POST",
@@ -437,7 +462,7 @@ export interface StockSuggestionItem {
 }
 
 export const suggestionsApi = {
-  getStocks: (book?: { portfolioId?: string; clientId?: string | null }) =>
+  getStocks: (book?: { portfolioId?: string; clientId?: string | null }, force = false) =>
     apiFetch<{
       cash: number;
       bookLabel: string;
@@ -445,12 +470,35 @@ export const suggestionsApi = {
       suggestions: StockSuggestionItem[];
       totalSuggested?: number;
       cashAfterSuggestions?: number;
-    }>(`/api/suggestions/stocks${bookQuery(book)}`),
+    }>(`/api/suggestions/stocks${bookQuery(book)}`, undefined, {
+      cacheTtlMs: SUGGESTIONS_CACHE_MS,
+      force,
+    }),
 };
 
 export const ordersApi = {
-  getAll: (book?: { portfolioId?: string; clientId?: string | null }) =>
-    apiFetch<OrderHistoryResponse>(`/api/orders${bookQuery(book)}`),
+  getAll: (book?: { portfolioId?: string; clientId?: string | null }, force = false) =>
+    apiFetch<OrderHistoryResponse>(`/api/orders${bookQuery(book)}`, undefined, {
+      cacheTtlMs: ORDERS_CACHE_MS,
+      force,
+    }),
+};
+
+export const dashboardApi = {
+  get: (force = false) =>
+    apiFetch<import("@/lib/dashboard/types").DashboardSummaryPayload>("/api/dashboard", undefined, {
+      cacheTtlMs: DASHBOARD_CACHE_MS,
+      force,
+    }),
+};
+
+export const userApi = {
+  getProfile: (force = false) =>
+    apiFetch<{
+      profile: Record<string, unknown> | null;
+      feature_access?: import("@/lib/user/featureAccess").FeatureAccessMap;
+      source?: string;
+    }>("/api/user/profile", undefined, { cacheTtlMs: PROFILE_CACHE_MS, force }),
 };
 
 export interface WalletTransaction {
@@ -489,8 +537,11 @@ export interface WalletSummaryResponse {
 }
 
 export const walletApi = {
-  get: (book?: { portfolioId?: string; clientId?: string | null }) =>
-    apiFetch<WalletSummaryResponse>(`/api/wallet${bookQuery(book)}`),
+  get: (book?: { portfolioId?: string; clientId?: string | null }, force = false) =>
+    apiFetch<WalletSummaryResponse>(`/api/wallet${bookQuery(book)}`, undefined, {
+      cacheTtlMs: WALLET_CACHE_MS,
+      force,
+    }),
   deposit: (body: {
     amount: number;
     note?: string;
@@ -522,7 +573,11 @@ export interface WatchlistItem {
 }
 
 export const watchlistApi = {
-  getAll: () => apiFetch<{ items: WatchlistItem[] }>("/api/watchlist"),
+  getAll: (force = false) =>
+    apiFetch<{ items: WatchlistItem[] }>("/api/watchlist", undefined, {
+      cacheTtlMs: WATCHLIST_CACHE_MS,
+      force,
+    }),
   add: (body: { symbol: string; name?: string; assetClass?: string }) =>
     apiFetch<{ item: WatchlistItem }>("/api/watchlist", {
       method: "POST",

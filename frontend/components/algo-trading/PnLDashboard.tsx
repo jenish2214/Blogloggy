@@ -237,7 +237,7 @@ export function PnLDashboard() {
       </div>
 
       <p className={styles.disclaimer}>
-        <strong>Live book</strong> uses Yahoo Finance (10s). <strong>Session P&amp;L</strong> is from the algo simulator; enable portfolio sync to mirror fills to your book.
+        <strong>Charts</strong> use yfinance (Python). Algo desk runs <strong>7 days/week</strong> (no Sat/Sun block). Portfolio sync mirrors paper fills to your book.
       </p>
     </div>
   );
