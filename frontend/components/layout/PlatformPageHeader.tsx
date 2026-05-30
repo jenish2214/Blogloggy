@@ -39,29 +39,24 @@ export function PlatformPageHeader() {
   const title = titleForPath(path);
   const isHome = path === "/";
 
+  if (isHome) return null;
+
   return (
     <div className={styles.bar}>
       <div className={styles.lead}>
         <h1 className={styles.title}>{title}</h1>
-        {isHome && (
-          <p className={styles.sub}>
-            Paper trading · $100k virtual capital · Live market data
-          </p>
-        )}
       </div>
-      {!isHome && (
-        <nav className={styles.quick} aria-label="Quick links">
-          {QUICK.map((q) => (
-            <Link
-              key={q.href}
-              href={q.href}
-              className={`${styles.quickLink} ${path.startsWith(q.href) ? styles.quickActive : ""}`}
-            >
-              {q.label}
-            </Link>
-          ))}
-        </nav>
-      )}
+      <nav className={styles.quick} aria-label="Quick links">
+        {QUICK.map((q) => (
+          <Link
+            key={q.href}
+            href={q.href}
+            className={`${styles.quickLink} ${path.startsWith(q.href) ? styles.quickActive : ""}`}
+          >
+            {q.label}
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }

@@ -527,16 +527,17 @@ select.input { cursor: pointer; }
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* RESPONSIVE                                                                  */
 /* ─────────────────────────────────────────────────────────────────────────── */
-@media (max-width: 1024px) {
-  .sidebar        { width: 64px; }
-  .app-main       { margin-left: 64px; }
-  :root           { --sidebar-w: 64px; --page-pad-x: clamp(12px, 2.5vw, 24px); }
-}
-
 @media (max-width: 768px) {
-  .sidebar   { display: none; }
-  :root      { --sidebar-w: 0px; --app-topbar-h: 56px; }
-  .mobile-header { display: flex !important; }
+  :root {
+    --app-topbar-h: 56px;
+  }
+  /* Overridden by .app-shell .sidebar in platform-soft.css */
+  .sidebar {
+    display: none;
+  }
+  .mobile-header {
+    display: flex !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

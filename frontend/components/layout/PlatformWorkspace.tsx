@@ -9,7 +9,7 @@ import styles from "./PlatformWorkspace.module.css";
 
 export function PlatformWorkspace({ children }: { children: React.ReactNode }) {
   return (
-    <div className={styles.workspace}>
+    <div className={`platform-workspace ${styles.workspace}`}>
       <MobileTopBar />
       <header className={styles.topStrip}>
         <PlatformPageHeader />

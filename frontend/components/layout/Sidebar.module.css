@@ -1,9 +1,9 @@
 .logoBlock {
   display: flex;
   align-items: center;
+  gap: 6px;
   height: var(--app-topbar-h);
-  padding: 0 20px;
-  box-sizing: border-box;
+  padding: 0 10px 0 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -12,15 +12,21 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+  min-width: 0;
   text-decoration: none;
   border-radius: var(--radius-sm);
-  transition: background var(--t-fast), box-shadow var(--t-fast);
+  overflow: hidden;
+}
+
+.logoLink:hover {
+  background: var(--bg-surface-2);
 }
 
 .logoMark {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: var(--accent);
   display: flex;
   align-items: center;
@@ -29,130 +35,155 @@
 }
 
 .logoTitle {
-  font-size: 0.925rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .logoSub {
   font-size: 0.65rem;
   color: var(--text-muted);
-  margin-top: 1px;
+}
+
+.collapseBtn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.collapseBtn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.collapseIconFlipped {
+  transform: rotate(180deg);
 }
 
 .nav {
   flex: 1;
-  padding: 12px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+  padding: 10px 8px;
   overflow-y: auto;
-}
-
-.navSection {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  overflow-x: hidden;
+  min-height: 0;
 }
 
 .navSection + .navSection {
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid var(--border-subtle);
 }
 
-.navSection:first-child {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-
 .navSectionTitle {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: var(--text-muted);
-  margin: 0 0 6px;
-  padding: 0 12px;
+  margin: 0 0 4px;
+  padding: 0 10px;
+  display: block;
 }
 
 .navLink {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px;
-  border-radius: var(--radius-sm);
+  padding: 9px 10px;
+  margin-bottom: 2px;
+  border-radius: 10px;
   text-decoration: none;
   color: var(--text-secondary);
-  background: transparent;
   font-weight: 500;
-  font-size: 0.875rem;
-  border-left: 3px solid transparent;
-  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+  font-size: 0.84rem;
   position: relative;
-  min-width: 0;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
+/* Expanded: icon + label hover */
 .navLink:hover {
-  background: var(--bg-surface-2);
+  background: var(--bg-surface);
   color: var(--text-primary);
+  transform: translateX(3px);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Zerodha-style: accent bar + soft fill (same palette, clearer structure) */
+.navLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .navLinkActive {
-  color: var(--text-primary);
   background: var(--accent-soft);
-  border-left-color: var(--accent);
+  color: var(--text-primary);
   font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .navLinkActive:hover {
   background: var(--accent-soft);
-  color: var(--text-primary);
+  transform: translateX(2px);
 }
 
 .navIcon {
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.navLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .liveRow {
-  padding: 12px 20px;
+  padding: 10px 12px;
   border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
+  flex-shrink: 0;
 }
 
 .liveDot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--live);
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
-  display: inline-block;
-  animation: sidebarPulse 2s infinite;
   flex-shrink: 0;
 }
 
 .liveLabel {
   font-size: 0.72rem;
   color: var(--text-muted);
-  font-weight: 500;
 }
 
 .userBlock {
-  padding: 12px 10px;
+  padding: 10px 8px;
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .userStack {
@@ -166,13 +197,15 @@
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   text-decoration: none;
-  transition: background var(--t-fast), box-shadow var(--t-fast);
+  color: inherit;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .profileLink:hover {
-  background: var(--bg-surface-2);
+  background: var(--bg-surface);
+  transform: translateX(3px);
 }
 
 .avatar {
@@ -184,7 +217,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
@@ -196,180 +229,172 @@
 }
 
 .profileName {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .profileHint {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
+}
+
+.signOutBtn,
+.authBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .authStack {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 0 2px;
-}
-
-.signOutBtn {
-  justify-content: center;
-  margin: 0 2px;
-}
-
-.authBtn {
-  justify-content: center;
-  gap: 8px;
 }
 
 .authIcon {
-  flex-shrink: 0;
   display: flex;
+  flex-shrink: 0;
+}
+
+/* ── Collapsed: icons only, all text hidden (no hover labels) ── */
+.collapsed :global(.sidebar-text),
+.collapsed :global(.sidebar-logo-text),
+.collapsed .navLabel,
+.collapsed .navSectionTitle,
+.collapsed .liveLabel,
+.collapsed .profileMeta,
+.collapsed .profileName,
+.collapsed .profileHint,
+.collapsed .logoTitle,
+.collapsed .logoSub {
+  display: none !important;
+}
+
+.collapsed .logoBlock {
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-}
-
-.signOutBtn {
   gap: 8px;
+  padding: 12px 8px;
+  height: auto;
+  min-height: var(--app-topbar-h);
 }
 
-@keyframes sidebarPulse {
-  0%,
-  100% {
-    opacity: 1;
+.collapsed .logoLink {
+  justify-content: center;
+  flex: none;
+  width: 100%;
+  padding: 0;
+}
+
+.collapsed .collapseBtn {
+  margin: 0;
+}
+
+.collapsed .navSection {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.collapsed .navSection + .navSection {
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.collapsed .navLink {
+  justify-content: center;
+  align-items: center;
+  padding: 11px;
+  gap: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.collapsed .navLink::after,
+.collapsed .profileLink::after,
+.collapsed .signOutBtn::after,
+.collapsed .authBtn::after {
+  display: none !important;
+  content: none !important;
+}
+
+.collapsed .navLink:hover,
+.collapsed .navLinkActive {
+  transform: none;
+}
+
+@media (hover: hover) {
+  .collapsed .navLink:hover {
+    transform: scale(1.06);
+    background: var(--accent);
+    color: #fff;
   }
-  50% {
-    opacity: 0.35;
+
+  .collapsed .navLink:hover .navIcon,
+  .collapsed .navLinkActive .navIcon {
+    color: inherit;
+  }
+
+  .collapsed .navLinkActive {
+    background: var(--accent);
+    color: #fff;
   }
 }
 
-/* Collapsed sidebar — icon rail with hover flyout labels */
-@media (max-width: 1024px) {
-  .logoBlock {
-    height: var(--app-topbar-h);
-    padding: 0 10px;
-  }
+.collapsed .navIcon {
+  display: flex !important;
+  margin: 0 auto;
+}
 
-  .logoLink {
-    justify-content: center;
-  }
+.collapsed .liveRow {
+  justify-content: center;
+  padding: 10px 8px;
+}
 
-  .navLink {
-    justify-content: center;
-    padding: 10px 8px;
-    gap: 0;
-  }
+.collapsed .profileLink {
+  justify-content: center;
+  padding: 8px;
+}
 
-  .navLink:hover,
-  .navLink:focus-visible,
-  .logoLink:hover,
-  .logoLink:focus-visible,
-  .liveRow:hover,
-  .liveRow:focus-within,
-  .profileLink:hover,
-  .profileLink:focus-visible,
-  .signOutBtn:hover,
-  .signOutBtn:focus-visible,
-  .authBtn:hover,
-  .authBtn:focus-visible {
-    z-index: 30;
-    width: max-content;
-    min-width: calc(100% - 4px);
-    padding-right: 14px;
-    box-shadow: var(--shadow);
-    background: var(--bg-surface);
-  }
+.collapsed .signOutBtn,
+.collapsed .authBtn {
+  justify-content: center;
+  width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
 
-  .navLinkActive:hover,
-  .navLinkActive:focus-visible {
-    background: var(--accent-soft);
-  }
+.collapsed .authIcon {
+  margin: 0 auto;
+}
 
-  .navLink:hover,
-  .navLink:focus-visible {
-    justify-content: flex-start;
-    gap: 12px;
-    padding-left: 12px;
-  }
-
-  .logoLink:hover,
-  .logoLink:focus-visible {
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 8px 12px;
-    margin: 0 2px;
-  }
-
-  .liveRow:hover,
-  .liveRow:focus-within {
-    padding-right: 16px;
-  }
-
-  .profileLink:hover,
-  .profileLink:focus-visible {
-    padding-right: 14px;
-  }
-
-  .signOutBtn:hover,
-  .signOutBtn:focus-visible,
-  .authBtn:hover,
-  .authBtn:focus-visible {
-    justify-content: flex-start;
-    padding-left: 12px;
-  }
-
-  .authBtn,
-  .signOutBtn {
-    justify-content: center;
-  }
-
-  .logoLink :global(.sidebar-logo-text) {
-    display: none !important;
-  }
-
-  .navSectionTitle,
-  .navLink :global(.sidebar-label),
-  .liveRow :global(.sidebar-label),
-  .profileLink :global(.sidebar-label),
-  .signOutBtn :global(.sidebar-label),
-  .authBtn :global(.sidebar-label) {
-    display: none !important;
-  }
-
-  .authIcon {
-    display: flex !important;
-  }
-
-  .navLink:hover :global(.sidebar-label),
-  .navLink:focus-visible :global(.sidebar-label),
-  .logoLink:hover :global(.sidebar-logo-text),
-  .logoLink:focus-visible :global(.sidebar-logo-text),
-  .liveRow:hover :global(.sidebar-label),
-  .liveRow:focus-within :global(.sidebar-label),
-  .profileLink:hover :global(.sidebar-label),
-  .profileLink:focus-visible :global(.sidebar-label),
-  .signOutBtn:hover :global(.sidebar-label),
-  .signOutBtn:focus-visible :global(.sidebar-label),
-  .authBtn:hover :global(.sidebar-label),
-  .authBtn:focus-visible :global(.sidebar-label) {
-    display: inline !important;
-  }
-
-  .logoLink:hover :global(.sidebar-logo-text),
-  .logoLink:focus-visible :global(.sidebar-logo-text) {
-    display: block !important;
-  }
+.collapsed .avatar {
+  margin: 0 auto;
 }
 
 @media (max-width: 768px) {
-  .logoBlock,
-  .nav,
-  .liveRow,
-  .userBlock {
+  .collapseBtn {
     display: none;
+  }
+
+  .logoBlock {
+    flex-direction: row;
+    height: var(--app-topbar-h);
+    padding: 0 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navLink,
+  .profileLink,
+  .collapseBtn {
+    transition: none;
+  }
+
+  .navLink:hover,
+  .profileLink:hover {
+    transform: none;
   }
 }

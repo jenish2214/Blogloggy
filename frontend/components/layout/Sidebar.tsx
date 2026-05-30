@@ -1,31 +1,20 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { signOutPlatform } from "@/lib/auth/signOut";
 import type { User } from "@supabase/supabase-js";
+import { useSidebar } from "@/components/layout/SidebarContext";
+import { isNavActive } from "@/lib/layout/navActive";
 import { SIDEBAR_NAV_SECTIONS } from "@/components/layout/sidebarNav";
 import styles from "./Sidebar.module.css";
-
-function isNavActive(path: string, search: URLSearchParams, href: string) {
-  const [base, queryString] = href.split("?");
-  const pathMatch = base === "/" ? path === "/" : path.startsWith(base!);
-  if (!pathMatch) return false;
-  if (!queryString) {
-    if (base === "/desk" && search.has("section")) return false;
-    return true;
-  }
-  const expected = new URLSearchParams(queryString);
-  for (const [key, value] of expected.entries()) {
-    if (search.get(key) !== value) return false;
-  }
-  return true;
-}
 
 export function Sidebar() {
   const path = usePathname();
   const searchParams = useSearchParams();
+  const { collapsed, toggleCollapsed, closeMobile } = useSidebar();
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(!hasSupabaseEnv());
 
@@ -34,6 +23,10 @@ export function Sidebar() {
     path === "/signup" ||
     path === "/terms" ||
     path.startsWith("/welcome");
+
+  useEffect(() => {
+    closeMobile();
+  }, [path, closeMobile]);
 
   useEffect(() => {
     if (isAuthPage) return;
@@ -72,11 +65,16 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="sidebar">
+    <aside
+      id="app-sidebar"
+      className={`sidebar ${collapsed ? styles.collapsed : ""}`}
+      aria-label="Application sidebar"
+      data-collapsed={collapsed ? "true" : "false"}
+    >
       <div className={styles.logoBlock}>
         <Link href="/" className={styles.logoLink} aria-label="QuantDesk home">
           <div className={styles.logoMark}>
-            <svg width="16" height="16" viewBox="0 0 22 22" fill="none">
+            <svg width="16" height="16" viewBox="0 0 22 22" fill="none" aria-hidden>
               <polyline
                 points="3,16 7,10 11,13 15,6 19,9"
                 stroke="#fff"
@@ -92,13 +90,34 @@ export function Sidebar() {
             <div className={styles.logoSub}>Paper Trading</div>
           </div>
         </Link>
+        <button
+          type="button"
+          className={styles.collapseBtn}
+          onClick={toggleCollapsed}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden
+            className={collapsed ? styles.collapseIconFlipped : undefined}
+          >
+            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
 
       <nav className={styles.nav} aria-label="Main navigation">
         {SIDEBAR_NAV_SECTIONS.map((section) => (
           <div key={section.title || "primary"} className={styles.navSection}>
             {section.title ? (
-              <h2 className={`${styles.navSectionTitle} sidebar-label`}>{section.title}</h2>
+              <h2 className={`${styles.navSectionTitle} sidebar-text`}>{section.title}</h2>
             ) : null}
             {section.items.map(({ href, label, icon }) => {
               const isActive = isNavActive(path, searchParams, href);
@@ -107,12 +126,13 @@ export function Sidebar() {
                   key={href}
                   href={href}
                   className={`${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
+                  data-label={label}
                   aria-label={label}
                   aria-current={isActive ? "page" : undefined}
-                  title={label}
+                  onClick={closeMobile}
                 >
                   <span className={styles.navIcon}>{icon}</span>
-                  <span className="sidebar-label">{label}</span>
+                  <span className={`${styles.navLabel} sidebar-text`}>{label}</span>
                 </Link>
               );
             })}
@@ -122,7 +142,7 @@ export function Sidebar() {
 
       <div className={styles.liveRow} title="Live Market Data">
         <span className={styles.liveDot} aria-hidden />
-        <span className={`sidebar-label ${styles.liveLabel}`}>Live Market Data</span>
+        <span className={`${styles.liveLabel} sidebar-text`}>Live Market Data</span>
       </div>
 
       <div className={styles.userBlock}>
@@ -133,16 +153,17 @@ export function Sidebar() {
               className={styles.profileLink}
               aria-label={`Profile: ${username}`}
               title={username}
+              onClick={closeMobile}
             >
               <div className={styles.avatar}>{initials}</div>
-              <div className={`sidebar-label ${styles.profileMeta}`}>
+              <div className={`${styles.profileMeta} sidebar-text`}>
                 <div className={styles.profileName}>{username}</div>
                 <span className={styles.profileHint}>View profile →</span>
               </div>
             </Link>
             <button
               type="button"
-              onClick={handleSignOut}
+              onClick={() => void handleSignOut()}
               className={`btn btn-ghost btn-sm ${styles.signOutBtn}`}
               title="Sign out"
             >
@@ -153,7 +174,7 @@ export function Sidebar() {
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
               </span>
-              <span className="sidebar-label">Sign out</span>
+              <span className="sidebar-text">Sign out</span>
             </button>
           </div>
         ) : (
@@ -166,7 +187,7 @@ export function Sidebar() {
                   <line x1="15" y1="12" x2="3" y2="12" />
                 </svg>
               </span>
-              <span className="sidebar-label">Sign In</span>
+              <span className="sidebar-text">Sign In</span>
             </Link>
             <Link href="/signup" className={`btn btn-primary btn-sm ${styles.authBtn}`} title="Sign Up Free">
               <span className={styles.authIcon} aria-hidden>
@@ -177,7 +198,7 @@ export function Sidebar() {
                   <line x1="22" y1="11" x2="16" y2="11" />
                 </svg>
               </span>
-              <span className="sidebar-label">Sign Up Free</span>
+              <span className="sidebar-text">Sign Up Free</span>
             </Link>
           </div>
         )}

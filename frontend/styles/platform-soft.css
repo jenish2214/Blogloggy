@@ -1,0 +1,94 @@
+/* Platform shell — collapsible sidebar + workspace layout */
+
+.app-shell {
+  --bg-base: #f0f0f2;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f7f7f8;
+  --bg-sidebar: #f4f4f6;
+
+  --border: #e0e0e4;
+  --border-subtle: #ececee;
+  --border-strong: #c8c8ce;
+
+  --text-primary: #0a0a0a;
+  --text-secondary: #525252;
+  --text-muted: #a3a3a3;
+
+  --accent: #0a0a0a;
+  --accent-2: #262626;
+  --accent-soft: #f0f0f2;
+
+  --live: #0a0a0a;
+
+  --sidebar-w-expanded: 248px;
+  --sidebar-w-collapsed: 76px;
+  --sidebar-w: var(--sidebar-w-expanded);
+
+  --app-topbar-h: 56px;
+  --shadow-sm: 0 1px 4px rgba(10, 10, 10, 0.06);
+  --shadow: 0 8px 24px rgba(10, 10, 10, 0.08);
+  --shadow-lg: 0 16px 40px rgba(10, 10, 10, 0.12);
+}
+
+.app-shell.sidebar-collapsed {
+  --sidebar-w: var(--sidebar-w-collapsed);
+}
+
+.app-shell .sidebar {
+  display: flex !important;
+  flex-direction: column;
+  width: var(--sidebar-w);
+  overflow-x: hidden;
+  transition: width 0.22s ease;
+}
+
+.app-shell .platform-workspace,
+.app-shell .workspace {
+  margin-left: var(--sidebar-w);
+  transition: margin-left 0.22s ease;
+}
+
+/* Collapsed: icons only — no visible text (labels use .sidebar-text in Sidebar.module.css) */
+.app-shell.sidebar-collapsed .sidebar .sidebar-text,
+.app-shell.sidebar-collapsed .sidebar .sidebar-logo-text {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .app-shell {
+    --sidebar-w: var(--sidebar-w-expanded);
+  }
+
+  .app-shell .sidebar {
+    width: min(280px, 88vw);
+    transform: translateX(-100%);
+    z-index: 200;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .app-shell.sidebar-mobile-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .app-shell.sidebar-mobile-open :global(.sidebar-text),
+  .app-shell.sidebar-mobile-open :global(.sidebar-logo-text) {
+    opacity: 1;
+    width: auto;
+    max-width: 200px;
+    pointer-events: auto;
+  }
+
+  .app-shell .platform-workspace,
+  .app-shell .workspace {
+    margin-left: 0 !important;
+  }
+}
+
+.app-shell-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgba(10, 10, 10, 0.45);
+  border: none;
+  cursor: pointer;
+}

@@ -1,14 +1,6 @@
-import { Suspense } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { PlatformWorkspace } from "@/components/layout/PlatformWorkspace";
+import { PlatformShell } from "@/components/layout/PlatformShell";
+import "@/styles/platform-soft.css";
 
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="app-shell">
-      <Suspense fallback={null}>
-        <Sidebar />
-      </Suspense>
-      <PlatformWorkspace>{children}</PlatformWorkspace>
-    </div>
-  );
+  return <PlatformShell>{children}</PlatformShell>;
 }

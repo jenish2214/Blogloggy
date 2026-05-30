@@ -150,19 +150,23 @@ export async function middleware(request: NextRequest) {
   return supabaseResponse;
 }
 
-const AUTH_API_PREFIXES = [
-  "/api/wealth",
-  "/api/portfolio",
-  "/api/wallet",
-  "/api/orders",
-  "/api/watchlist",
-  "/api/messages",
-  "/api/user",
-];
-
+/** Static matcher — Next.js 14 cannot analyze spread in config.matcher */
 export const config = {
   matcher: [
-    ...AUTH_API_PREFIXES.flatMap((p) => [p, `${p}/:path*`]),
+    "/api/wealth",
+    "/api/wealth/:path*",
+    "/api/portfolio",
+    "/api/portfolio/:path*",
+    "/api/wallet",
+    "/api/wallet/:path*",
+    "/api/orders",
+    "/api/orders/:path*",
+    "/api/watchlist",
+    "/api/watchlist/:path*",
+    "/api/messages",
+    "/api/messages/:path*",
+    "/api/user",
+    "/api/user/:path*",
     "/((?!_next/static|_next/image|favicon.ico|icons|brand|api).*)",
   ],
 };
