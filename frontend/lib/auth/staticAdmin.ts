@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-/** Static admin credentials (override via env in production). */
+/** Dev admin credentials — override via ADMIN_EMAIL / ADMIN_PASSWORD env. */
 export const STATIC_ADMIN_EMAIL =
   process.env.ADMIN_EMAIL?.trim().toLowerCase() || "admin@quantdesk.com";
 

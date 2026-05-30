@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient, SUPABASE_CONFIG_ERROR } from "@/lib/supabase/client";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
+import { logAuthEvent } from "@/lib/auth/logAuthEvent";
 import { GoogleButton } from "@/components/ui/GoogleButton";
 
 export function LoginForm() {
@@ -28,6 +29,7 @@ export function LoginForm() {
     }
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err) { setError(err.message); setLoading(false); return; }
+    void logAuthEvent("login", "platform");
     await syncPortfolioFromCloud();
     router.push(redirectTo === "/" ? "/" : redirectTo);
     router.refresh();

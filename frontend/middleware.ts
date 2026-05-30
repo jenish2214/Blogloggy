@@ -50,8 +50,7 @@ function isAdminLoginPath(path: string) {
 
 function handleAdminRoute(request: NextRequest, supabaseAdmin: boolean) {
   const path = request.nextUrl.pathname;
-  const staticAdmin = hasStaticAdminSession(request);
-  const admin = staticAdmin || supabaseAdmin;
+  const admin = hasStaticAdminSession(request) || supabaseAdmin;
 
   if (isAdminLoginPath(path)) {
     if (admin) {

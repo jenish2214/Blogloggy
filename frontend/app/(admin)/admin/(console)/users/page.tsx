@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { AdminPlaceholder } from "@/components/admin/AdminPlaceholder";
+import { AdminUsersPanel } from "@/components/admin/AdminUsersPanel";
 
 export const metadata: Metadata = { title: "Users" };
 
+export const dynamic = "force-dynamic";
+
 export default function AdminUsersPage() {
-  return (
-    <AdminPlaceholder
-      title="Users"
-      description="Search users, view profiles, and track onboarding status across the platform."
-    />
-  );
+  return <AdminUsersPanel />;
 }

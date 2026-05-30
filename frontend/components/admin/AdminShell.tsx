@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { logAuthEvent } from "@/lib/auth/logAuthEvent";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import styles from "./admin.module.css";
 
@@ -26,7 +27,10 @@ export function AdminShell({ children, userEmail }: Props) {
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     const supabase = createClient();
-    if (supabase) await supabase.auth.signOut();
+    if (supabase) {
+      await logAuthEvent("logout", "admin");
+      await supabase.auth.signOut();
+    }
     router.push("/admin/login");
     router.refresh();
   };

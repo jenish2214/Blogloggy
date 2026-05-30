@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
+import { logAuthEvent } from "@/lib/auth/logAuthEvent";
 import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
@@ -47,6 +48,7 @@ export function Navbar() {
   const handleSignOut = async () => {
     const supabase = createClient();
     if (!supabase) return;
+    await logAuthEvent("logout", "platform");
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();

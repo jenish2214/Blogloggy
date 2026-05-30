@@ -31,7 +31,7 @@ export const ADMIN_MODULES: AdminModuleDef[] = [
     title: "Users",
     description: "Search users, view profiles, and onboarding status.",
     tier: "core",
-    status: "coming_soon",
+    status: "ready",
     icon: "users",
   },
   {

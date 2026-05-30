@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { handleAuthSessionChange } from "@/lib/auth/tradingSession";
+import { logAuthEvent } from "@/lib/auth/logAuthEvent";
 import type { User } from "@supabase/supabase-js";
 import { PnlStatementPanel } from "@/components/trading/PnlStatementPanel";
 import { OrderHistoryTable } from "@/components/trading/OrderHistoryTable";
@@ -122,6 +123,7 @@ export function AccountProfileSection() {
   const handleSignOut = async () => {
     const supabase = createClient();
     if (!supabase) return;
+    await logAuthEvent("logout", "platform");
     handleAuthSessionChange(null);
     await supabase.auth.signOut();
     router.push("/login");

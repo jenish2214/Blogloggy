@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, SUPABASE_CONFIG_ERROR } from "@/lib/supabase/client";
 import { isAdminUser } from "@/lib/auth/admin";
+import { logAuthEvent } from "@/lib/auth/logAuthEvent";
 import { STATIC_ADMIN_EMAIL } from "@/lib/auth/staticAdmin";
 import styles from "./admin.module.css";
 
@@ -12,53 +13,92 @@ export function AdminLoginForm() {
   const params = useSearchParams();
   const redirectTo = params.get("redirect") ?? "/admin";
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(STATIC_ADMIN_EMAIL);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [bootstrapping, setBootstrapping] = useState(false);
+  const [bootstrapMsg, setBootstrapMsg] = useState<string | null>(null);
+
+  const goAdmin = () => {
+    router.push(redirectTo.startsWith("/admin") ? redirectTo : "/admin");
+    router.refresh();
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setBootstrapMsg(null);
     setLoading(true);
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (res.ok) {
-        router.push(redirectTo.startsWith("/admin") ? redirectTo : "/admin");
-        router.refresh();
-        return;
-      }
-
       const supabase = createClient();
+
       if (supabase) {
         const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-          email,
+          email: normalizedEmail,
           password,
         });
 
         if (!signInErr && isAdminUser(data.user)) {
-          router.push(redirectTo.startsWith("/admin") ? redirectTo : "/admin");
-          router.refresh();
+          void logAuthEvent("login", "admin");
+          goAdmin();
           return;
         }
 
         if (!signInErr && data.user) {
           await supabase.auth.signOut();
+          setError("This account is not an admin. Click “Create admin in Supabase” or run npm run seed:admin.");
+          return;
         }
+      } else if (normalizedEmail !== STATIC_ADMIN_EMAIL) {
+        setError(SUPABASE_CONFIG_ERROR);
+        return;
+      }
+
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail, password }),
+      });
+
+      if (res.ok) {
+        goAdmin();
+        return;
       }
 
       const body = await res.json().catch(() => ({}));
-      setError((body as { error?: string }).error ?? "Invalid email or password");
+      setError(
+        normalizedEmail === STATIC_ADMIN_EMAIL
+          ? `Login failed. Use password Admin@12345, or click “Create admin in Supabase” first.`
+          : ((body as { error?: string }).error ?? "Invalid email or password")
+      );
     } catch {
       setError("Login failed. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBootstrap = async () => {
+    setBootstrapping(true);
+    setBootstrapMsg(null);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/bootstrap", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Bootstrap failed");
+        if (data.hint) setBootstrapMsg(data.hint);
+        return;
+      }
+      setBootstrapMsg(data.message ?? "Admin created. Sign in with admin@quantdesk.com / Admin@12345");
+    } catch {
+      setError("Bootstrap request failed");
+    } finally {
+      setBootstrapping(false);
     }
   };
 
@@ -88,7 +128,7 @@ export function AdminLoginForm() {
         <div className={styles.loginCard}>
           <div className={styles.loginHeader}>
             <h1 className={styles.loginTitle}>Admin Console</h1>
-            <p className={styles.loginSubtitle}>QuantDesk platform administration</p>
+            <p className={styles.loginSubtitle}>Supabase admin or dev static login</p>
           </div>
 
           <form onSubmit={handleLogin} className={styles.loginForm}>
@@ -99,7 +139,6 @@ export function AdminLoginForm() {
               <input
                 className="input"
                 type="email"
-                placeholder={STATIC_ADMIN_EMAIL}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -114,7 +153,7 @@ export function AdminLoginForm() {
               <input
                 className="input"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Admin@12345"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -123,6 +162,11 @@ export function AdminLoginForm() {
             </div>
 
             {error && <div className={styles.loginError}>✗ {error}</div>}
+            {bootstrapMsg && (
+              <div style={{ padding: "10px 14px", background: "var(--up-soft)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: "0.875rem", color: "var(--up)" }}>
+                {bootstrapMsg}
+              </div>
+            )}
 
             <button
               type="submit"
@@ -132,15 +176,24 @@ export function AdminLoginForm() {
             >
               {loading ? "Signing in…" : "Sign in →"}
             </button>
+
+            <button
+              type="button"
+              disabled={bootstrapping}
+              className="btn btn-ghost"
+              style={{ width: "100%", justifyContent: "center", fontSize: "0.85rem" }}
+              onClick={() => void handleBootstrap()}
+            >
+              {bootstrapping ? "Creating admin in Supabase…" : "Create admin in Supabase (first time)"}
+            </button>
           </form>
         </div>
 
         <div className={styles.loginFooter}>
           <p>
-            Dev static admin: <strong>{STATIC_ADMIN_EMAIL}</strong> / change via{" "}
-            <code style={{ fontSize: "0.7rem" }}>ADMIN_EMAIL</code> and{" "}
-            <code style={{ fontSize: "0.7rem" }}>ADMIN_PASSWORD</code> in{" "}
-            <code style={{ fontSize: "0.7rem" }}>.env.local</code>.
+            Default: <strong>{STATIC_ADMIN_EMAIL}</strong> / <strong>Admin@12345</strong>
+            <br />
+            Supabase login fails until admin is created — static dev login always works with these credentials.
           </p>
         </div>
       </div>

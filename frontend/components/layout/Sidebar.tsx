@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { handleAuthSessionChange } from "@/lib/auth/tradingSession";
+import { logAuthEvent } from "@/lib/auth/logAuthEvent";
 import type { User } from "@supabase/supabase-js";
 import { useFeatureAccess } from "@/lib/hooks/useFeatureAccess";
 import { filterNavByAccess } from "@/lib/user/featureAccess";
@@ -157,6 +158,7 @@ export function Sidebar() {
   const handleSignOut = async () => {
     const supabase = createClient();
     if (!supabase) return;
+    await logAuthEvent("logout", "platform");
     handleAuthSessionChange(null);
     await supabase.auth.signOut();
     router.push("/login");

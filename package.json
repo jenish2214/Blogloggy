@@ -12,6 +12,7 @@
     "install:all": "npm install --prefix backend && npm install --prefix frontend",
     "setup": "npm install && npm run install:all && node scripts/setup-quant.mjs && cp -n backend/.env.example backend/.env 2>/dev/null; cp -n frontend/.env.example frontend/.env.local 2>/dev/null; grep -q '^QUANT_SERVICE_URL=' frontend/.env.local 2>/dev/null || echo 'QUANT_SERVICE_URL=http://127.0.0.1:8000' >> frontend/.env.local; echo Setup done. Run: npm run dev",
     "setup:quant": "node scripts/setup-quant.mjs",
+    "seed:admin": "npm run seed:admin --prefix frontend",
     "docker:up": "command -v docker >/dev/null 2>&1 || (echo 'Docker is not installed. Install Docker Desktop: https://docs.docker.com/desktop/setup/install/mac-install/ then run: open -a Docker' && exit 1); docker compose up --build",
     "docker:down": "command -v docker >/dev/null 2>&1 && docker compose down || echo 'Docker not installed — nothing to stop.'"
   },
