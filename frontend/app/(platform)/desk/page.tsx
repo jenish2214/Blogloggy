@@ -8,7 +8,6 @@ import { wealthApi } from "@/lib/api";
 import { ClientsMasterDetail } from "@/components/wealth/ClientsMasterDetail";
 import { WalletPanel } from "@/components/wealth/WalletPanel";
 import { useClientsCrud } from "@/lib/hooks/useClientsCrud";
-import { useActiveBookStore } from "@/lib/store/activeBook";
 import { PageLoading } from "@/components/shared/PageLoading";
 import styles from "./desk.module.css";
 
@@ -54,8 +53,6 @@ async function saveBroker(body: Record<string, string>) {
 function DeskPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeBook = useActiveBookStore((s) => s.activeBook);
-
   const [section, setSection] = useState<DeskSection>(() =>
     parseSection(searchParams.get("section"))
   );
@@ -248,13 +245,10 @@ function DeskPageContent() {
 
       {section === "wallet" && (
         <section key="wallet" className={`${styles.panel} panel-fade`}>
-          <div className={styles.panelHeadRow}>
-            <h2 className={styles.panelTitle}>Client wallet · deposits &amp; withdrawals</h2>
-            {activeBook && <span className={styles.bookTag}>{activeBook.label}</span>}
-          </div>
+          <h2 className={styles.panelTitle}>Client wallet · deposits &amp; withdrawals</h2>
           <p className={styles.walletHint}>
-            Select the active client book in the desk bar above, then record + deposits or − withdrawals.
-            Order history lives on{" "}
+            Use <strong>Switch wallet</strong> to move between your personal book and client mandates, then
+            record + deposits or − withdrawals. Order history lives on{" "}
             <Link href="/trade" style={{ color: "var(--text-primary)", fontWeight: 600 }}>
               Trade
             </Link>

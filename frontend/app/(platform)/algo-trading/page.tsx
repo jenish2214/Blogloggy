@@ -13,8 +13,8 @@ import { IndicatorsPanel } from "@/components/algo-trading/IndicatorsPanel";
 import { ChartStrategyBar } from "@/components/algo-trading/ChartStrategyBar";
 import { ChartRangeBar } from "@/components/algo-trading/ChartRangeBar";
 import { useAlgoHistory } from "@/lib/hooks/useAlgoHistory";
-import { AlgoRightTabs } from "@/components/algo-trading/AlgoRightTabs";
-import { AlgoHeaderStats } from "@/components/algo-trading/AlgoHeaderStats";
+import { AlgoDeskOverview } from "@/components/algo-trading/AlgoDeskOverview";
+import { AlgoDataStack } from "@/components/algo-trading/AlgoDataStack";
 import { LiveAlgoPnLStrip } from "@/components/algo-trading/LiveAlgoPnLStrip";
 import { LivePriceProvider, useLivePricesOptional } from "@/components/algo-trading/LivePriceProvider";
 import { getSymbolConfig } from "@/types/algoTrading";
@@ -122,8 +122,8 @@ function AlgoTradingContent({
             <p className={styles.eyebrow}>QuantDesk · Algo Desk</p>
             <h1 className={styles.headerTitle}>Algorithmic Trading</h1>
             <p className={styles.headerSub}>
-              {cfg.name} · yfinance · runs 7 days/week (paper) ·{" "}
-              {activeStrategy ? STRATEGY_LABELS[activeStrategy] : "Select strategy"}
+              Full desk view — live P&amp;L, session metrics, signals, positions, and execution log ·{" "}
+              {cfg.name} · {activeStrategy ? STRATEGY_LABELS[activeStrategy] : "Select strategy"}
             </p>
           </div>
         </div>
@@ -145,9 +145,9 @@ function AlgoTradingContent({
         </div>
       </header>
 
-      <AlgoHeaderStats />
-
       <LiveAlgoPnLStrip />
+
+      <AlgoDeskOverview />
 
       <div className={styles.chartWide}>
         <ChartRangeBar />
@@ -166,7 +166,7 @@ function AlgoTradingContent({
         />
       </div>
 
-      <div className={styles.grid}>
+      <div className={styles.workspace}>
         <aside className={styles.colLeft}>
           <WatchlistPanel />
           <IndicatorsPanel />
@@ -178,10 +178,14 @@ function AlgoTradingContent({
         </main>
 
         <aside className={styles.colRight}>
-          <AlgoRightTabs />
-          <PnLDashboard />
+          <AlgoDataStack />
         </aside>
       </div>
+
+      <section className={styles.analyticsSection} aria-label="P&amp;L analytics">
+        <h2 className={styles.analyticsTitle}>P&amp;L &amp; trade history</h2>
+        <PnLDashboard />
+      </section>
     </div>
   );
 }

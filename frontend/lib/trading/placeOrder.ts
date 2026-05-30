@@ -11,6 +11,11 @@ import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import { canPlaceMarketOrders, getTradingBlockReason } from "@/lib/trading/marketHours";
 import { mapServerOrder } from "@/lib/trading/orders";
 import { notifyOrderPlaced } from "@/lib/trading/orderEvents";
+import {
+  notifyOrderFailedToast,
+  notifyOrderPlacedToast,
+  notifyWeekendTradingBlocked,
+} from "@/lib/trading/tradeNotifications";
 export interface PlaceOrderInput {
   symbol: string;
   name: string;
@@ -56,12 +61,10 @@ export async function executePlaceOrder(
       { algoDesk: params.algoDesk }
     )
   ) {
-    return {
-      success: false,
-      message:
-        getTradingBlockReason({ symbol: params.symbol, assetClass: params.assetClass }) ??
-        "Market closed",
-    };
+    const ctx = { symbol: params.symbol, assetClass: params.assetClass };
+    const message = getTradingBlockReason(ctx) ?? "Market closed";
+    notifyWeekendTradingBlocked(ctx);
+    return { success: false, message };
   }
 
   const fillPrice =
@@ -97,6 +100,18 @@ export async function executePlaceOrder(
       usePortfolioStore.getState().appendOrderRecord(record);
       await syncPortfolioFromCloud();
       notifyOrderPlaced();
+      notifyOrderPlacedToast({
+        side: params.side,
+        symbol: params.symbol,
+        qty: params.qty,
+        message: serverRes.message,
+      });
+    } else {
+      notifyOrderFailedToast({
+        side: params.side,
+        symbol: params.symbol,
+        message: serverRes.message,
+      });
     }
 
     return { success: serverRes.success, message: serverRes.message };
@@ -104,6 +119,18 @@ export async function executePlaceOrder(
     const res = usePortfolioStore.getState().placeOrder(params);
     if (res.success) {
       notifyOrderPlaced();
+      notifyOrderPlacedToast({
+        side: params.side,
+        symbol: params.symbol,
+        qty: params.qty,
+        message: res.message,
+      });
+    } else {
+      notifyOrderFailedToast({
+        side: params.side,
+        symbol: params.symbol,
+        message: res.message,
+      });
     }
     return res;
   }

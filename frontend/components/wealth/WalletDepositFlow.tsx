@@ -158,12 +158,21 @@ export function WalletDepositFlow({
             ) : null}
             <button
               type="button"
-              className="btn btn-primary btn-sm press-scale"
-              style={{ width: "100%", fontWeight: 700 }}
+              className={`${styles.depositBtn} press-scale`}
               disabled={submitting || !validation.ok}
               onClick={() => void confirmDeposit()}
             >
-              {submitting ? "Recording deposit…" : `+ Confirm deposit ${parsed > 0 ? fmtUsd(parsed) : ""}`}
+              <span className={styles.verifyBtnIcon} aria-hidden>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </span>
+              {submitting
+                ? "Recording deposit…"
+                : parsed > 0
+                  ? `Confirm deposit ${fmtUsd(parsed)}`
+                  : "Confirm deposit"}
             </button>
           </motion.div>
         </AnimatePresence>

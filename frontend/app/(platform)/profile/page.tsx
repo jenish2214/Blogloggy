@@ -21,7 +21,8 @@ export default function ProfilePage() {
           <p className={styles.eyebrow}>Account</p>
           <h1 className={styles.displayName}>Profile</h1>
           <p className={styles.sectionSub}>
-            Your portfolio, trading history, and preferences — scoped to your active book only.
+            See how many client mandates and assets you manage, each client&apos;s track record, and your
+            active book trading history.
           </p>
         </div>
         <nav className={`${styles.shortcuts} stagger-in`} aria-label="Quick links">

@@ -1,33 +1,60 @@
 "use client";
+
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { Search, BarChart3 } from "lucide-react";
 import { marketApi, watchlistApi, type Quote } from "@/lib/api";
 import { PriceChart } from "@/components/trading/PriceChart";
 import { OrderForm } from "@/components/trading/OrderForm";
 import { CompareSymbolsModal } from "@/components/features/CompareSymbolsModal";
 import { AlgoSignals } from "@/components/trading/AlgoSignals";
+import { TradeSymbolMarketBanner } from "@/components/trading/TradeSymbolMarketBanner";
 import type { AssetClass } from "@/lib/store/portfolio";
 import { useActiveBookStore } from "@/lib/store/activeBook";
+import { usePortfolioStore } from "@/lib/store/portfolio";
 import { BookOrdersSection } from "@/components/account/BookOrdersSection";
-import tradeStyles from "./trade.module.css";
+import styles from "./trade.module.css";
 
-// ── Default watchlist symbols ─────────────────────────────────────────────────
 const DEFAULT_SYMBOLS = [
   "AAPL", "TSLA", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "AMD",
   "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD",
 ];
 
-// ── Formatters ─────────────────────────────────────────────────────────────────
+const ALGO_GLOSSARY = [
+  {
+    term: "RSI (14)",
+    formula: "RSI = 100 − 100/(1 + AvgGain/AvgLoss)",
+    desc: "Momentum oscillator. Below 35 suggests oversold; above 65 suggests overbought.",
+  },
+  {
+    term: "SMA Cross (20/50)",
+    formula: "Signal = SMA₂₀ / SMA₅₀",
+    desc: "Golden cross (20 above 50) is bullish; death cross is bearish.",
+  },
+  {
+    term: "MACD (12/26/9)",
+    formula: "MACD = EMA₁₂ − EMA₂₆",
+    desc: "MACD above signal line suggests bullish momentum shift.",
+  },
+  {
+    term: "Bollinger %B",
+    formula: "%B = (Price − Lower) / (Upper − Lower) × 100",
+    desc: "Below 25% is relatively cheap; above 75% is extended within the band.",
+  },
+];
+
 function fmt(n: number | null | undefined, dec = 2) {
   if (n == null) return "—";
   return n.toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
+
 function fmtLarge(n: number | null | undefined) {
   if (n == null) return "—";
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   return `$${(n / 1e6).toFixed(1)}M`;
 }
+
 function fmtVol(v: number | null | undefined) {
   if (v == null) return "—";
   if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`;
@@ -35,55 +62,9 @@ function fmtVol(v: number | null | undefined) {
   return `${(v / 1e3).toFixed(0)}K`;
 }
 
-// ── Stat cell ─────────────────────────────────────────────────────────────────
-function StatCell({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div style={{ background: "var(--bg-surface)", padding: "10px 14px" }}>
-      <div style={{
-        fontFamily: "var(--font-mono)", fontSize: "0.6rem",
-        color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.09em",
-      }}>
-        {label}
-      </div>
-      <div style={{
-        fontFamily: "var(--font-mono)", fontSize: "0.88rem",
-        color: accent ? "var(--accent-2)" : "var(--text-primary)",
-        marginTop: 3, fontWeight: 500,
-      }}>
-        {value}
-      </div>
-    </div>
-  );
-}
-
-// ── Algorithm glossary ─────────────────────────────────────────────────────────
-const ALGO_GLOSSARY = [
-  {
-    term: "RSI (14)",
-    formula: "RSI = 100 − 100/(1 + AvgGain/AvgLoss)",
-    desc: "Momentum oscillator. Values below 35 suggest oversold conditions — price may bounce. Above 65 suggests overbought — price may pull back.",
-  },
-  {
-    term: "SMA Cross (20/50)",
-    formula: "Signal = SMA₂₀ / SMA₅₀",
-    desc: "When the 20-day average crosses above the 50-day (golden cross) institutional buyers typically dominate. The reverse (death cross) signals distribution.",
-  },
-  {
-    term: "MACD (12/26/9)",
-    formula: "MACD = EMA₁₂ − EMA₂₆, Signal = EMA₉(MACD)",
-    desc: "Trend-following momentum. When MACD line crosses above its signal line, momentum is shifting bullish. Histogram shows the divergence magnitude.",
-  },
-  {
-    term: "Bollinger %B",
-    formula: "%B = (Price − Lower) / (Upper − Lower) × 100",
-    desc: "Measures price position within 2σ bands. Below 25% is statistically cheap relative to recent range; above 75% is extended. Bands also widen during volatility expansions.",
-  },
-];
-
-// ── Main trade component ───────────────────────────────────────────────────────
-
 function TradeInner() {
   const activeBook = useActiveBookStore((s) => s.activeBook);
+  const { cash, positions } = usePortfolioStore();
   const params = useSearchParams();
   const paramSymbol = params.get("symbol")?.toUpperCase() ?? "";
   const paramName = params.get("name") ?? "";
@@ -103,20 +84,17 @@ function TradeInner() {
   const [watchSymbols, setWatchSymbols] = useState<string[]>(DEFAULT_SYMBOLS);
   const [compareOpen, setCompareOpen] = useState(false);
 
+  const position = positions[selected];
+
   useEffect(() => {
     watchlistApi
       .getAll()
       .then(({ items }) => {
-        if (items.length > 0) {
-          setWatchSymbols(items.map((i) => i.symbol));
-        }
+        if (items.length > 0) setWatchSymbols(items.map((i) => i.symbol));
       })
-      .catch(() => {
-        /* guest or offline — keep defaults */
-      });
+      .catch(() => {});
   }, []);
 
-  // Load watchlist quotes
   const loadQuotes = useCallback(async () => {
     const { quotes: q } = await marketApi.getQuotes(watchSymbols);
     const valid = q.filter((qt) => !qt.error && qt.price != null);
@@ -130,12 +108,11 @@ function TradeInner() {
   }, [selected, paramName, watchSymbols]);
 
   useEffect(() => {
-    loadQuotes();
-    const id = setInterval(loadQuotes, 15_000);
+    void loadQuotes();
+    const id = setInterval(() => void loadQuotes(), 15_000);
     return () => clearInterval(id);
   }, [loadQuotes]);
 
-  // Sync URL params
   useEffect(() => {
     if (!paramSymbol) return;
     setSelected(paramSymbol);
@@ -143,14 +120,18 @@ function TradeInner() {
     if (paramName) setSelectedName(paramName);
   }, [paramSymbol, paramName, paramClass]);
 
-  // Live symbol search (debounced)
   useEffect(() => {
-    if (searchQ.length < 1) { setSearchResults([]); return; }
+    if (searchQ.length < 1) {
+      setSearchResults([]);
+      return;
+    }
     const t = setTimeout(async () => {
       try {
         const { results } = await marketApi.search(searchQ);
         setSearchResults(results.slice(0, 8));
-      } catch { /* silent */ }
+      } catch {
+        setSearchResults([]);
+      }
     }, 280);
     return () => clearTimeout(t);
   }, [searchQ]);
@@ -164,7 +145,9 @@ function TradeInner() {
     try {
       const { quotes: q } = await marketApi.getQuotes([sym]);
       if (q[0] && !q[0].error) setSelectedQuote(q[0]);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }, []);
 
   const currentPrice = selectedQuote?.price ?? 0;
@@ -173,252 +156,230 @@ function TradeInner() {
   const isUp = changePct >= 0;
 
   return (
-    <div className="page">
-      {/* ── Page header ────────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 5 }}>
-            TRADE TERMINAL · {activeBook?.accountType === "client" ? "CLIENT BOOK" : "PERSONAL BOOK"}
-          </div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "1.7rem", fontWeight: 700, color: "var(--text-primary)", lineHeight: 1 }}>
-              {selected}
-            </span>
-            <span style={{ fontFamily: "var(--font-sans)", fontSize: "0.95rem", color: "var(--text-secondary)" }}>
-              {selectedName}
-            </span>
-            <span className={`badge badge-neutral`} style={{ fontSize: "0.65rem" }}>
-              {assetClass.toUpperCase()}
-            </span>
+    <div className={`page ${styles.page}`}>
+      <header className={styles.header}>
+        <div className={styles.headerMain}>
+          <p className={styles.eyebrow}>
+            Trade terminal · {activeBook?.accountType === "client" ? "Client book" : "Personal book"}
+          </p>
+          <div className={styles.tickerRow}>
+            <span className={styles.symbol}>{selected}</span>
+            <span className={styles.name}>{selectedName}</span>
+            <span className={styles.assetBadge}>{assetClass}</span>
           </div>
           {selectedQuote && (
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 6, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "1.5rem", fontWeight: 600, color: "var(--text-primary)" }}>
-                ${fmt(currentPrice)}
+            <div className={styles.priceRow}>
+              <span className={styles.price}>${fmt(currentPrice)}</span>
+              <span className={`${styles.changePct} ${isUp ? styles.up : styles.down}`}>
+                {isUp ? "+" : ""}
+                {fmt(changePct)}%
               </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.9rem", fontWeight: 600, color: isUp ? "var(--up)" : "var(--down)" }}>
-                {isUp ? "+" : ""}{fmt(changePct)}%
+              <span className={`${styles.changeAbs} ${isUp ? styles.up : styles.down}`}>
+                {isUp ? "+" : ""}
+                {fmt(changeAbs)} today
               </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: isUp ? "var(--up)" : "var(--down)" }}>
-                {isUp ? "+" : ""}{fmt(changeAbs)} today
-              </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--text-muted)" }}>
-                {selectedQuote.exchange && `${selectedQuote.exchange} · `}{selectedQuote.currency}
+              <span className={styles.meta}>
+                {selectedQuote.exchange && `${selectedQuote.exchange} · `}
+                {selectedQuote.currency}
               </span>
             </div>
           )}
         </div>
 
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setCompareOpen(true)}>
-          Compare with…
-        </button>
-
-        {/* Search */}
-        <div style={{ position: "relative", minWidth: 240 }}>
-          <input
-            className="input"
-            placeholder="Search symbol or company..."
-            value={searchQ}
-            onChange={(e) => setSearchQ(e.target.value)}
-            style={{ width: "100%" }}
-          />
-          {searchResults.length > 0 && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
-              background: "var(--bg-elevated)", border: "1px solid var(--border-strong)",
-              borderRadius: "var(--radius)", zIndex: 50, overflow: "hidden",
-              boxShadow: "var(--shadow-lg)",
-            }}>
-              {searchResults.map((r) => (
-                <button
-                  key={r.symbol}
-                  onClick={() => selectSymbol(r.symbol, r.name, r.type)}
-                  style={{
-                    width: "100%", background: "none", border: "none", padding: "9px 12px",
-                    cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center",
-                    gap: 10, borderBottom: "1px solid var(--border-subtle)", color: "var(--text-primary)",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-hover)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-                >
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", fontWeight: 700, color: "var(--accent-2)", minWidth: 70 }}>
-                    {r.symbol}
-                  </span>
-                  <span style={{ fontFamily: "var(--font-sans)", fontSize: "0.78rem", color: "var(--text-secondary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {r.name}
-                  </span>
-                  <span className="badge badge-neutral" style={{ flexShrink: 0, fontSize: "0.6rem" }}>{r.type}</span>
-                </button>
-              ))}
-            </div>
-          )}
+        <div className={styles.headerActions}>
+          <div className={styles.bookPill}>
+            Active book · <strong>{activeBook?.label ?? "—"}</strong>
+          </div>
+          <div className={styles.searchWrap}>
+            <Search size={16} className={styles.searchIcon} aria-hidden />
+            <input
+              className={`input ${styles.searchInput}`}
+              placeholder="Search symbol or company…"
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              aria-label="Search symbols"
+            />
+            {searchResults.length > 0 && (
+              <div className={styles.searchDropdown}>
+                {searchResults.map((r) => (
+                  <button
+                    key={r.symbol}
+                    type="button"
+                    className={styles.searchItem}
+                    onClick={() => void selectSymbol(r.symbol, r.name, r.type)}
+                  >
+                    <span className={styles.searchSym}>{r.symbol}</span>
+                    <span className={styles.searchName}>{r.name}</span>
+                    <span className="badge badge-neutral">{r.type}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm press-scale"
+            onClick={() => setCompareOpen(true)}
+          >
+            Compare symbols
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Notification banner */}
+      <TradeSymbolMarketBanner symbol={selected} assetClass={assetClass} />
+
       {notification && (
-        <div style={{
-          padding: "10px 16px", background: "var(--up-soft)", border: "1px solid rgba(52,211,153,0.25)",
-          borderRadius: "var(--radius-sm)", marginBottom: 16,
-          fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--up)",
-        }}>
+        <div className={styles.toast} role="status">
           ✓ {notification}
         </div>
       )}
 
-      {/* ── Main grid ──────────────────────────────────────────────────────── */}
-      <div className={tradeStyles.tradeGrid}>
-        {/* Left column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-          {/* Chart card */}
-          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                PRICE CHART — {selected}
-              </div>
+      <div className={styles.layout}>
+        <div className={styles.mainCol}>
+          <section className={styles.panel}>
+            <div className={styles.panelHead}>
+              <h2 className={styles.panelTitle}>
+                <BarChart3 size={14} style={{ verticalAlign: -2, marginRight: 6 }} />
+                Price chart · {selected}
+              </h2>
             </div>
-            <div style={{ padding: "8px 12px 4px" }}>
-              <PriceChart symbol={selected} height={270} />
+            <div className={styles.chartBody}>
+              <PriceChart symbol={selected} height={300} />
             </div>
-          </div>
+          </section>
 
-          {/* Stats row */}
           {selectedQuote && (
-            <div style={{
-              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
-              gap: 1, background: "var(--border)", border: "1px solid var(--border)",
-              borderRadius: "var(--radius)", overflow: "hidden",
-            }}>
-              <StatCell label="Open"     value={`$${fmt(selectedQuote.open)}`} />
-              <StatCell label="Day High" value={`$${fmt(selectedQuote.high)}`} />
-              <StatCell label="Day Low"  value={`$${fmt(selectedQuote.low)}`} />
-              <StatCell label="Volume"   value={fmtVol(selectedQuote.volume)} />
-              <StatCell label="Mkt Cap"  value={fmtLarge(selectedQuote.mktCap)} />
-              <StatCell label="Exchange" value={selectedQuote.exchange || "—"} />
+            <div className={styles.statsGrid}>
+              <div className={styles.statCell}>
+                <div className={styles.statLabel}>Open</div>
+                <div className={styles.statValue}>${fmt(selectedQuote.open)}</div>
+              </div>
+              <div className={styles.statCell}>
+                <div className={styles.statLabel}>Day high</div>
+                <div className={styles.statValue}>${fmt(selectedQuote.high)}</div>
+              </div>
+              <div className={styles.statCell}>
+                <div className={styles.statLabel}>Day low</div>
+                <div className={styles.statValue}>${fmt(selectedQuote.low)}</div>
+              </div>
+              <div className={styles.statCell}>
+                <div className={styles.statLabel}>Volume</div>
+                <div className={styles.statValue}>{fmtVol(selectedQuote.volume)}</div>
+              </div>
+              <div className={styles.statCell}>
+                <div className={styles.statLabel}>Market cap</div>
+                <div className={styles.statValue}>{fmtLarge(selectedQuote.mktCap)}</div>
+              </div>
+              <div className={styles.statCell}>
+                <div className={styles.statLabel}>Exchange</div>
+                <div className={`${styles.statValue} ${styles.statValueAccent}`}>
+                  {selectedQuote.exchange || "—"}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Algo signals card */}
-          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-            <div style={{
-              padding: "10px 16px", borderBottom: "1px solid var(--border)",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-            }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                ALGORITHM SIGNALS
-              </div>
+          <section className={styles.panel}>
+            <div className={styles.panelHead}>
+              <h2 className={styles.panelTitle}>Algorithm signals</h2>
               <button
+                type="button"
+                className={styles.collapseBtn}
                 onClick={() => setShowAlgo((v) => !v)}
-                style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}
               >
-                {showAlgo ? "hide" : "show"}
+                {showAlgo ? "Hide" : "Show"}
               </button>
             </div>
-            {showAlgo && <AlgoSignals symbol={selected} />}
-          </div>
-
-          {/* How the algorithm works */}
-          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-            <button
-              onClick={() => setShowGlossary((v) => !v)}
-              style={{
-                width: "100%", background: "none", border: "none", cursor: "pointer",
-                padding: "10px 16px",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                borderBottom: showGlossary ? "1px solid var(--border)" : "none",
-              }}
-            >
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                HOW THE ALGORITHMS WORK
-              </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}>
-                {showGlossary ? "▲ collapse" : "▼ expand"}
-              </span>
-            </button>
-            {showGlossary && (
-              <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
-                {ALGO_GLOSSARY.map((g) => (
-                  <div key={g.term} style={{ paddingBottom: 14, borderBottom: "1px solid var(--border-subtle)" }}>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>
-                      {g.term}
-                    </div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", color: "var(--accent-2)", marginBottom: 6, background: "var(--bg-surface-2)", padding: "4px 10px", borderRadius: "var(--radius-sm)", display: "inline-block" }}>
-                      {g.formula}
-                    </div>
-                    <div style={{ fontFamily: "var(--font-sans)", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                      {g.desc}
-                    </div>
-                  </div>
-                ))}
-                <div style={{ fontFamily: "var(--font-sans)", fontSize: "0.75rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
-                  <strong>Composite signal</strong> is a majority vote across all four indicators: 3+ buys = STRONG BUY, 2 buys = BUY, 2 sells = SELL, 3+ sells = STRONG SELL, otherwise NEUTRAL.
-                  All signals are computed from 3-month daily close data fetched live from Yahoo Finance.
-                </div>
+            {showAlgo && (
+              <div className={styles.panelBodyFlush}>
+                <AlgoSignals symbol={selected} />
               </div>
             )}
-          </div>
+          </section>
 
-          {/* Watchlist */}
-          {!loading && (
-            <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-              <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                QUICK WATCHLIST
+          <section className={styles.panel}>
+            <button
+              type="button"
+              className={styles.glossaryToggle}
+              onClick={() => setShowGlossary((v) => !v)}
+              aria-expanded={showGlossary}
+            >
+              How the algorithms work
+              <span>{showGlossary ? "▲" : "▼"}</span>
+            </button>
+            {showGlossary && (
+              <div className={styles.glossaryBody}>
+                {ALGO_GLOSSARY.map((g) => (
+                  <div key={g.term} className={styles.glossaryItem}>
+                    <p className={styles.glossaryTerm}>{g.term}</p>
+                    <span className={styles.glossaryFormula}>{g.formula}</span>
+                    <p className={styles.glossaryDesc}>{g.desc}</p>
+                  </div>
+                ))}
+                <p className={styles.glossaryDesc}>
+                  <strong>Composite signal</strong> is a majority vote across all four indicators.
+                  Data is fetched from Yahoo Finance (3-month daily closes).
+                </p>
+              </div>
+            )}
+          </section>
+
+          {!loading && quotes.length > 0 && (
+            <section className={styles.panel}>
+              <div className={styles.panelHead}>
+                <h2 className={styles.panelTitle}>Watchlist</h2>
+                <span className={styles.meta}>{quotes.length} symbols</span>
               </div>
               <div style={{ overflowX: "auto" }}>
-                <table className="data-table" style={{ width: "100%" }}>
+                <table className={styles.watchTable}>
                   <thead>
                     <tr>
-                      {["Symbol", "Name", "Price", "Change %", "Volume"].map((h) => (
-                        <th key={h}>{h}</th>
-                      ))}
+                      <th>Symbol</th>
+                      <th>Name</th>
+                      <th>Price</th>
+                      <th>Change</th>
+                      <th>Volume</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {quotes.map((q) => (
-                      <tr
-                        key={q.symbol}
-                        onClick={() => selectSymbol(q.symbol, q.name ?? q.symbol, q.type ?? "stock")}
-                        style={{ cursor: "pointer", background: q.symbol === selected ? "var(--accent-soft)" : undefined }}
-                      >
-                        <td>
-                          <span style={{ fontWeight: 700, color: q.symbol === selected ? "var(--accent-2)" : "var(--text-primary)", fontFamily: "var(--font-mono)", fontSize: "0.82rem" }}>
-                            {q.symbol}
-                          </span>
-                        </td>
-                        <td style={{ fontFamily: "var(--font-sans)", fontSize: "0.78rem", color: "var(--text-secondary)", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {q.name ?? "—"}
-                        </td>
-                        <td style={{ fontFamily: "var(--font-mono)", fontWeight: 600 }}>
-                          ${fmt(q.price)}
-                        </td>
-                        <td>
-                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", fontWeight: 600, color: (q.changePct ?? 0) >= 0 ? "var(--up)" : "var(--down)" }}>
-                            {(q.changePct ?? 0) >= 0 ? "+" : ""}{fmt(q.changePct)}%
-                          </span>
-                        </td>
-                        <td style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                          {fmtVol(q.volume)}
-                        </td>
-                      </tr>
-                    ))}
+                    {quotes.map((q) => {
+                      const active = q.symbol === selected;
+                      const up = (q.changePct ?? 0) >= 0;
+                      return (
+                        <tr
+                          key={q.symbol}
+                          className={`${styles.watchRow} ${active ? styles.watchRowActive : ""}`}
+                          onClick={() => void selectSymbol(q.symbol, q.name ?? q.symbol, q.type ?? "stock")}
+                        >
+                          <td>
+                            <span className={`${styles.watchSym} ${active ? styles.watchSymActive : ""}`}>
+                              {q.symbol}
+                            </span>
+                          </td>
+                          <td style={{ color: "var(--text-secondary)", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {q.name ?? "—"}
+                          </td>
+                          <td>${fmt(q.price)}</td>
+                          <td className={up ? styles.up : styles.down}>
+                            {up ? "+" : ""}
+                            {fmt(q.changePct)}%
+                          </td>
+                          <td style={{ color: "var(--text-muted)" }}>{fmtVol(q.volume)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </section>
           )}
         </div>
 
-        {/* Right column: sticky order form */}
-        <div style={{ position: "sticky", top: "calc(var(--navbar-h, 56px) + 16px)", display: "flex", flexDirection: "column", gap: 12 }}>
-          <div className="card" style={{ padding: 16 }}>
-            <div style={{
-              marginBottom: 14,
-              fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)",
-              textTransform: "uppercase", letterSpacing: "0.1em",
-            }}>
-              PLACE ORDER · {selected}
-            </div>
+        <aside className={styles.railCol}>
+          <section className={`card ${styles.panel} ${styles.orderPanel}`}>
+            <h2 className={styles.panelTitle} style={{ marginBottom: 14 }}>
+              Place order · {selected}
+            </h2>
             <OrderForm
               symbol={selected}
               name={selectedName}
@@ -429,56 +390,77 @@ function TradeInner() {
                 setTimeout(() => setNotification(""), 6000);
               }}
             />
-          </div>
+          </section>
 
-          {/* Quick facts sidebar */}
-          {selectedQuote && (
-            <div className="card" style={{ padding: 14 }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.62rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
-                INSTRUMENT FACTS
+          <section className={styles.panel}>
+            <div className={styles.panelBody}>
+              <p className={styles.positionTitle}>Your book</p>
+              <div className={styles.positionCard}>
+                <div className={styles.positionRow}>
+                  <span className={styles.positionLabel}>Buying power</span>
+                  <span className={styles.positionVal}>
+                    ${fmt(cash)}
+                  </span>
+                </div>
+                {position && position.qty > 0 ? (
+                  <>
+                    <div className={styles.positionRow}>
+                      <span className={styles.positionLabel}>Position</span>
+                      <span className={styles.positionVal}>{position.qty} units</span>
+                    </div>
+                    <div className={styles.positionRow}>
+                      <span className={styles.positionLabel}>Avg cost</span>
+                      <span className={styles.positionVal}>${fmt(position.avgPrice)}</span>
+                    </div>
+                    <div className={styles.positionRow}>
+                      <span className={styles.positionLabel}>Unrealized P&amp;L</span>
+                      <span className={`${styles.positionVal} ${position.unrealizedPnl >= 0 ? styles.up : styles.down}`}>
+                        {position.unrealizedPnl >= 0 ? "+" : ""}${fmt(Math.abs(position.unrealizedPnl))}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <p className={styles.glossaryDesc} style={{ margin: 0 }}>
+                    No open position in {selected} on this book.
+                  </p>
+                )}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                {[
-                  { label: "Name", value: selectedName },
-                  { label: "Type", value: assetClass.toUpperCase() },
-                  { label: "Currency", value: selectedQuote.currency ?? "USD" },
-                  { label: "Exchange", value: selectedQuote.exchange ?? "—" },
-                  { label: "Mkt Cap", value: fmtLarge(selectedQuote.mktCap) },
-                ].map(({ label, value }) => (
-                  <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}>{label}</span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", color: "var(--text-secondary)", maxWidth: 140, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
+
+              {selectedQuote && (
+                <>
+                  <p className={styles.positionTitle}>Instrument</p>
+                  <div className={styles.factsList}>
+                    {[
+                      { label: "Name", value: selectedName },
+                      { label: "Type", value: assetClass.toUpperCase() },
+                      { label: "Currency", value: selectedQuote.currency ?? "USD" },
+                      { label: "Exchange", value: selectedQuote.exchange ?? "—" },
+                      { label: "Mkt cap", value: fmtLarge(selectedQuote.mktCap) },
+                    ].map(({ label, value }) => (
+                      <div key={label} className={styles.factRow}>
+                        <span className={styles.factLabel}>{label}</span>
+                        <span className={styles.factValue}>{value}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
             </div>
-          )}
-        </div>
+          </section>
+        </aside>
       </div>
 
-      <div className="card" style={{ marginTop: 24, overflow: "hidden" }}>
-        <div
-          style={{
-            padding: "12px 16px",
-            borderBottom: "1px solid var(--border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 8,
-          }}
-        >
-          <div>
-            <span className="label-caps">Order history</span>
-            <p style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)", margin: "4px 0 0" }}>
-              Orders for {activeBook?.label ?? "active book"} with <strong>realized P&amp;L on each sell</strong> · live book summary above
-            </p>
-          </div>
+      <section className={`card ${styles.panel} ${styles.historySection}`}>
+        <div className={styles.historyHead}>
+          <h2 className={styles.historyTitle}>Order history</h2>
+          <p className={styles.historySub}>
+            Fills and realized P&amp;L for <strong>{activeBook?.label ?? "your active book"}</strong>
+          </p>
         </div>
-        <div style={{ padding: "12px 16px 16px" }}>
+        <div className={styles.historyBody}>
           <BookOrdersSection />
         </div>
-      </div>
+      </section>
 
       {compareOpen && (
         <CompareSymbolsModal
@@ -493,11 +475,7 @@ function TradeInner() {
 
 export default function TradePage() {
   return (
-    <Suspense fallback={
-      <div className="page" style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)", paddingTop: 40 }}>
-        Loading terminal...
-      </div>
-    }>
+    <Suspense fallback={<div className={styles.loading}>Loading trade terminal…</div>}>
       <TradeInner />
     </Suspense>
   );

@@ -223,12 +223,17 @@ export function WalletWithdrawFlow({
               ) : null}
               <button
                 type="button"
-                className="btn btn-primary btn-sm press-scale"
-                style={{ width: "100%", fontWeight: 700 }}
+                className={`${styles.verifyBtn} press-scale`}
                 disabled={submitting || !validation.ok}
                 onClick={() => void requestOtp()}
               >
-                {submitting ? "Sending code…" : "Send verification code →"}
+                <span className={styles.verifyBtnIcon} aria-hidden>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                </span>
+                {submitting ? "Sending code…" : "Send verification code"}
               </button>
             </motion.div>
           ) : (
@@ -276,25 +281,33 @@ export function WalletWithdrawFlow({
               ) : (
                 <p className={styles.warn}>Code expired. Go back and request a new one.</p>
               )}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className={styles.resendBtn}
+                disabled={submitting}
+                onClick={() => void requestOtp()}
+              >
+                {submitting ? "Sending…" : "Resend verification code"}
+              </button>
+              <div className={styles.otpActions}>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className={styles.backBtn}
                   onClick={() => {
                     setStep("amount");
                     setChallengeId(null);
+                    setOtpDigits(["", "", "", "", "", ""]);
                   }}
                 >
                   ← Change amount
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary btn-sm press-scale"
-                  style={{ flex: 1, fontWeight: 700, color: "var(--down)" }}
+                  className={`${styles.confirmBtn} press-scale`}
                   disabled={submitting || otpValue.length !== 6 || secondsLeft <= 0}
                   onClick={() => void confirmWithdraw()}
                 >
-                  {submitting ? "Processing…" : `Confirm withdrawal ${fmtUsd(parsed)}`}
+                  {submitting ? "Processing…" : `Confirm ${fmtUsd(parsed)}`}
                 </button>
               </div>
             </motion.div>

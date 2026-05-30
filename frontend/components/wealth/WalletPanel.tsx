@@ -6,6 +6,7 @@ import { walletApi, type WalletSummaryResponse, type WalletTransaction } from "@
 import { useActiveBookStore } from "@/lib/store/activeBook";
 import { MAX_DEPOSIT_PER_TX, MAX_WITHDRAWAL_24H, formatWalletLimit } from "@/lib/wealth/walletLimits";
 import { LoadingIndicator } from "@/components/shared/LoadingIndicator";
+import { WalletBookSwitcher } from "@/components/wealth/WalletBookSwitcher";
 import { WalletDepositFlow } from "@/components/wealth/WalletDepositFlow";
 import { WalletWithdrawFlow } from "@/components/wealth/WalletWithdrawFlow";
 import styles from "./WalletPanel.module.css";
@@ -67,6 +68,12 @@ export function WalletPanel({ compact = false, rail = false, nested = false }: W
     void load();
   }, [load]);
 
+  useEffect(() => {
+    const onWalletUpdated = () => void load();
+    window.addEventListener("wallet-updated", onWalletUpdated);
+    return () => window.removeEventListener("wallet-updated", onWalletUpdated);
+  }, [load]);
+
   const netFlow =
     (data?.stats.totalDeposits ?? 0) - (data?.stats.totalWithdrawals ?? 0);
 
@@ -78,9 +85,10 @@ export function WalletPanel({ compact = false, rail = false, nested = false }: W
   if (!activeBook) {
     return (
       <div className={nested ? styles.panelNested : styles.panel}>
+        <WalletBookSwitcher />
         <div className={styles.emptyState}>
           <p className={styles.muted}>
-            Select a client book in the desk bar above to manage deposits (+) and withdrawals (−).
+            Choose Personal or a Client wallet above to manage deposits (+) and withdrawals (−).
           </p>
         </div>
       </div>
@@ -94,6 +102,7 @@ export function WalletPanel({ compact = false, rail = false, nested = false }: W
 
   return (
     <div className={`${nested ? styles.panelNested : styles.panel} page-enter-child`}>
+      {!rail && <WalletBookSwitcher />}
       <div className={rail ? styles.headRailWrap : styles.hero}>
         {!rail && (
           <div className={styles.head}>

@@ -1,0 +1,151 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section {
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.sectionTitle {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.count {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.summaryRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.summaryLabel {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.summaryVal {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.algoOpen {
+  font-size: 0.78rem;
+  padding: 10px 12px;
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  line-height: 1.45;
+}
+
+.exitBtn {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.posList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.posItem {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.78rem;
+}
+
+.posItem:last-child {
+  border-bottom: none;
+}
+
+.posTop {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.posMeta {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  margin-bottom: 4px;
+}
+
+.tradesWrap {
+  max-height: 140px;
+  overflow: auto;
+}
+
+.tradesTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.tradesTable th {
+  text-align: left;
+  padding: 4px 6px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.tradesTable td {
+  padding: 4px 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.up {
+  color: var(--up);
+  font-weight: 600;
+}
+
+.down {
+  color: var(--down);
+  font-weight: 600;
+}
+
+.muted {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.win,
+.loss {
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.win {
+  background: var(--up-soft);
+  color: var(--up);
+}
+
+.loss {
+  background: var(--down-soft);
+  color: var(--down);
+}

@@ -14,6 +14,7 @@ import {
 } from "@/lib/trading/portfolioSnapshot";
 import { subscribeOrderPlaced } from "@/lib/trading/orderEvents";
 import { useActiveBookStore } from "@/lib/store/activeBook";
+import { ProfileMandatesTrackRecord } from "@/components/account/ProfileMandatesTrackRecord";
 import { ProfilePreferencesSection } from "@/components/account/ProfilePreferencesSection";
 import { PageLoading } from "@/components/shared/PageLoading";
 import styles from "@/app/(platform)/profile/profile.module.css";
@@ -156,6 +157,8 @@ export function AccountProfileSection() {
           </div>
         </div>
       </div>
+
+      {user && <ProfileMandatesTrackRecord />}
 
       <div className={`${styles.statsGrid} stagger-in`}>
         {[

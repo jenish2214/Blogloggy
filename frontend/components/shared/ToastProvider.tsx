@@ -4,10 +4,15 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import {
+  APP_TOAST_EVENT,
+  type AppToastDetail,
+} from "@/lib/trading/tradeNotifications";
 import styles from "./Toast.module.css";
 
 export type ToastType = "success" | "error" | "info";
@@ -96,6 +101,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     }),
     [push]
   );
+
+  useEffect(() => {
+    const onAppToast = (e: Event) => {
+      const detail = (e as CustomEvent<AppToastDetail>).detail;
+      if (!detail?.title) return;
+      push({
+        type: detail.type,
+        title: detail.title,
+        message: detail.message,
+        durationMs: detail.durationMs,
+      });
+    };
+    window.addEventListener(APP_TOAST_EVENT, onAppToast);
+    return () => window.removeEventListener(APP_TOAST_EVENT, onAppToast);
+  }, [push]);
 
   return (
     <ToastContext.Provider value={value}>

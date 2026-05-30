@@ -9,6 +9,10 @@ import {
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import { mapServerOrder } from "@/lib/trading/orders";
 import { notifyOrderPlaced } from "@/lib/trading/orderEvents";
+import {
+  notifyOrderFailedToast,
+  notifyOrderPlacedToast,
+} from "@/lib/trading/tradeNotifications";
 import type { SnapshotPosition } from "@/lib/trading/portfolioSnapshot";
 
 function sellQtyForAsset(qty: number, assetClass: string): number {
@@ -60,12 +64,38 @@ export async function sellHoldingPosition(
 
     if (serverRes.success) {
       await finishSellSuccess(params, fillPrice, serverRes.order);
+      notifyOrderPlacedToast({
+        side: "sell",
+        symbol: params.symbol,
+        qty: params.qty,
+        message: serverRes.message,
+      });
       return serverRes;
     }
 
-    return await tryLocalSell(params, fillPrice, serverRes.message);
+    const fallback = await tryLocalSell(params, fillPrice, serverRes.message);
+    if (!fallback.success) {
+      notifyOrderFailedToast({
+        side: "sell",
+        symbol: params.symbol,
+        message: fallback.message,
+      });
+    }
+    return fallback;
   } catch {
-    return await tryLocalSell(params, fillPrice, "Could not reach server — trying local book.");
+    const fallback = await tryLocalSell(
+      params,
+      fillPrice,
+      "Could not reach server — trying local book."
+    );
+    if (!fallback.success) {
+      notifyOrderFailedToast({
+        side: "sell",
+        symbol: params.symbol,
+        message: fallback.message,
+      });
+    }
+    return fallback;
   }
 }
 
@@ -86,6 +116,12 @@ async function tryLocalSell(
   const local = usePortfolioStore.getState().placeOrder(params);
   if (local.success) {
     notifyOrderPlaced();
+    notifyOrderPlacedToast({
+      side: "sell",
+      symbol: params.symbol,
+      qty: params.qty,
+      message: local.message,
+    });
     return local;
   }
   return {

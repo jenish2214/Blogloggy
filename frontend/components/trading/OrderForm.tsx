@@ -7,6 +7,7 @@ import {
   canPlaceMarketOrders,
   getTradingBlockReason,
 } from "@/lib/trading/marketHours";
+import { notifyWeekendTradingBlocked } from "@/lib/trading/tradeNotifications";
 import {
   OrderConfirmModal,
   type OrderConfirmDetails,
@@ -49,7 +50,9 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
       return;
     }
     if (tradingBlocked) {
-      setResult({ success: false, message: blockReason ?? "Market closed" });
+      const reason = blockReason ?? "Market closed";
+      setResult({ success: false, message: reason });
+      notifyWeekendTradingBlocked(marketCtx);
       return;
     }
 
@@ -104,7 +107,10 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
       <div style={{ display: "flex", gap: 1 }}>
         <button
           type="button"
-          onClick={() => setSide("buy")}
+          onClick={() => {
+            if (side !== "buy" && tradingBlocked) notifyWeekendTradingBlocked(marketCtx);
+            setSide("buy");
+          }}
           style={{
             flex: 1,
             padding: "8px 0",
@@ -217,6 +223,10 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
               className="btn btn-ghost btn-sm"
               style={{ flex: 1 }}
               onClick={() => {
+                if (tradingBlocked) {
+                  notifyWeekendTradingBlocked(marketCtx);
+                  return;
+                }
                 const maxQty = cash / (fillPrice || 1);
                 setQty(((maxQty * pct) / 100).toFixed(assetClass === "crypto" || assetClass === "forex" ? 4 : 0));
               }}
@@ -233,7 +243,19 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
               type="button"
               className="btn btn-ghost btn-sm"
               style={{ flex: 1 }}
-              onClick={() => setQty(pct === 100 ? String(position.qty) : ((position.qty * pct) / 100).toFixed(assetClass === "crypto" || assetClass === "forex" ? 4 : 0))}
+              onClick={() => {
+                if (tradingBlocked) {
+                  notifyWeekendTradingBlocked(marketCtx);
+                  return;
+                }
+                setQty(
+                  pct === 100
+                    ? String(position.qty)
+                    : ((position.qty * pct) / 100).toFixed(
+                        assetClass === "crypto" || assetClass === "forex" ? 4 : 0
+                      )
+                );
+              }}
             >
               Sell {pct}%
             </button>
@@ -278,7 +300,7 @@ export function OrderForm({ symbol, name, assetClass, currentPrice, defaultSide 
       {/* Submit */}
       <button
         type="submit"
-        disabled={submitting || tradingBlocked}
+        disabled={submitting}
         style={{
           padding: "10px",
           fontFamily: "var(--font-mono)",
