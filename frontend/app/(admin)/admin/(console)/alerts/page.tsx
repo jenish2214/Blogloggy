@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { AdminPlaceholder } from "@/components/admin/AdminPlaceholder";
+import { AdminModuleDataPanel } from "@/components/admin/AdminModuleDataPanel";
 
 export const metadata: Metadata = { title: "Alerts" };
+export const dynamic = "force-dynamic";
 
 export default function AdminAlertsPage() {
-  return (
-    <AdminPlaceholder
-      title="Alerts"
-      description="Monitor and manage price alerts across all user accounts."
-    />
-  );
+  return <AdminModuleDataPanel apiPath="/api/admin/alerts" />;
 }

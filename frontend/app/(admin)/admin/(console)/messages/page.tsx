@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { AdminPlaceholder } from "@/components/admin/AdminPlaceholder";
+import { AdminModuleDataPanel } from "@/components/admin/AdminModuleDataPanel";
 
 export const metadata: Metadata = { title: "Messages" };
+export const dynamic = "force-dynamic";
 
 export default function AdminMessagesPage() {
-  return (
-    <AdminPlaceholder
-      title="Messages"
-      description="View and manage system notifications and in-app messages."
-    />
-  );
+  return <AdminModuleDataPanel apiPath="/api/admin/messages" />;
 }

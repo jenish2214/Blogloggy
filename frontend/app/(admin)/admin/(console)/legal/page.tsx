@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { AdminPlaceholder } from "@/components/admin/AdminPlaceholder";
+import { AdminModuleDataPanel } from "@/components/admin/AdminModuleDataPanel";
 
 export const metadata: Metadata = { title: "Legal & Compliance" };
+export const dynamic = "force-dynamic";
 
 export default function AdminLegalPage() {
-  return (
-    <AdminPlaceholder
-      title="Legal & Compliance"
-      description="Audit terms acceptance, onboarding completion, and compliance metadata."
-    />
-  );
+  return <AdminModuleDataPanel apiPath="/api/admin/legal" />;
 }

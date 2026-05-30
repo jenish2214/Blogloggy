@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { AdminPlaceholder } from "@/components/admin/AdminPlaceholder";
+import { AdminModuleDataPanel } from "@/components/admin/AdminModuleDataPanel";
 
 export const metadata: Metadata = { title: "Feature Access" };
+export const dynamic = "force-dynamic";
 
 export default function AdminFeaturesPage() {
-  return (
-    <AdminPlaceholder
-      title="Feature Access"
-      description="Toggle per-user desk modules — markets, trade, quant lab, wealth desk, and more."
-    />
-  );
+  return <AdminModuleDataPanel apiPath="/api/admin/features" />;
 }

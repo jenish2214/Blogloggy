@@ -1,28 +1,68 @@
 import { NextResponse } from "next/server";
 import { AdminAuthError } from "@/lib/auth/admin";
 import { requireAdmin } from "@/lib/auth/adminServer";
+import {
+  buildUserStats,
+  countByUserId,
+  mergeAuthUser,
+} from "@/lib/admin/buildUserRows";
+import type { AdminUserRow } from "@/lib/admin/users";
 import { createAdminClient, hasServiceRoleKey } from "@/lib/supabase/admin";
 
-import type { AdminUserRow } from "@/lib/admin/users";
+const EMPTY_ID = "00000000-0000-0000-0000-000000000000";
 
-function pickName(
-  profile: { full_name?: string | null } | null,
-  meta: Record<string, unknown>
-): string {
-  const fromProfile = profile?.full_name?.trim();
-  if (fromProfile) return fromProfile;
-  const fromMeta =
-    (meta.full_name as string)?.trim() ||
-    (meta.display_name as string)?.trim() ||
-    (meta.name as string)?.trim();
-  return fromMeta || "—";
-}
+async function loadAuthEventCounts(
+  admin: ReturnType<typeof createAdminClient>,
+  ids: string[]
+) {
+  const empty = {
+    loginCount: 0,
+    logoutCount: 0,
+    lastLoginAt: null as string | null,
+    lastLogoutAt: null as string | null,
+  };
 
-function enabledFeatures(raw: unknown): string[] {
-  if (!raw || typeof raw !== "object") return [];
-  return Object.entries(raw as Record<string, boolean>)
-    .filter(([, on]) => on === true)
-    .map(([key]) => key);
+  const map = new Map<string, typeof empty>();
+  const filterIds = ids.length ? ids : [EMPTY_ID];
+
+  const { data: eventCounts, error: countsErr } = await admin
+    .from("user_auth_event_counts")
+    .select("*")
+    .in("user_id", filterIds);
+
+  if (!countsErr && eventCounts) {
+    for (const row of eventCounts) {
+      map.set(row.user_id as string, {
+        loginCount: Number(row.login_count ?? 0),
+        logoutCount: Number(row.logout_count ?? 0),
+        lastLoginAt: (row.last_login_at as string | null) ?? null,
+        lastLogoutAt: (row.last_logout_at as string | null) ?? null,
+      });
+    }
+    return map;
+  }
+
+  const { data: events } = await admin
+    .from("user_auth_events")
+    .select("user_id, event_type, created_at")
+    .in("user_id", filterIds);
+
+  for (const ev of events ?? []) {
+    const uid = ev.user_id as string;
+    const row = map.get(uid) ?? { ...empty };
+    if (ev.event_type === "login") {
+      row.loginCount += 1;
+      const at = ev.created_at as string;
+      if (!row.lastLoginAt || at > row.lastLoginAt) row.lastLoginAt = at;
+    } else if (ev.event_type === "logout") {
+      row.logoutCount += 1;
+      const at = ev.created_at as string;
+      if (!row.lastLogoutAt || at > row.lastLogoutAt) row.lastLogoutAt = at;
+    }
+    map.set(uid, row);
+  }
+
+  return map;
 }
 
 export async function GET() {
@@ -41,6 +81,8 @@ export async function GET() {
         error: "SUPABASE_SERVICE_ROLE_KEY is not configured",
         hint: "Add it to .env.local to load users from Supabase Auth.",
         users: [] as AdminUserRow[],
+        total: 0,
+        stats: buildUserStats([]),
       },
       { status: 503 }
     );
@@ -51,11 +93,14 @@ export async function GET() {
   const authUsers: Array<{
     id: string;
     email?: string;
+    phone?: string;
     created_at?: string;
+    updated_at?: string;
     last_sign_in_at?: string | null;
     email_confirmed_at?: string | null;
     app_metadata?: Record<string, unknown>;
     user_metadata?: Record<string, unknown>;
+    identities?: Array<{ provider?: string }>;
   }> = [];
 
   let page = 1;
@@ -71,101 +116,70 @@ export async function GET() {
   }
 
   const ids = authUsers.map((u) => u.id);
+  const filterIds = ids.length ? ids : [EMPTY_ID];
 
-  const { data: profiles } = await admin
-    .from("user_profiles")
-    .select("*")
-    .in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+  const [
+    profilesRes,
+    portfoliosRes,
+    positionsRes,
+    ordersRes,
+    watchlistRes,
+    messagesRes,
+    alertsRes,
+    clientsRes,
+    eventCountsMap,
+  ] = await Promise.all([
+    admin.from("user_profiles").select("*").in("id", filterIds),
+    admin.from("portfolios").select("user_id, cash, starting_capital").in("user_id", filterIds),
+    admin.from("positions").select("user_id").in("user_id", filterIds),
+    admin.from("orders").select("user_id").in("user_id", filterIds),
+    admin.from("watchlist").select("user_id").in("user_id", filterIds),
+    admin.from("messages").select("user_id").in("user_id", filterIds),
+    admin.from("price_alerts").select("user_id").in("user_id", filterIds),
+    admin.from("wealth_clients").select("advisor_id").in("advisor_id", filterIds),
+    loadAuthEventCounts(admin, ids),
+  ]);
 
-  const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
-
-  const { data: eventCounts, error: countsErr } = await admin
-    .from("user_auth_event_counts")
-    .select("*")
-    .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-
-  let countsByUser = new Map<
-    string,
-    {
-      loginCount: number;
-      logoutCount: number;
-      lastLoginAt: string | null;
-      lastLogoutAt: string | null;
-    }
-  >();
-
-  if (!countsErr && eventCounts) {
-    countsByUser = new Map(
-      eventCounts.map((row) => [
-        row.user_id as string,
-        {
-          loginCount: Number(row.login_count ?? 0),
-          logoutCount: Number(row.logout_count ?? 0),
-          lastLoginAt: (row.last_login_at as string | null) ?? null,
-          lastLogoutAt: (row.last_logout_at as string | null) ?? null,
-        },
-      ])
-    );
-  } else {
-    const { data: events } = await admin
-      .from("user_auth_events")
-      .select("user_id, event_type, created_at")
-      .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-
-    for (const ev of events ?? []) {
-      const uid = ev.user_id as string;
-      const row = countsByUser.get(uid) ?? {
-        loginCount: 0,
-        logoutCount: 0,
-        lastLoginAt: null as string | null,
-        lastLogoutAt: null as string | null,
-      };
-      if (ev.event_type === "login") {
-        row.loginCount += 1;
-        const at = ev.created_at as string;
-        if (!row.lastLoginAt || at > row.lastLoginAt) row.lastLoginAt = at;
-      } else if (ev.event_type === "logout") {
-        row.logoutCount += 1;
-        const at = ev.created_at as string;
-        if (!row.lastLogoutAt || at > row.lastLogoutAt) row.lastLogoutAt = at;
-      }
-      countsByUser.set(uid, row);
-    }
-  }
+  const profileById = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
+  const portfolioByUser = new Map(
+    (portfoliosRes.data ?? []).map((p) => [p.user_id as string, p])
+  );
+  const positionCounts = countByUserId(positionsRes.data);
+  const orderCounts = countByUserId(ordersRes.data);
+  const watchlistCounts = countByUserId(watchlistRes.data);
+  const messageCounts = countByUserId(messagesRes.data);
+  const alertCounts = countByUserId(alertsRes.data);
+  const clientCounts = countByUserId(
+    (clientsRes.data ?? []).map((c) => ({ user_id: c.advisor_id as string }))
+  );
 
   const byId = new Map<string, AdminUserRow>();
 
   for (const u of authUsers) {
     if (!u.id || byId.has(u.id)) continue;
 
-    const profile = profileById.get(u.id) ?? null;
-    const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
-    const counts = countsByUser.get(u.id);
-
-    byId.set(u.id, {
-      id: u.id,
-      email: u.email ?? "—",
-      fullName: pickName(profile, meta),
-      createdAt: u.created_at ?? new Date(0).toISOString(),
-      lastSignInAt: u.last_sign_in_at ?? null,
-      emailConfirmed: Boolean(u.email_confirmed_at),
-      isAdmin: u.app_metadata?.role === "admin",
-      experienceLevel: profile?.experience_level ?? (meta.experience_level as string) ?? null,
-      yearsExperience:
-        profile?.years_experience != null
-          ? Number(profile.years_experience)
-          : meta.years_experience != null
-            ? Number(meta.years_experience)
-            : null,
-      primaryInterest: profile?.primary_interest ?? (meta.primary_interest as string) ?? null,
-      profileCompletedAt: profile?.profile_completed_at ?? (meta.profile_completed_at as string) ?? null,
-      termsAcceptedAt: profile?.terms_accepted_at ?? null,
-      loginCount: counts?.loginCount ?? 0,
-      logoutCount: counts?.logoutCount ?? 0,
-      lastLoginAt: counts?.lastLoginAt ?? u.last_sign_in_at ?? null,
-      lastLogoutAt: counts?.lastLogoutAt ?? null,
-      enabledFeatures: enabledFeatures(profile?.feature_access ?? meta.feature_access),
-    });
+    byId.set(
+      u.id,
+      mergeAuthUser(
+        u,
+        profileById.get(u.id) ?? null,
+        eventCountsMap.get(u.id) ?? {
+          loginCount: 0,
+          logoutCount: 0,
+          lastLoginAt: null,
+          lastLogoutAt: null,
+        },
+        {
+          portfolio: portfolioByUser.get(u.id) ?? null,
+          positionCount: positionCounts.get(u.id) ?? 0,
+          orderCount: orderCounts.get(u.id) ?? 0,
+          watchlistCount: watchlistCounts.get(u.id) ?? 0,
+          messageCount: messageCounts.get(u.id) ?? 0,
+          alertCount: alertCounts.get(u.id) ?? 0,
+          clientCount: clientCounts.get(u.id) ?? 0,
+        }
+      )
+    );
   }
 
   const users = Array.from(byId.values()).sort(
@@ -176,5 +190,6 @@ export async function GET() {
     users,
     total: users.length,
     orderedBy: "created_at_desc",
+    stats: buildUserStats(users),
   });
 }

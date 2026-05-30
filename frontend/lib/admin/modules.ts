@@ -39,7 +39,7 @@ export const ADMIN_MODULES: AdminModuleDef[] = [
     title: "Feature Access",
     description: "Toggle per-user desk modules and platform capabilities.",
     tier: "core",
-    status: "coming_soon",
+    status: "ready",
     icon: "features",
   },
   {
@@ -47,7 +47,7 @@ export const ADMIN_MODULES: AdminModuleDef[] = [
     title: "Trading Monitor",
     description: "Read-only view of orders, positions, and portfolios.",
     tier: "core",
-    status: "coming_soon",
+    status: "ready",
     icon: "trading",
   },
   {
@@ -55,7 +55,7 @@ export const ADMIN_MODULES: AdminModuleDef[] = [
     title: "Wealth & Clients",
     description: "Advisors, client books, and broker profiles.",
     tier: "operations",
-    status: "coming_soon",
+    status: "ready",
     icon: "wealth",
   },
   {
@@ -63,7 +63,7 @@ export const ADMIN_MODULES: AdminModuleDef[] = [
     title: "Alerts",
     description: "Price alerts across all users.",
     tier: "operations",
-    status: "coming_soon",
+    status: "ready",
     icon: "alerts",
   },
   {
@@ -71,7 +71,7 @@ export const ADMIN_MODULES: AdminModuleDef[] = [
     title: "Messages",
     description: "System notifications and in-app messages.",
     tier: "operations",
-    status: "coming_soon",
+    status: "ready",
     icon: "messages",
   },
   {
@@ -79,7 +79,7 @@ export const ADMIN_MODULES: AdminModuleDef[] = [
     title: "System Health",
     description: "API health checks and live metrics.",
     tier: "platform",
-    status: "coming_soon",
+    status: "ready",
     icon: "system",
   },
   {
@@ -87,7 +87,7 @@ export const ADMIN_MODULES: AdminModuleDef[] = [
     title: "Legal & Compliance",
     description: "Terms acceptance and onboarding audit trail.",
     tier: "platform",
-    status: "coming_soon",
+    status: "ready",
     icon: "legal",
   },
 ];

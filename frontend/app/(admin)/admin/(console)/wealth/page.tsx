@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { AdminPlaceholder } from "@/components/admin/AdminPlaceholder";
+import { AdminModuleDataPanel } from "@/components/admin/AdminModuleDataPanel";
 
 export const metadata: Metadata = { title: "Wealth & Clients" };
+export const dynamic = "force-dynamic";
 
 export default function AdminWealthPage() {
-  return (
-    <AdminPlaceholder
-      title="Wealth & Clients"
-      description="Manage advisors, client books, and broker profiles across the wealth desk."
-    />
-  );
+  return <AdminModuleDataPanel apiPath="/api/admin/wealth" />;
 }
