@@ -140,11 +140,6 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className={styles.liveRow} title="Live Market Data">
-        <span className={styles.liveDot} aria-hidden />
-        <span className={`${styles.liveLabel} sidebar-text`}>Live Market Data</span>
-      </div>
-
       <div className={styles.userBlock}>
         {authReady && user ? (
           <div className={styles.userStack}>
@@ -158,7 +153,6 @@ export function Sidebar() {
               <div className={styles.avatar}>{initials}</div>
               <div className={`${styles.profileMeta} sidebar-text`}>
                 <div className={styles.profileName}>{username}</div>
-                <span className={styles.profileHint}>View profile →</span>
               </div>
             </Link>
             <button

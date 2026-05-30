@@ -54,7 +54,7 @@ function assignShares(workspaces: DashboardWorkspace[]): DashboardWorkspace[] {
 export function buildGuestDashboard() {
   return {
     greeting: "Dashboard",
-    subtitle: "Sign in to see your total portfolio value with live market prices",
+    subtitle: "",
     kpis: null as DashboardKpi[] | null,
     workspaces: DASHBOARD_WORKSPACES,
     quickActions: DASHBOARD_QUICK_ACTIONS,
@@ -139,21 +139,9 @@ export function buildDashboardFromSummary(data: DashboardSummaryPayload) {
     }))
   ).sort((a, b) => (b.progress ?? 0) - (a.progress ?? 0));
 
-  const subtitle = [
-    scope === "book"
-      ? `${p.accountLabel}: ${fmtUsd(t.totalPortfolioValue)}`
-      : `Your books · ${fmtUsd(t.totalPortfolioValue)}`,
-    scope !== "book" && clientAum > 0 ? `Clients ${fmtUsd(clientAum)}` : null,
-    scope !== "book" && personalAum > 0 ? `Personal ${fmtUsd(personalAum)}` : null,
-    t.totalPnl !== 0 ? `${fmtUsd(t.totalPnl, { signed: true })} all-time P&L` : null,
-    benchmark ? `${benchmark.name} ${fmtPct(benchmark.changePct)} today` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
   return {
     greeting: `Welcome back, ${name}`,
-    subtitle,
+    subtitle: "",
     kpis,
     workspaces,
     quickActions: DASHBOARD_QUICK_ACTIONS,

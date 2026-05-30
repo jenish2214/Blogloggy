@@ -9,19 +9,13 @@ import {
   DashboardEarnings,
   DashboardMarketIndices,
   DashboardMarketWatch,
-  DashboardSuggestions,
   DashboardTicker,
 } from "@/components/dashboard/DashboardWidgets";
 import {
   buildDashboardFromSummary,
   buildGuestDashboard,
 } from "@/lib/dashboard/buildUserDashboard";
-import {
-  DASHBOARD_QUICK_ACTIONS,
-  DASHBOARD_WORKSPACES,
-  type DashboardKpi,
-  type DashboardWorkspace,
-} from "@/lib/dashboard/dashboardData";
+import type { DashboardKpi } from "@/lib/dashboard/dashboardData";
 import type {
   DashboardBenchmark,
   DashboardBookSummary,
@@ -61,7 +55,6 @@ type DashboardViewState = {
   greeting: string;
   subtitle: string;
   kpis: DashboardKpi[];
-  workspaces: DashboardWorkspace[];
   totals: DashboardTotals | null;
   books: DashboardBookSummary[];
   benchmark: DashboardBenchmark | null;
@@ -79,7 +72,6 @@ function stateFromPayload(data: DashboardSummaryPayload): DashboardViewState {
       greeting: guestView.greeting,
       subtitle: guestView.subtitle,
       kpis: GUEST_KPIS,
-      workspaces: guestView.workspaces,
       totals: null,
       books: [],
       benchmark: null,
@@ -95,7 +87,6 @@ function stateFromPayload(data: DashboardSummaryPayload): DashboardViewState {
     greeting: view.greeting,
     subtitle: view.subtitle,
     kpis: view.kpis ?? [],
-    workspaces: view.workspaces,
     totals: view.totals ?? data.totals,
     books: view.books ?? data.books,
     benchmark: view.benchmark ?? data.benchmark,
@@ -122,13 +113,8 @@ export function DashboardPageClient() {
   const [refreshing, setRefreshing] = useState(false);
   const [guest, setGuest] = useState(cachedState?.guest ?? true);
   const [greeting, setGreeting] = useState(cachedState?.greeting ?? "Dashboard");
-  const [subtitle, setSubtitle] = useState(
-    cachedState?.subtitle ?? "Sign in to see your personal and client book data"
-  );
+  const [subtitle, setSubtitle] = useState(cachedState?.subtitle ?? "");
   const [kpis, setKpis] = useState<DashboardKpi[]>(cachedState?.kpis ?? GUEST_KPIS);
-  const [workspaces, setWorkspaces] = useState<DashboardWorkspace[]>(
-    cachedState?.workspaces ?? DASHBOARD_WORKSPACES
-  );
   const [totals, setTotals] = useState<DashboardTotals | null>(cachedState?.totals ?? null);
   const [books, setBooks] = useState<DashboardBookSummary[]>(cachedState?.books ?? []);
   const [benchmark, setBenchmark] = useState<DashboardBenchmark | null>(
@@ -141,7 +127,6 @@ export function DashboardPageClient() {
   const [personalAum, setPersonalAum] = useState(cachedState?.personalAum ?? 0);
   const [clientAum, setClientAum] = useState(cachedState?.clientAum ?? 0);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [quickActions] = useState(DASHBOARD_QUICK_ACTIONS);
 
   useEffect(() => {
     void useActiveBookStore.persist.rehydrate();
@@ -152,7 +137,6 @@ export function DashboardPageClient() {
     setGreeting(next.greeting);
     setSubtitle(next.subtitle);
     setKpis(next.kpis);
-    setWorkspaces(next.workspaces);
     setTotals(next.totals);
     setBooks(next.books);
     setBenchmark(next.benchmark);
@@ -223,8 +207,7 @@ export function DashboardPageClient() {
       ) : null}
       {guest ? (
         <p className={styles.disclaimer} style={{ marginBottom: 16 }}>
-          <Link href="/login">Sign in</Link> or <Link href="/signup">create an account</Link> to see your
-          portfolio, client books, and watchlist — never another user&apos;s data.
+          <Link href="/login">Sign in</Link> or <Link href="/signup">Sign up</Link> to view your portfolio.
         </p>
       ) : null}
       <DashboardView
@@ -232,8 +215,6 @@ export function DashboardPageClient() {
         greeting={greeting}
         subtitle={subtitle}
         kpis={kpis}
-        quickActions={quickActions}
-        workspaces={workspaces}
         portfolioTotals={totals}
         portfolioBooks={books}
         benchmark={benchmark}
@@ -245,7 +226,6 @@ export function DashboardPageClient() {
         marketWatch={<DashboardMarketWatch />}
         marketIndices={<DashboardMarketIndices />}
         earnings={<DashboardEarnings />}
-        suggestions={<DashboardSuggestions />}
       />
     </>
   );

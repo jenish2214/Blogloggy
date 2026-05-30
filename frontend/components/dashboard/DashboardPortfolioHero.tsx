@@ -60,12 +60,12 @@ export function DashboardPortfolioHero({
           <span className={styles.portfolioHeroLabel}>
             {scope === "book" ? "Active book value" : "Your total portfolio"}
           </span>
-          <span
-            className={`${styles.portfolioLiveBadge} ${loading ? styles.portfolioLiveBadgeBusy : ""}`}
-          >
-            <span className={styles.portfolioLiveDot} aria-hidden />
-            {loading ? "Updating prices…" : "Live · API prices"}
-          </span>
+          {loading ? (
+            <span className={`${styles.portfolioLiveBadge} ${styles.portfolioLiveBadgeBusy}`}>
+              <span className={styles.portfolioLiveDot} aria-hidden />
+              Updating…
+            </span>
+          ) : null}
         </div>
         <p className={styles.portfolioHeroValue}>{fmtUsd(totals.totalPortfolioValue)}</p>
         <div className={styles.portfolioHeroMeta}>
