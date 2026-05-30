@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { NewUserStockSuggestions } from "@/components/dashboard/NewUserStockSuggestions";
 import { ClientOnly } from "@/components/system/ClientOnly";
@@ -19,37 +20,55 @@ import styles from "./dashboard.module.css";
 const KPI = [
   { label: "Paper capital", value: "$100,000", note: "Starting balance" },
   { label: "Universe", value: "5,000+", note: "Equities · ETFs · Crypto" },
-  { label: "Market data", value: "10s", note: "Live refresh cycle" },
-  { label: "Risk engine", value: "Built-in", note: "Greeks · VaR · Backtest" },
+  { label: "Market data", value: "Live", note: "Streaming quotes" },
+  { label: "Workspaces", value: "12+", note: "Trade · Wallet · Algo" },
 ];
 
-const NAV_GROUPS = [
+const QUICK_ACTIONS = [
+  { href: "/trade", label: "Trade", desc: "Orders & execution" },
+  { href: "/markets", label: "Markets", desc: "Quotes & watchlists" },
+  { href: "/desk?section=wallet", label: "Client wallet", desc: "Balances & deposits" },
+  { href: "/algo-trading", label: "Algo desk", desc: "Strategies & signals" },
+] as const;
+
+const FEATURED_WORKSPACES = [
   {
-    title: "Trading",
-    items: [
-      { href: "/trade", code: "TRD", title: "Trade Terminal", desc: "Market & limit orders" },
-      { href: "/markets", code: "MKT", title: "Live Markets", desc: "Quotes · movers · regions" },
-      { href: "/portfolio", code: "PRT", title: "Portfolio", desc: "Holdings · P&L · history" },
-    ],
+    href: "/algo-trading",
+    code: "ALG",
+    title: "Algo Desk",
+    desc: "Live strategy engine, signals, and paper execution",
   },
   {
-    title: "Analytics",
-    items: [
-      { href: "/quant-lab", code: "QLB", title: "Quant Lab", desc: "ML · options · Monte Carlo" },
-      { href: "/research", code: "RSH", title: "Research", desc: "Backtest · Sharpe · VaR" },
-      { href: "/algo-trading", code: "ALG", title: "Algo Desk", desc: "Strategy simulation" },
-    ],
+    href: "/quant-lab",
+    code: "QLB",
+    title: "Quant Lab",
+    desc: "Greeks, Monte Carlo, ML predictions, and backtests",
   },
   {
-    title: "Advisory",
-    items: [
-      { href: "/wealth", code: "WLT", title: "Wealth Desk", desc: "Client & personal books" },
-      { href: "/desk", code: "DSK", title: "Broker & Clients", desc: "Books · wallet · orders" },
-      { href: "/options", code: "OPT", title: "Options", desc: "Chain · Greeks · pricing" },
-      { href: "/forex", code: "FX", title: "Forex", desc: "Major pairs" },
-    ],
+    href: "/research",
+    code: "RSH",
+    title: "Research",
+    desc: "Strategy backtests, Sharpe, VaR, and quant library",
   },
-];
+  {
+    href: "/desk?section=clients",
+    code: "CLT",
+    title: "Clients",
+    desc: "Books, onboarding, and client master detail",
+  },
+  {
+    href: "/wealth",
+    code: "WLT",
+    title: "Wealth books",
+    desc: "Multi-book capital and allocation view",
+  },
+  {
+    href: "/risk",
+    code: "RSK",
+    title: "Risk desk",
+    desc: "VaR, beta, and concentration limits",
+  },
+] as const;
 
 const MODULES = [
   { id: "WDG · 01", title: "Live market watch", content: <LiveMarketWatch /> },
@@ -60,14 +79,21 @@ const MODULES = [
   },
 ] as const;
 
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function LandingPage() {
   const reduce = useReducedMotion();
   const pageStagger = dashboardStagger(reduce, 0.07);
   const kpiStagger = dashboardStagger(reduce, 0.08);
-  const navStagger = dashboardStagger(reduce, 0.05);
   const item = fadeUp(reduce, 14);
   const moduleIn = scaleIn(reduce);
   const tagIn = fadeIn(reduce);
+  const greet = useMemo(() => greeting(), []);
 
   return (
     <div className={styles.root}>
@@ -79,22 +105,22 @@ export default function LandingPage() {
         initial="hidden"
         animate="show"
       >
-        <motion.header className={styles.pageHead} variants={item}>
-          <div>
-            <motion.p
-              className={styles.eyebrow}
-              variants={fadeUp(reduce, 8)}
-              initial="hidden"
-              animate="show"
-              transition={{ delay: reduce ? 0 : 0.05 }}
-            >
-              Institutional paper trading workspace
-            </motion.p>
-            <h1 className={styles.pageTitle}>Market dashboard</h1>
+        <motion.header className={styles.hero} variants={item} initial="hidden" animate="show">
+          <div className={styles.heroText}>
+            <p className={styles.eyebrow}>QuantDesk workspace</p>
+            <h1 className={styles.pageTitle}>{greet}</h1>
             <p className={styles.pageDesc}>
-              Real-time surveillance, execution shortcuts, and portfolio analytics — structured for
-              professional workflows. No live capital at risk.
+              Trade, manage client wallets, and run algos from one desk. Everything in the sidebar is
+              available — no page toggles required.
             </p>
+          </div>
+          <div className={styles.quickActions} aria-label="Quick actions">
+            {QUICK_ACTIONS.map((action) => (
+              <Link key={action.href} href={action.href} className={styles.quickAction}>
+                <span className={styles.quickActionLabel}>{action.label}</span>
+                <span className={styles.quickActionDesc}>{action.desc}</span>
+              </Link>
+            ))}
           </div>
         </motion.header>
 
@@ -127,6 +153,43 @@ export default function LandingPage() {
           ))}
         </motion.section>
 
+        <motion.section
+          className={styles.workspaceSection}
+          aria-label="Features and workspaces"
+          variants={item}
+          initial="hidden"
+          animate="show"
+        >
+          <div className={styles.sectionHead}>
+            <h2 className={styles.sectionTitle}>Features &amp; workspaces</h2>
+            <p className={styles.sectionDesc}>
+              Algo desk, quant tools, wallets, and client management.
+            </p>
+          </div>
+          <motion.div
+            className={`${styles.workspaceGrid} ${styles.workspaceGridSix}`}
+            variants={kpiStagger}
+            initial="hidden"
+            animate="show"
+          >
+            {FEATURED_WORKSPACES.map((ws) => (
+              <motion.div
+                key={ws.href}
+                variants={item}
+                whileHover={reduce ? undefined : { y: -4, transition: { duration: 0.2 } }}
+                whileTap={reduce ? undefined : { scale: 0.99 }}
+              >
+                <Link href={ws.href} className={styles.workspaceCard}>
+                  <span className={styles.workspaceCode}>{ws.code}</span>
+                  <span className={styles.workspaceCardTitle}>{ws.title}</span>
+                  <span className={styles.workspaceCardDesc}>{ws.desc}</span>
+                  <span className={styles.workspaceOpen}>Open →</span>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.section>
+
         <motion.div variants={item}>
           <ClientOnly>
             <EarningsCalendar compact />
@@ -139,114 +202,21 @@ export default function LandingPage() {
           </ClientOnly>
         </motion.div>
 
-        <div className={styles.terminalGrid}>
-          <div className={styles.mainColumn}>
-            {MODULES.map((mod, i) => (
-              <motion.section
-                key={mod.id}
-                className={styles.module}
-                variants={moduleIn}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: "-48px" }}
-                transition={{ delay: reduce ? 0 : i * 0.08 }}
-              >
-                <div className={styles.moduleHead}>
-                  <span className={styles.moduleId}>{mod.id}</span>
-                  <h2 className={styles.moduleTitle}>{mod.title}</h2>
-                </div>
-                <div className={styles.moduleBody}>{mod.content}</div>
-              </motion.section>
-            ))}
-          </div>
-
-          <motion.aside
-            className={styles.sideColumn}
-            variants={item}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-40px" }}
-          >
+        <div className={styles.contentStack}>
+          {MODULES.map((mod, i) => (
             <motion.section
+              key={mod.id}
               className={styles.module}
-              whileHover={reduce ? undefined : { y: -2 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className={styles.moduleHead}>
-                <span className={styles.moduleId}>NAV</span>
-                <h2 className={styles.moduleTitle}>Application map</h2>
-              </div>
-              <nav className={styles.navGroups}>
-                {NAV_GROUPS.map((group, gi) => (
-                  <motion.div
-                    key={group.title}
-                    className={styles.navGroup}
-                    variants={navStagger}
-                    initial="hidden"
-                    whileInView="show"
-                    viewport={{ once: true }}
-                  >
-                    <h3 className={styles.navGroupTitle}>{group.title}</h3>
-                    <ul className={styles.navList}>
-                      {group.items.map((navItem, ii) => (
-                        <motion.li key={navItem.href} variants={fadeUp(reduce, 10)}>
-                          <motion.div whileHover={reduce ? undefined : { x: 4 }} whileTap={{ scale: 0.99 }}>
-                            <Link href={navItem.href} className={styles.navLink}>
-                              <span className={styles.navCode}>{navItem.code}</span>
-                              <span className={styles.navText}>
-                                <span className={styles.navLinkTitle}>{navItem.title}</span>
-                                <span className={styles.navLinkDesc}>{navItem.desc}</span>
-                              </span>
-                              <span className={styles.navArrow} aria-hidden>
-                                →
-                              </span>
-                            </Link>
-                          </motion.div>
-                        </motion.li>
-                      ))}
-                    </ul>
-                  </motion.div>
-                ))}
-              </nav>
-            </motion.section>
-
-            <motion.section
-              className={styles.module}
+              variants={moduleIn}
               initial="hidden"
               whileInView="show"
-              viewport={{ once: true }}
-              variants={moduleIn}
+              viewport={{ once: true, margin: "-48px" }}
+              transition={{ delay: reduce ? 0 : i * 0.08 }}
             >
-              <div className={styles.moduleHead}>
-                <span className={styles.moduleId}>ACT</span>
-                <h2 className={styles.moduleTitle}>Quick actions</h2>
-              </div>
-              <motion.div
-                className={styles.actionStack}
-                variants={navStagger}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-              >
-                {[
-                  { href: "/trade", label: "Open trade terminal", primary: true },
-                  { href: "/portfolio", label: "View holdings", primary: false },
-                  { href: "/quant-lab", label: "Launch quant lab", primary: false },
-                ].map((action) => (
-                  <motion.div key={action.href} variants={fadeUp(reduce, 8)}>
-                    <motion.div whileHover={reduce ? undefined : { scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <Link
-                        href={action.href}
-                        className={`btn ${action.primary ? "btn-primary" : "btn-ghost"} ${styles.actionBtn}`}
-                      >
-                        {action.label}
-                      </Link>
-                    </motion.div>
-                  </motion.div>
-                ))}
-              </motion.div>
+              <h2 className={styles.moduleTitle}>{mod.title}</h2>
+              <div className={styles.moduleBody}>{mod.content}</div>
             </motion.section>
-          </motion.aside>
+          ))}
         </div>
 
         <motion.footer

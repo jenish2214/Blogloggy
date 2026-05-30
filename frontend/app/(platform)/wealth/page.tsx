@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { WealthBookSummary } from "@/lib/api";
 import { wealthApi } from "@/lib/api";
-import { ClientCrudPanel } from "@/components/wealth/ClientCrudPanel";
-import { ClientsTable } from "@/components/wealth/ClientsTable";
+import { ClientsMasterDetail } from "@/components/wealth/ClientsMasterDetail";
 import { useClientsCrud } from "@/lib/hooks/useClientsCrud";
 import { useWealthLiveFeed } from "@/lib/hooks/useWealthLiveFeed";
 import { useActiveBookStore } from "@/lib/store/activeBook";
@@ -39,6 +39,7 @@ function pnlClass(n: number) {
 }
 
 export default function WealthDeskPage() {
+  const router = useRouter();
   const [deskTab, setDeskTab] = useState<"books" | "clients">("clients");
   const { books, summary, loading, error, tick, refresh } = useWealthLiveFeed(true);
   const setActiveBook = useActiveBookStore((s) => s.setActiveBook);
@@ -95,11 +96,6 @@ export default function WealthDeskPage() {
     if (activeBook?.clientId === id) clearActiveBook();
   };
 
-  const handleDeleteFromPanel = async (id: string) => {
-    await crud.remove(id);
-    if (activeBook?.clientId === id) clearActiveBook();
-  };
-
   const displayError = error ?? crud.error;
   const liveLabel = tick > 0 ? "Live · 5s refresh" : "Connecting…";
 
@@ -136,7 +132,14 @@ export default function WealthDeskPage() {
           <button type="button" className="btn btn-ghost btn-sm" onClick={handleSeed} disabled={seeding}>
             {seeding ? "Seeding…" : "Sample clients"}
           </button>
-          <button type="button" className="btn btn-primary btn-sm" onClick={crud.openCreate}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              setDeskTab("clients");
+              crud.openCreate();
+            }}
+          >
             + New client
           </button>
           <Link href="/desk?section=wallet" className="btn btn-ghost btn-sm">
@@ -211,23 +214,14 @@ export default function WealthDeskPage() {
 
       {deskTab === "clients" && (
         <section className={styles.panel}>
-          <div className={styles.panelHead}>
-            <span className={styles.panelTitle}>Client registry — live book metrics</span>
-            <input
-              className={`input ${styles.search}`}
-              placeholder="Search name, code, email…"
-              value={crud.search}
-              onChange={(e) => crud.setSearch(e.target.value)}
-            />
-          </div>
-          <ClientsTable
-            clients={crud.clients}
-            loading={crud.loading}
-            activeClientId={crud.selectedId}
+          <p className={styles.panelTitle} style={{ marginBottom: 12 }}>
+            Client registry — select a client on the left for live book metrics and profile
+          </p>
+          <ClientsMasterDetail
+            crud={crud}
             bookByClientId={bookByClientId}
-            onView={crud.openRead}
-            onEdit={crud.openUpdate}
             onDelete={handleDeleteFromTable}
+            onWallet={() => router.push("/desk?section=wallet")}
           />
         </section>
       )}
@@ -311,7 +305,10 @@ export default function WealthDeskPage() {
                           <button
                             type="button"
                             className={styles.rowBtn}
-                            onClick={() => crud.openRead(b.clientId!)}
+                            onClick={() => {
+                              setDeskTab("clients");
+                              void crud.openRead(b.clientId!);
+                            }}
                           >
                             Details
                           </button>
@@ -341,22 +338,6 @@ export default function WealthDeskPage() {
         </p>
       )}
 
-      <ClientCrudPanel
-        mode={crud.mode}
-        form={crud.form}
-        setForm={crud.setForm}
-        detail={crud.detail}
-        liveBook={
-          crud.selectedId ? bookByClientId.get(crud.selectedId) ?? null : null
-        }
-        saving={crud.saving}
-        selectedId={crud.selectedId}
-        onClose={crud.closePanel}
-        onCreate={crud.create}
-        onUpdate={crud.update}
-        onDelete={handleDeleteFromPanel}
-        onEdit={() => crud.selectedId && crud.openUpdate(crud.selectedId)}
-      />
     </div>
   );
 }

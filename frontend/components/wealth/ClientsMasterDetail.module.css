@@ -1,0 +1,155 @@
+.shell {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 0;
+  min-height: 420px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.listPane {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  min-width: 0;
+}
+
+.listHead {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.listSearch {
+  width: 100%;
+}
+
+.listActions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.listScroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.listEmpty {
+  padding: 24px 14px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.clientBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.clientBtn:hover {
+  background: var(--bg-surface);
+}
+
+.clientBtnActive {
+  background: var(--bg-surface);
+  border-left: 3px solid var(--accent);
+  padding-left: 11px;
+}
+
+.clientName {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.clientMeta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.clientSub {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.detailPane {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+}
+
+.detailEmpty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  gap: 8px;
+}
+
+.detailEmptyTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.detailEmptyDesc {
+  font-size: 0.85rem;
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.pnlUp {
+  color: var(--up);
+}
+
+.pnlDown {
+  color: var(--down);
+}
+
+@media (max-width: 768px) {
+  .shell {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .listPane {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 280px;
+  }
+}

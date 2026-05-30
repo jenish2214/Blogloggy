@@ -2,10 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
-import { handleAuthSessionChange } from "@/lib/auth/tradingSession";
-import { logAuthEvent } from "@/lib/auth/logAuthEvent";
+import { signOutPlatform } from "@/lib/auth/signOut";
 import type { User } from "@supabase/supabase-js";
 import { PnlStatementPanel } from "@/components/trading/PnlStatementPanel";
 import { OrderHistoryTable } from "@/components/trading/OrderHistoryTable";
@@ -66,7 +64,6 @@ function pnlClass(n: number) {
 }
 
 export function AccountProfileSection() {
-  const router = useRouter();
   const activeBook = useActiveBookStore((s) => s.activeBook);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -120,14 +117,8 @@ export function AccountProfileSection() {
   const email = user?.email ?? "Not signed in";
   const initials = (displayName.slice(0, 2) || "??").toUpperCase();
 
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    if (!supabase) return;
-    await logAuthEvent("logout", "platform");
-    handleAuthSessionChange(null);
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+  const handleSignOut = () => {
+    void signOutPlatform();
   };
 
   return (
@@ -165,8 +156,6 @@ export function AccountProfileSection() {
         </div>
       </div>
 
-      {user && <ProfilePreferencesSection />}
-
       <div className={styles.statsGrid} style={{ marginBottom: 16 }}>
         {[
           { label: "Portfolio Value", value: fmtUsd(totalValue) },
@@ -181,6 +170,17 @@ export function AccountProfileSection() {
             </div>
           </div>
         ))}
+      </div>
+
+      {user && <ProfilePreferencesSection />}
+
+      <div className={styles.section} style={{ marginTop: 8 }}>
+        <div className={styles.sectionHead}>
+          <div>
+            <h2 className={styles.sectionTitle}>Trading activity</h2>
+            <p className={styles.sectionSub}>P&amp;L statement and order history for your active book</p>
+          </div>
+        </div>
       </div>
 
       <div className={styles.tabs} style={{ marginBottom: 12 }}>

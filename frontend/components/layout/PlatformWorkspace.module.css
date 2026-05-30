@@ -1,0 +1,45 @@
+.workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100dvh;
+  margin-left: var(--sidebar-w);
+  background: var(--bg-base);
+  transition: margin-left var(--t-smooth);
+}
+
+.topStrip {
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.bookRow {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.inner {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .workspace {
+    margin-left: 64px;
+  }
+}
+
+@media (max-width: 768px) {
+  .workspace {
+    margin-left: 0;
+  }
+
+  .topStrip {
+    top: var(--app-topbar-h, 56px);
+  }
+}

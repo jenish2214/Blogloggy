@@ -20,6 +20,18 @@
   box-shadow: var(--shadow-lg);
 }
 
+.panelInline {
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  min-height: 100%;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .head {
   display: flex;
   align-items: center;

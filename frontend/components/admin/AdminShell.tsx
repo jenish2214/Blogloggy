@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { logAuthEvent } from "@/lib/auth/logAuthEvent";
+import { signOutAdmin } from "@/lib/auth/signOut";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import styles from "./admin.module.css";
 
@@ -13,7 +11,6 @@ type Props = {
 };
 
 export function AdminShell({ children, userEmail }: Props) {
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -24,15 +21,8 @@ export function AdminShell({ children, userEmail }: Props) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const handleLogout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
-    const supabase = createClient();
-    if (supabase) {
-      await logAuthEvent("logout", "admin");
-      await supabase.auth.signOut();
-    }
-    router.push("/admin/login");
-    router.refresh();
+  const handleLogout = () => {
+    void signOutAdmin();
   };
 
   return (

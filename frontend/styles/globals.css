@@ -172,15 +172,14 @@ h4 { font-size: var(--text-lg); }
   transition: width var(--t-smooth);
 }
 
+/* Legacy — platform routes use PlatformWorkspace instead */
 .app-main {
   flex: 1;
-  margin-left: var(--sidebar-w);
   min-height: 100dvh;
   min-width: 0;
   width: 100%;
   overflow-x: hidden;
   background: var(--bg-base);
-  transition: margin-left var(--t-smooth);
   box-sizing: border-box;
 }
 
@@ -536,8 +535,7 @@ select.input { cursor: pointer; }
 
 @media (max-width: 768px) {
   .sidebar   { display: none; }
-  .app-main  { margin-left: 0; }
-  :root      { --sidebar-w: 0px; }
+  :root      { --sidebar-w: 0px; --app-topbar-h: 56px; }
   .mobile-header { display: flex !important; }
 }
 

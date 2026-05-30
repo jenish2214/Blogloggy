@@ -53,5 +53,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: profileErr.message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true, next: "/welcome/profile" });
+  return NextResponse.json({ success: true, next: "/" });
 }

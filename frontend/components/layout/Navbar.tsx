@@ -1,22 +1,20 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/client";
-import { logAuthEvent } from "@/lib/auth/logAuthEvent";
+import { signOutPlatform } from "@/lib/auth/signOut";
 import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { href: "/markets", label: "MARKETS" },
   { href: "/trade", label: "TRADE" },
   { href: "/portfolio", label: "PORTFOLIO" },
-  { href: "/options", label: "OPTIONS" },
   { href: "/research", label: "RESEARCH" },
 ];
 
 export function Navbar() {
   const path = usePathname();
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [unread, setUnread] = useState(0);
@@ -45,13 +43,8 @@ export function Navbar() {
     return () => { subscription.unsubscribe(); supabase.removeChannel(channel); };
   }, []);
 
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    if (!supabase) return;
-    await logAuthEvent("logout", "platform");
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+  const handleSignOut = () => {
+    void signOutPlatform();
   };
 
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? "??";

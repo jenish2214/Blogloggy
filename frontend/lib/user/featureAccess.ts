@@ -61,17 +61,9 @@ export function normalizeFeatureAccess(raw: unknown): FeatureAccessMap {
   return base;
 }
 
-/** Legacy users (onboarding before profile step) get full access. */
-export function getFeatureAccessFromUser(user: User | null | undefined): FeatureAccessMap {
-  if (!user) return defaultFeatureAccess();
-  const m = user.user_metadata ?? {};
-  if (m.profile_completed_at) {
-    return normalizeFeatureAccess(m.feature_access);
-  }
-  if (m.onboarding_applied_at && !m.profile_completed_at) {
-    return Object.fromEntries(FEATURE_KEYS.map((k) => [k, true])) as FeatureAccessMap;
-  }
-  return defaultFeatureAccess();
+/** All signed-in users see every workspace (no per-page gating). */
+export function getFeatureAccessFromUser(_user: User | null | undefined): FeatureAccessMap {
+  return Object.fromEntries(FEATURE_KEYS.map((k) => [k, true])) as FeatureAccessMap;
 }
 
 export function isFeatureEnabled(

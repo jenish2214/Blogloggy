@@ -3,16 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isAdminUser } from "@/lib/auth/admin";
 import { hasStaticAdminSession } from "@/lib/auth/staticAdmin";
 import { getSupabaseAnonKey, getSupabaseUrl, hasSupabaseEnv } from "@/lib/supabase/env";
-import {
-  getOnboardingRedirect,
-  hasCompletedOnboarding,
-  isWelcomePath,
-} from "@/lib/legal/onboarding";
-import {
-  featureKeyForPath,
-  getFeatureAccessFromUser,
-} from "@/lib/user/featureAccess";
-
+import { isWelcomePath } from "@/lib/legal/onboarding";
+/** App sections that require a signed-in user (guests may browse home, login, signup, etc.). */
 const PROTECTED = [
   "/markets",
   "/trade",
@@ -34,7 +26,11 @@ const PROTECTED = [
   "/screener",
 ];
 
-const AUTH_PATHS = ["/login", "/signup"];
+const AUTH_PATHS = ["/login", "/signup", "/forgot-password", "/reset-password"];
+
+function isProtectedPath(path: string) {
+  return PROTECTED.some((p) => path === p || path.startsWith(`${p}/`));
+}
 
 function isAuthPath(path: string) {
   return AUTH_PATHS.includes(path) || path.startsWith("/auth/");
@@ -46,6 +42,16 @@ function isAdminPath(path: string) {
 
 function isAdminLoginPath(path: string) {
   return path === "/admin/login";
+}
+
+function loginRedirect(request: NextRequest, returnPath?: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/login";
+  url.search = "";
+  if (returnPath && returnPath !== "/login" && returnPath !== "/signup") {
+    url.searchParams.set("redirect", returnPath);
+  }
+  return NextResponse.redirect(url);
 }
 
 function handleAdminRoute(request: NextRequest, supabaseAdmin: boolean) {
@@ -106,8 +112,8 @@ export async function middleware(request: NextRequest) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const isApiRoute = path.startsWith("/api/");
 
+    const isApiRoute = path.startsWith("/api/");
     if (isApiRoute) {
       return supabaseResponse;
     }
@@ -117,54 +123,25 @@ export async function middleware(request: NextRequest) {
       return adminRedirect ?? supabaseResponse;
     }
 
-    const onboardingDone = hasCompletedOnboarding(user);
-    const isProtected = PROTECTED.some((p) => path.startsWith(p));
+    if (!user) {
+      if (isWelcomePath(path)) {
+        return loginRedirect(request);
+      }
+      if (isProtectedPath(path)) {
+        return loginRedirect(request, path);
+      }
+      return supabaseResponse;
+    }
 
-    if (!user && isWelcomePath(path)) {
+    if (isWelcomePath(path)) {
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
 
-    if (!user && isProtected) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("redirect", path);
-      return NextResponse.redirect(url);
-    }
-
-    if (user) {
-      if (!onboardingDone) {
-        const required = getOnboardingRedirect(user);
-        if (!isAuthPath(path) && path !== required) {
-          const url = request.nextUrl.clone();
-          url.pathname = required;
-          return NextResponse.redirect(url);
-        }
-      }
-
-      if (onboardingDone && isWelcomePath(path)) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        return NextResponse.redirect(url);
-      }
-
-      if (onboardingDone) {
-        const access = getFeatureAccessFromUser(user);
-        const featureKey = featureKeyForPath(path);
-        if (featureKey && !access[featureKey]) {
-          const url = request.nextUrl.clone();
-          url.pathname = "/";
-          url.searchParams.set("feature", featureKey);
-          return NextResponse.redirect(url);
-        }
-      }
-
-      if (isAuthPath(path)) {
-        const url = request.nextUrl.clone();
-        url.pathname = onboardingDone ? "/" : getOnboardingRedirect(user);
-        return NextResponse.redirect(url);
-      }
+    // Always allow login / signup pages to render (sign-out, switch account, new signup).
+    if (isAuthPath(path)) {
+      return supabaseResponse;
     }
   } catch {
     return NextResponse.next({ request });

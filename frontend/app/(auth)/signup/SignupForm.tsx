@@ -1,19 +1,18 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient, SUPABASE_CONFIG_ERROR } from "@/lib/supabase/client";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
+import { redirectAfterAuth } from "@/lib/auth/redirectAfterAuth";
 import { GoogleButton } from "@/components/ui/GoogleButton";
 
 export function SignupForm() {
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -21,22 +20,31 @@ export function SignupForm() {
     setError("");
     if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
     setLoading(true);
-    const supabase = createClient();
-    if (!supabase) {
-      setError(SUPABASE_CONFIG_ERROR);
+    try {
+      const supabase = createClient();
+      if (!supabase) {
+        setError(SUPABASE_CONFIG_ERROR);
+        return;
+      }
+      const { data, error: err } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { display_name: displayName || email.split("@")[0] } },
+      });
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      if (!data.session) {
+        setNeedsEmailConfirm(true);
+        setSuccess(true);
+        return;
+      }
+      void syncPortfolioFromCloud();
+      redirectAfterAuth("/");
+    } finally {
       setLoading(false);
-      return;
     }
-    const { error: err } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { display_name: displayName || email.split("@")[0] } },
-    });
-    if (err) { setError(err.message); setLoading(false); return; }
-    await syncPortfolioFromCloud();
-    setSuccess(true);
-    setLoading(false);
-    setTimeout(() => router.push("/welcome/terms"), 2000);
   };
 
   return (
@@ -75,7 +83,11 @@ export function SignupForm() {
           <div style={{ padding: "40px 28px", textAlign: "center" }}>
             <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--bg-surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: "1.5rem", color: "var(--text-primary)" }}>✓</div>
             <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>Account created!</div>
-            <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>Next: terms & your profile setup…</div>
+            <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+              {needsEmailConfirm
+                ? "Check your email to confirm your account, then sign in."
+                : "Taking you to your dashboard…"}
+            </div>
           </div>
         ) : (
           <>

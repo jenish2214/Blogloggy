@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient, SUPABASE_CONFIG_ERROR } from "@/lib/supabase/client";
 import { syncPortfolioFromCloud } from "@/lib/trading/cloudPortfolio";
 import { logAuthEvent } from "@/lib/auth/logAuthEvent";
+import { redirectAfterAuth } from "@/lib/auth/redirectAfterAuth";
 import { GoogleButton } from "@/components/ui/GoogleButton";
 
 export function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const redirectTo = params.get("redirect") ?? "/";
 
@@ -21,18 +21,27 @@ export function LoginForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const supabase = createClient();
-    if (!supabase) {
-      setError(SUPABASE_CONFIG_ERROR);
+    try {
+      const supabase = createClient();
+      if (!supabase) {
+        setError(SUPABASE_CONFIG_ERROR);
+        return;
+      }
+      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      if (!data.session) {
+        setError("Sign-in did not create a session. Please try again.");
+        return;
+      }
+      void logAuthEvent("login", "platform");
+      void syncPortfolioFromCloud();
+      redirectAfterAuth(redirectTo);
+    } finally {
       setLoading(false);
-      return;
     }
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-    if (err) { setError(err.message); setLoading(false); return; }
-    void logAuthEvent("login", "platform");
-    await syncPortfolioFromCloud();
-    router.push(redirectTo === "/" ? "/" : redirectTo);
-    router.refresh();
   };
 
   return (

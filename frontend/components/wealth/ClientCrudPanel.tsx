@@ -18,6 +18,8 @@ interface ClientCrudPanelProps {
   onDelete: (id: string) => Promise<void>;
   onEdit: () => void;
   selectedId: string | null;
+  /** modal = overlay dialog; inline = right pane in master-detail layout */
+  layout?: "modal" | "inline";
 }
 
 function fmtDate(iso: string) {
@@ -47,6 +49,7 @@ export function ClientCrudPanel({
   onDelete,
   onEdit,
   selectedId,
+  layout = "modal",
 }: ClientCrudPanelProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -66,14 +69,15 @@ export function ClientCrudPanel({
     else if (mode === "update") await onUpdate();
   };
 
-  return (
-    <div className={styles.overlay} role="dialog" aria-modal="true">
-      <div className={styles.panel}>
+  const panelBody = (
+    <div className={layout === "inline" ? styles.panelInline : styles.panel}>
         <div className={styles.head}>
           <h2 className={styles.title}>{title}</h2>
-          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          {layout === "modal" ? (
+            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
+              ×
+            </button>
+          ) : null}
         </div>
 
         {mode === "read" && detail && (
@@ -289,12 +293,27 @@ export function ClientCrudPanel({
                 {saving ? "Saving…" : "Save changes"}
               </button>
             )}
-            <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
-              Close
-            </button>
+            {layout === "modal" ? (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
+                Close
+              </button>
+            ) : mode === "create" ? (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
+                Cancel
+              </button>
+            ) : null}
           </div>
         </form>
-      </div>
+    </div>
+  );
+
+  if (layout === "inline") {
+    return panelBody;
+  }
+
+  return (
+    <div className={styles.overlay} role="dialog" aria-modal="true">
+      {panelBody}
     </div>
   );
 }

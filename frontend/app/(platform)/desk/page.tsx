@@ -4,9 +4,8 @@ import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AccountProfileSection } from "@/components/account/AccountProfileSection";
-import { wealthApi, type WealthClient } from "@/lib/api";
-import { ClientCrudPanel } from "@/components/wealth/ClientCrudPanel";
-import { ClientsTable } from "@/components/wealth/ClientsTable";
+import { wealthApi } from "@/lib/api";
+import { ClientsMasterDetail } from "@/components/wealth/ClientsMasterDetail";
 import { WalletPanel } from "@/components/wealth/WalletPanel";
 import { useClientsCrud } from "@/lib/hooks/useClientsCrud";
 import { useActiveBookStore } from "@/lib/store/activeBook";
@@ -228,38 +227,19 @@ function DeskPageContent() {
 
       {section === "clients" && (
         <section className={styles.panel}>
-          <div className={styles.panelHeadRow}>
-            <h2 className={styles.panelTitle}>Clients — full CRUD</h2>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <input
-                className="input"
-                placeholder="Search clients…"
-                value={crud.search}
-                onChange={(e) => crud.setSearch(e.target.value)}
-                style={{ maxWidth: 220 }}
-              />
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => goSection("wallet")}>
-                Client wallet →
-              </button>
-              <button type="button" className="btn btn-primary btn-sm" onClick={crud.openCreate}>
-                + New client
-              </button>
-            </div>
-          </div>
-          <p className={styles.walletHint}>
-            After creating a client, switch their book in the bar above, then open{" "}
+          <h2 className={styles.panelTitle}>Client management</h2>
+          <p className={styles.walletHint} style={{ marginBottom: 16 }}>
+            Click a client on the left to view details. Use the desk bar above to switch their book,
+            then open{" "}
             <button type="button" className={styles.inlineLink} onClick={() => goSection("wallet")}>
               Client wallet
             </button>{" "}
-            to deposit or withdraw cash.
+            for deposits and withdrawals.
           </p>
-          <ClientsTable
-            clients={crud.clients as WealthClient[]}
-            loading={crud.loading}
-            activeClientId={crud.selectedId}
-            onView={crud.openRead}
-            onEdit={crud.openUpdate}
+          <ClientsMasterDetail
+            crud={crud}
             onDelete={handleDeleteClient}
+            onWallet={() => goSection("wallet")}
           />
         </section>
       )}
@@ -296,19 +276,6 @@ function DeskPageContent() {
         </section>
       )}
 
-      <ClientCrudPanel
-        mode={crud.mode}
-        form={crud.form}
-        setForm={crud.setForm}
-        detail={crud.detail}
-        saving={crud.saving}
-        selectedId={crud.selectedId}
-        onClose={crud.closePanel}
-        onCreate={crud.create}
-        onUpdate={crud.update}
-        onDelete={handleDeleteClient}
-        onEdit={() => crud.selectedId && crud.openUpdate(crud.selectedId)}
-      />
     </div>
   );
 }

@@ -47,22 +47,54 @@
   padding: 12px 10px;
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.navSection {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
   min-width: 0;
+}
+
+.navSection + .navSection {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.navSection:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.navSectionTitle {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin: 0 0 6px;
+  padding: 0 12px;
 }
 
 .navLink {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 9px 12px;
   border-radius: var(--radius-sm);
   text-decoration: none;
   color: var(--text-secondary);
   background: transparent;
-  font-weight: 400;
-  font-size: 0.9rem;
-  transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-left: 3px solid transparent;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
   position: relative;
   min-width: 0;
 }
@@ -72,15 +104,17 @@
   color: var(--text-primary);
 }
 
+/* Zerodha-style: accent bar + soft fill (same palette, clearer structure) */
 .navLinkActive {
-  color: #fff;
-  background: var(--accent);
+  color: var(--text-primary);
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
   font-weight: 600;
 }
 
 .navLinkActive:hover {
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-soft);
+  color: var(--text-primary);
 }
 
 .navIcon {
@@ -189,6 +223,18 @@
 
 .authBtn {
   justify-content: center;
+  gap: 8px;
+}
+
+.authIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signOutBtn {
+  gap: 8px;
 }
 
 @keyframes sidebarPulse {
@@ -240,7 +286,7 @@
 
   .navLinkActive:hover,
   .navLinkActive:focus-visible {
-    background: var(--accent);
+    background: var(--accent-soft);
   }
 
   .navLink:hover,
@@ -276,16 +322,26 @@
     padding-left: 12px;
   }
 
+  .authBtn,
+  .signOutBtn {
+    justify-content: center;
+  }
+
   .logoLink :global(.sidebar-logo-text) {
     display: none !important;
   }
 
+  .navSectionTitle,
   .navLink :global(.sidebar-label),
   .liveRow :global(.sidebar-label),
   .profileLink :global(.sidebar-label),
   .signOutBtn :global(.sidebar-label),
   .authBtn :global(.sidebar-label) {
     display: none !important;
+  }
+
+  .authIcon {
+    display: flex !important;
   }
 
   .navLink:hover :global(.sidebar-label),
